@@ -21,8 +21,13 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.mobileappsurvey.query.MobileAppSurveyQuerySchema;
+import org.labkey.mobileappsurvey.view.EnrollmentTokenBatchesWebPart;
+import org.labkey.mobileappsurvey.view.EnrollmentTokensWebPart;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -40,7 +45,7 @@ public class MobileAppSurveyModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 16.21;
+        return 16.22;
     }
 
     @Override
@@ -53,7 +58,10 @@ public class MobileAppSurveyModule extends DefaultModule
     @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
-        return Collections.emptyList();
+        ArrayList<WebPartFactory> list = new ArrayList<>();
+        list.add(new SimpleWebPartFactory("Enrollment Token Batches", WebPartFactory.LOCATION_BODY, EnrollmentTokenBatchesWebPart.class, null));
+        list.add(new SimpleWebPartFactory("Enrollment Tokens", WebPartFactory.LOCATION_BODY, EnrollmentTokensWebPart.class, null));
+        return list;
     }
 
     @Override
@@ -67,6 +75,7 @@ public class MobileAppSurveyModule extends DefaultModule
     {
         // add a container listener so we'll know when our container is deleted:
         ContainerManager.addContainerListener(new MobileAppSurveyContainerListener());
+        MobileAppSurveyQuerySchema.register(this);
     }
 
     @Override

@@ -16,15 +16,22 @@
 
 package org.labkey.mobileappsurvey;
 
+import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.Marshal;
+import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
+import org.labkey.mobileappsurvey.view.EnrollmentTokenBatchesWebPart;
+import org.labkey.mobileappsurvey.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
+@Marshal(Marshaller.Jackson)
 public class MobileAppSurveyController extends SpringActionController
 {
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(MobileAppSurveyController.class);
@@ -46,6 +53,67 @@ public class MobileAppSurveyController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return root;
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class TokenBatchAction extends SimpleViewAction
+    {
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+
+        @Override
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            setTitle("Enrollment Token Batches");
+            return new EnrollmentTokenBatchesWebPart(getViewContext());
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class TokenListAction extends SimpleViewAction
+    {
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+
+        @Override
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            setTitle("Enrollment Tokens");
+            return new EnrollmentTokensWebPart(getViewContext());
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class GenerateTokensAction extends ApiAction<GenerateTokensForm>
+    {
+        @Override
+        public Object execute(GenerateTokensForm form, BindException errors) throws Exception
+        {
+            Integer batchId = MobileAppSurveyManager.get().insertNewTokenBatch(form.getCount(), getUser(), getContainer());
+
+            return success(batchId);
+        }
+    }
+
+    public static class GenerateTokensForm
+    {
+        private int _count;
+
+        public int getCount()
+        {
+            return _count;
+        }
+
+        public void setCount(int count)
+        {
+            _count = count;
         }
     }
 }

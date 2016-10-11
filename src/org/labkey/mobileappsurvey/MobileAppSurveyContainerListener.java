@@ -20,10 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager.ContainerListener;
 import org.labkey.api.security.User;
-import java.util.Collections;
-import java.util.Collection;
 
 import java.beans.PropertyChangeEvent;
+import java.util.Collection;
+import java.util.Collections;
 
 public class MobileAppSurveyContainerListener implements ContainerListener
 {
@@ -35,6 +35,7 @@ public class MobileAppSurveyContainerListener implements ContainerListener
     @Override
     public void containerDeleted(Container c, User user)
     {
+        MobileAppSurveyManager.purgeContainer(c, user);
     }
 
     @Override

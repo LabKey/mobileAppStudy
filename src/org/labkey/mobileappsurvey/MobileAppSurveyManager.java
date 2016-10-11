@@ -16,8 +16,26 @@
 
 package org.labkey.mobileappsurvey;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.DbScope;
+import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.security.User;
+import org.labkey.api.util.ChecksumUtil;
+import org.labkey.api.util.ContainerUtil;
+import org.labkey.mobileappsurvey.data.EnrollmentTokenBatch;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 public class MobileAppSurveyManager
 {
+    private static final Integer TOKEN_SIZE = 8;
+    private static final String TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final MobileAppSurveyManager _instance = new MobileAppSurveyManager();
 
     private MobileAppSurveyManager()
@@ -29,4 +47,81 @@ public class MobileAppSurveyManager
     {
         return _instance;
     }
+
+    public Set<String> generateEnrollmentTokens(Integer count)
+    {
+        Set<String> tokenSet = new HashSet<>();
+
+        ChecksumUtil checksumUtil = new ChecksumUtil(TOKEN_CHARS);
+        while (tokenSet.size() < count)
+        {
+            String prefix = RandomStringUtils.random(TOKEN_SIZE, TOKEN_CHARS);
+            tokenSet.add(prefix + checksumUtil.getValue(prefix));
+        }
+        return tokenSet;
+    }
+
+    public String generateEnrollmentToken()
+    {
+        ChecksumUtil checksumUtil = new ChecksumUtil(TOKEN_CHARS);
+        String prefix = RandomStringUtils.random(TOKEN_SIZE, TOKEN_CHARS);
+        return (prefix + checksumUtil.getValue(prefix));
+    }
+
+    public Integer insertNewTokenBatch(Integer count, User user, Container container)
+    {
+        DbScope scope = MobileAppSurveySchema.getInstance().getSchema().getScope();
+
+        Date createdDate = new Date();
+        try (DbScope.Transaction transaction = scope.ensureTransaction())
+        {
+            EnrollmentTokenBatch batch = new EnrollmentTokenBatch();
+            batch.setCount(count);
+            batch.setContainer(container);
+            batch.setCreatedBy(user);
+            batch.setCreated(createdDate);
+
+            // create the batch entry
+            TableInfo batchTable = MobileAppSurveySchema.getInstance().getTableInfoEnrollmentTokenBatch();
+            batch = Table.insert(user, batchTable, batch);
+
+            // Generate the individual tokens, checking for duplicates
+            TableInfo tokenTable = MobileAppSurveySchema.getInstance().getTableInfoEnrollmentToken();
+            MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
+            SqlExecutor executor = new SqlExecutor(schema.getSchema());
+
+            int numTokens = 0;
+            SQLFragment sql = new SQLFragment("INSERT INTO " + tokenTable);
+            sql.append(" (BatchId, Token, ParticipantId, Created, CreatedBy, Container) ");
+            sql.append(" SELECT ?, ?, NULL, ?, ?, ? ");
+            sql.append(" WHERE NOT EXISTS (SELECT * FROM ").append(tokenTable, "dup").append(" WHERE dup.Token = ?)");
+            while (numTokens < count)
+            {
+                String token = generateEnrollmentToken();
+                numTokens += executor.execute(sql.getSQL(), batch.getRowId(), token, createdDate, user.getUserId(), container, token);
+            }
+
+            transaction.commit();
+            return batch.getRowId();
+        }
+    }
+
+    public static void purgeContainer(Container c, User user)
+    {
+        MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
+        try (DbScope.Transaction transaction = schema.getSchema().getScope().ensureTransaction())
+        {
+            ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoEnrollmentToken(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoEnrollmentTokenBatch(), c, null);
+
+            transaction.commit();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

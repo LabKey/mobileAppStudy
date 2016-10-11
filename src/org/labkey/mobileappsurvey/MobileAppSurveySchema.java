@@ -18,12 +18,17 @@ package org.labkey.mobileappsurvey;
 
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.dialect.SqlDialect;
 
 public class MobileAppSurveySchema
 {
     private static final MobileAppSurveySchema _instance = new MobileAppSurveySchema();
     public static final String NAME = "mobileappsurvey";
+    public static final String ENROLLMENT_TOKEN_BATCH_TABLE = "EnrollmentTokenBatch";
+    public static final String ENROLLMENT_TOKEN_TABLE = "EnrollmentToken";
+    public static final String STUDY_TABLE = "Study";
+    public static final String PARTICIPANT_TABLE = "Participant";
 
     public static MobileAppSurveySchema getInstance()
     {
@@ -45,5 +50,25 @@ public class MobileAppSurveySchema
     public SqlDialect getSqlDialect()
     {
         return getSchema().getSqlDialect();
+    }
+
+    public TableInfo getTableInfoEnrollmentTokenBatch()
+    {
+        return getSchema().getTable(ENROLLMENT_TOKEN_BATCH_TABLE);
+    }
+
+    public TableInfo getTableInfoEnrollmentToken()
+    {
+        return getSchema().getTable(ENROLLMENT_TOKEN_TABLE);
+    }
+
+    public TableInfo getTableInfoParticipant()
+    {
+        return getSchema().getTable(PARTICIPANT_TABLE);
+    }
+
+    public TableInfo getTableInfoStudy()
+    {
+        return getSchema().getTable(STUDY_TABLE);
     }
 }
