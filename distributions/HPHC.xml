@@ -5,10 +5,10 @@
     <target name="distribution">
         <antcall target="gather_modules" />
         <ant antfile="${basedir}/build.xml" target="package_redistributables">
-            <property name="dist_sub.dir" value="harvardPilgrim" />
+            <property name="dist_sub.dir" value="HPHC" />
             <property name="skip.windowsInstaller" value="true" />
             <property name="skip.tarGZDistribution" value="false" />
-            <property name="extraFileIdentifier" value="-harvardPilgrim" />
+            <property name="extraFileIdentifier" value="-HPHC" />
         </ant>
     </target>
 
