@@ -1,10 +1,14 @@
 package org.labkey.mobileappsurvey.view;
 
+import org.labkey.api.data.ActionButton;
+import org.labkey.api.data.ButtonBar;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.mobileappsurvey.MobileAppSurveySchema;
 
 /**
@@ -17,6 +21,12 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
         super(QueryService.get().getUserSchema(viewContext.getUser(), viewContext.getContainer(), MobileAppSurveySchema.NAME));
         setSettings(createQuerySettings(viewContext));
         setTitle("Enrollment Token Batches");
+        addClientDependency(ClientDependency.fromPath("survey/panel/enrollmentTokenBatchFormPanel.js"));
+        setShowInsertNewButton(false);
+        setShowImportDataButton(false);
+        setShowDeleteButton(false);
+        setShowReports(false);
+
     }
 
     private QuerySettings createQuerySettings(ViewContext viewContext)
@@ -26,4 +36,13 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
 
         return settings;
     }
+
+    protected void populateButtonBar(DataView view, ButtonBar bar)
+    {
+        super.populateButtonBar(view, bar);
+        ActionButton generateBtn = new ActionButton("Generate");
+        generateBtn.setScript("Ext4.create('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel').show();");
+        addButton(bar, generateBtn);
+    }
+
 }

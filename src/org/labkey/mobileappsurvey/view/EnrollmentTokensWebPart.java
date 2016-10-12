@@ -17,6 +17,10 @@ public class EnrollmentTokensWebPart extends QueryView
         super(QueryService.get().getUserSchema(viewContext.getUser(), viewContext.getContainer(), MobileAppSurveySchema.NAME));
         setSettings(createQuerySettings(viewContext));
         setTitle("Enrollment Tokens");
+        setShowInsertNewButton(false);
+        setShowImportDataButton(false);
+        setShowDeleteButton(false);
+        setShowReports(false);
     }
 
     private QuerySettings createQuerySettings(ViewContext viewContext)

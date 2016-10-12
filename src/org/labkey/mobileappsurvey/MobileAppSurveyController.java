@@ -29,6 +29,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.mobileappsurvey.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappsurvey.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 @Marshal(Marshaller.Jackson)
@@ -94,6 +95,14 @@ public class MobileAppSurveyController extends SpringActionController
     public class GenerateTokensAction extends ApiAction<GenerateTokensForm>
     {
         @Override
+        public void validateForm(GenerateTokensForm form, Errors errors)
+        {
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format. Please check the log for errors.");
+            if (form.getCount() == null || form.getCount() <= 0)
+                errors.reject(ERROR_MSG, "Count must be provided and greater than 0.");
+        }
+        @Override
         public Object execute(GenerateTokensForm form, BindException errors) throws Exception
         {
             Integer batchId = MobileAppSurveyManager.get().insertNewTokenBatch(form.getCount(), getUser(), getContainer());
@@ -104,14 +113,14 @@ public class MobileAppSurveyController extends SpringActionController
 
     public static class GenerateTokensForm
     {
-        private int _count;
+        private Integer _count;
 
-        public int getCount()
+        public Integer getCount()
         {
             return _count;
         }
 
-        public void setCount(int count)
+        public void setCount(Integer count)
         {
             _count = count;
         }
