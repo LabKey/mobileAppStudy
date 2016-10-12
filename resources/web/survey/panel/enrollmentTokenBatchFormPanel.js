@@ -2,7 +2,7 @@
 
 Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
 
-    extend: 'Ext.form.Panel',
+    extend: 'Ext.window.Window',
 
     title: 'Generate Tokens',
 
@@ -10,10 +10,11 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
 
     closable: true,
 
-    cls: 'x4-window-default',
+    gridButton : null,
 
     initComponent : function()
     {
+        this.toggleGridButton();
         this.dockedItems = [{
             xtype: 'toolbar',
             dock: 'bottom',
@@ -26,16 +27,16 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
                     formBind: true,
                     handler: function (btn)
                     {
-                        var panel = btn.up('form');
+                        var panel = btn.up('window');
                         panel.doSubmit(btn);
                     }
                 },
                 {
                     text: 'Cancel',
                     itemId: 'cancelBtn',
-                    handler: function (btn, key)
+                    handler: function (btn)
                     {
-                        btn.up('form').close()
+                        btn.up('window').close();
                     }
                 }
             ]
@@ -49,17 +50,41 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
             html:'How many tokens would you like to generate?',
             border: false
         });
-        this.add(this.getFormFields());
 
+        this.add(this.createForm());
         this.on (
                 {
-                    afterRender: function (cmp) {
-                        console.log('after render now')
+                    afterRender: function () {
+                        this.getSubmitButton().setDisabled(true);
+                    },
+                    close : function() {
+                        this.toggleGridButton();
                     }
                 }
         )
 
 
+    },
+
+    toggleGridButton: function() {
+        if (this.gridButton)
+        {
+            if (this.gridButton.className.indexOf('labkey-disabled-button') >= 0)
+                this.gridButton.className = this.gridButton.className.replace('labkey-disabled-button', '');
+            else
+                this.gridButton.className += ' labkey-disabled-button ';
+        }
+    },
+
+    createForm: function() {
+        this.form = Ext4.create('Ext.form.Panel',
+                {
+                    border:false
+                }
+        );
+
+        this.form.add(this.getFormFields());
+        return this.form;
     },
 
     getFormFields : function()
@@ -103,23 +128,40 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
                                     name: 'otherCount',
                                     disabled: true,
                                     minValue: 1,
-                                    padding: '0 0 0 5px'
+                                    allowDecimals: false,
+                                    allowExponential: false,
+                                    padding: '0 0 0 5px',
+                                    listeners: {
+                                        change: function(cmp)
+                                        {
+                                            var window = cmp.up('window');
+                                            var submitBtn = window.getSubmitButton();
+                                            submitBtn.setDisabled(!cmp.getValue());
+                                            console.log("otherCount changed", cmp);
+                                        }
+                                    }
                                 }
                             ]
                         }
                     ],
                     listeners: {
-                        change: function(radiogroup, radio){
+                        change: function(radioGroup, radio){
                             var isOther = radio.count == 'other';
-                            var form = radiogroup.up('form');
+                            var form = radioGroup.up('form');
                             var otherCount = form.getForm().findField('otherCount');
                             otherCount.setDisabled(!isOther);
-
+                            var submitBtn = radioGroup.up('window').getSubmitButton();
+                            submitBtn.setDisabled(isOther && !otherCount.getValue());
                         }
                     }
                 }
         );
         return items;
+    },
+
+    getSubmitButton: function()
+    {
+        return this.dockedItems.items[1].items.items[1];
     },
 
     doSubmit: function(btn){
@@ -129,7 +171,7 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
             var batchId = JSON.parse(response.responseText).data;
             if (batchId)
             {
-                btn.up('form').close();
+                btn.up('window').close();
                 window.location = LABKEY.ActionURL.buildURL('mobileappsurvey', 'tokenList.view', null, {'query.BatchId/RowId~eq': batchId});
             }
         }
@@ -157,7 +199,7 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
 
     getFieldValues: function()
     {
-        var values = this.getForm().getFieldValues();
+        var values = this.down('form').getForm().getFieldValues();
         if (values.count == 'other' && values.otherCount)
         {
             values.count = values.otherCount;

@@ -24,6 +24,7 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.mobileappsurvey.view.EnrollmentTokenBatchesWebPart;
@@ -41,6 +42,11 @@ public class MobileAppSurveyController extends SpringActionController
     public MobileAppSurveyController()
     {
         setActionResolver(_actionResolver);
+    }
+
+    public ActionURL getEnrollmentTokenBatchURL()
+    {
+        return new ActionURL(TokenBatchAction.class, getContainer());
     }
 
     @RequiresPermission(ReadPermission.class)
@@ -63,7 +69,7 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Enrollment Token Batches");
         }
 
         @Override
@@ -80,7 +86,7 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Token Batches", getEnrollmentTokenBatchURL()).addChild("Enrollment Tokens");
         }
 
         @Override
@@ -99,7 +105,7 @@ public class MobileAppSurveyController extends SpringActionController
         {
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format. Please check the log for errors.");
-            if (form.getCount() == null || form.getCount() <= 0)
+            else if (form.getCount() == null || form.getCount() <= 0)
                 errors.reject(ERROR_MSG, "Count must be provided and greater than 0.");
         }
         @Override

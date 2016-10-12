@@ -20,12 +20,12 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     {
         super(QueryService.get().getUserSchema(viewContext.getUser(), viewContext.getContainer(), MobileAppSurveySchema.NAME));
         setSettings(createQuerySettings(viewContext));
-        setTitle("Enrollment Token Batches");
         addClientDependency(ClientDependency.fromPath("survey/panel/enrollmentTokenBatchFormPanel.js"));
         setShowInsertNewButton(false);
         setShowImportDataButton(false);
         setShowDeleteButton(false);
         setShowReports(false);
+        setShowUpdateColumn(false);
 
     }
 
@@ -40,8 +40,8 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);
-        ActionButton generateBtn = new ActionButton("Generate");
-        generateBtn.setScript("Ext4.create('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel').show();");
+        ActionButton generateBtn = new ActionButton("New Batch");
+        generateBtn.setScript("Ext4.create('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
         addButton(bar, generateBtn);
     }
 
