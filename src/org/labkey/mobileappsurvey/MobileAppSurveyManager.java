@@ -29,14 +29,13 @@ import org.labkey.api.util.ContainerUtil;
 import org.labkey.mobileappsurvey.data.EnrollmentTokenBatch;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 public class MobileAppSurveyManager
 {
     private static final Integer TOKEN_SIZE = 8;
     private static final String TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final MobileAppSurveyManager _instance = new MobileAppSurveyManager();
+    private static final ChecksumUtil _checksumUtil = new ChecksumUtil(TOKEN_CHARS);
 
     private MobileAppSurveyManager()
     {
@@ -48,24 +47,10 @@ public class MobileAppSurveyManager
         return _instance;
     }
 
-    public Set<String> generateEnrollmentTokens(Integer count)
-    {
-        Set<String> tokenSet = new HashSet<>();
-
-        ChecksumUtil checksumUtil = new ChecksumUtil(TOKEN_CHARS);
-        while (tokenSet.size() < count)
-        {
-            String prefix = RandomStringUtils.random(TOKEN_SIZE, TOKEN_CHARS);
-            tokenSet.add(prefix + checksumUtil.getValue(prefix));
-        }
-        return tokenSet;
-    }
-
     public String generateEnrollmentToken()
     {
-        ChecksumUtil checksumUtil = new ChecksumUtil(TOKEN_CHARS);
         String prefix = RandomStringUtils.random(TOKEN_SIZE, TOKEN_CHARS);
-        return (prefix + checksumUtil.getValue(prefix));
+        return (prefix + _checksumUtil.getValue(prefix));
     }
 
     public Integer insertNewTokenBatch(Integer count, User user, Container container)
