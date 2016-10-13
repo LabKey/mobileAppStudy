@@ -13,6 +13,7 @@ import org.labkey.api.security.User;
 import org.labkey.mobileappsurvey.MobileAppSurveyModule;
 
 import static org.labkey.mobileappsurvey.MobileAppSurveySchema.ENROLLMENT_TOKEN_BATCH_TABLE;
+import static org.labkey.mobileappsurvey.MobileAppSurveySchema.ENROLLMENT_TOKEN_TABLE;
 
 /**
  * Created by susanh on 10/10/16.
@@ -46,6 +47,10 @@ public class MobileAppSurveyQuerySchema extends SimpleUserSchema
         if (ENROLLMENT_TOKEN_BATCH_TABLE.equalsIgnoreCase(name))
         {
             return new EnrollmentTokenBatchTable(this);
+        }
+        else if (ENROLLMENT_TOKEN_TABLE.equalsIgnoreCase(name))
+        {
+            return new EnrollmentTokenTable(this);
         }
         else
             return super.createTable(name);
