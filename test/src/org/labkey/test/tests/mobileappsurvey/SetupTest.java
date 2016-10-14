@@ -30,6 +30,7 @@ import org.labkey.test.pages.mobileappsurvey.TokenListPage;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Category({InDevelopment.class})
 public class SetupTest extends BaseWebDriverTest
@@ -87,6 +88,12 @@ public class SetupTest extends BaseWebDriverTest
         popup.createNewBatch("100");
         TokenListPage tokenListPage = new TokenListPage(this);
         Assert.assertEquals("Number of tokens generated not as expected", 100, tokenListPage.getNumTokens());
+        Integer rowId = Integer.valueOf(getUrlParam("query.BatchId%2FRowId~eq"));
+        log("Returning to token batches page");
+        tokenListPage.goToBatches();
+        Map<String, String> batchData = tokenBatchPage.getBatchData(rowId);
+        Assert.assertEquals("Number of tokens not as expected", "100", batchData.get("Count"));
+        Assert.assertEquals("Number of tokens in use not as expected", "0", batchData.get("TokensInUse"));
     }
 
     @Test

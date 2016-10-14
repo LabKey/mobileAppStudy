@@ -24,6 +24,9 @@ import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.DataRegionTable;
 import org.openqa.selenium.WebElement;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class TokenBatchPage extends LabKeyPage
 {
     Elements _elements;
@@ -51,8 +54,20 @@ public class TokenBatchPage extends LabKeyPage
 
     public void openNewBatchPopup()
     {
-        log("Opening new batch size popup.");
+        log("Opening new batch request popup.");
         elements().newBatchButton.click();
+    }
+
+    public Map<String, String> getBatchData(int batchId)
+    {
+        DataRegionTable dataRegion = new DataRegionTable("query", getDriver());
+        int rowIndex = dataRegion.getRowIndex("RowId", String.valueOf(batchId));
+        Map<String, String> data = new HashMap<>();
+        for (String col : dataRegion.getColumnNames())
+        {
+            data.put(col, dataRegion.getDataAsText(rowIndex, col));
+        }
+        return data;
     }
 
     public Elements elements()
@@ -64,13 +79,12 @@ public class TokenBatchPage extends LabKeyPage
 
     private class Elements extends LabKeyPage.ElementCache
     {
-        WebElement batchQueryView = DataRegionTable.Locators.dataRegion("query").findWhenNeeded(this);
-        WebElement newBatchButton = new LazyWebElement(Locator.lkButton().withText("New Batch"), this);
-
+        WebElement newBatchButton = new LazyWebElement(Locators.newBatchButton, this);
     }
 
     public static class Locators extends org.labkey.test.Locators
     {
 
+        public static final Locator.XPathLocator newBatchButton = Locator.lkButton().withText("New Batch");
     }
 }

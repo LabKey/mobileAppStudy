@@ -17,8 +17,10 @@
 package org.labkey.test.pages.mobileappsurvey;
 
 import org.labkey.test.BaseWebDriverTest;
+import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.pages.LabKeyPage;
+import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.DataRegionTable;
 import org.openqa.selenium.WebElement;
 
@@ -43,6 +45,11 @@ public class TokenListPage extends LabKeyPage
         return dataRegion.getDataRowCount();
     }
 
+    public void goToBatches()
+    {
+        doAndWaitForPageToLoad(() -> elements().tokenBatchLink.click());
+    }
+
     public Elements elements()
     {
         if (_elements == null)
@@ -50,13 +57,14 @@ public class TokenListPage extends LabKeyPage
         return _elements;
     }
 
-    private class Elements extends ElementCache
+    private class Elements extends LabKeyPage.ElementCache
     {
-        WebElement tokensQueryView = DataRegionTable.Locators.dataRegion("query").findWhenNeeded(this);
+        WebElement tokenBatchLink = new LazyWebElement(Locators.tokenBatchLink, this);
     }
+
 
     public static class Locators extends org.labkey.test.Locators
     {
-
+        public static final Locator.XPathLocator tokenBatchLink = Locator.linkWithText("Token Batches");
     }
 }
