@@ -25,7 +25,6 @@ import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.mobileappsurvey.query.MobileAppSurveyQuerySchema;
 import org.labkey.mobileappsurvey.view.EnrollmentTokenBatchesWebPart;
-import org.labkey.mobileappsurvey.view.EnrollmentTokensWebPart;
 import org.labkey.mobileappsurvey.view.StudyConfigWebPart;
 
 import java.util.ArrayList;
@@ -61,7 +60,6 @@ public class MobileAppSurveyModule extends DefaultModule
     {
         ArrayList<WebPartFactory> list = new ArrayList<>();
         list.add(new SimpleWebPartFactory("Enrollment Token Batches", WebPartFactory.LOCATION_BODY, EnrollmentTokenBatchesWebPart.class, null));
-        list.add(new SimpleWebPartFactory("Enrollment Tokens", WebPartFactory.LOCATION_BODY, EnrollmentTokensWebPart.class, null));
         list.add(new SimpleWebPartFactory("Mobile App Study Setup", WebPartFactory.LOCATION_BODY, StudyConfigWebPart.class, null));
         return list;
     }

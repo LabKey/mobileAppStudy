@@ -34,7 +34,7 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     private QuerySettings createQuerySettings(ViewContext viewContext)
     {
         UserSchema schema = getSchema();
-        return schema.getSettings(viewContext, QueryView.DATAREGIONNAME_DEFAULT, MobileAppSurveySchema.ENROLLMENT_TOKEN_BATCH_TABLE);
+        return schema.getSettings(viewContext, "enrollmentTokenBatches", MobileAppSurveySchema.ENROLLMENT_TOKEN_BATCH_TABLE);
     }
 
     protected void populateButtonBar(DataView view, ButtonBar bar)
