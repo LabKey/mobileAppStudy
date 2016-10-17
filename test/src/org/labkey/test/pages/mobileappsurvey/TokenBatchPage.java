@@ -60,7 +60,7 @@ public class TokenBatchPage extends LabKeyPage
 
     public Map<String, String> getBatchData(int batchId)
     {
-        DataRegionTable dataRegion = new DataRegionTable("query", getDriver());
+        DataRegionTable dataRegion = new DataRegionTable("enrollmentTokenBatches", getDriver());
         int rowIndex = dataRegion.getRowIndex("RowId", String.valueOf(batchId));
         Map<String, String> data = new HashMap<>();
         for (String col : dataRegion.getColumnNames())
