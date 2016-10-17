@@ -25,10 +25,8 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.mobileappsurvey.data.EnrollmentTokenBatch;
 import org.labkey.mobileappsurvey.data.MobileAppStudy;
@@ -55,19 +53,6 @@ public class MobileAppSurveyController extends SpringActionController
         return new ActionURL(TokenBatchAction.class, getContainer());
     }
 
-    @RequiresPermission(ReadPermission.class)
-    public class BeginAction extends SimpleViewAction
-    {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
-        {
-            return new JspView("/org/labkey/mobileappsurvey/view/hello.jsp");
-        }
-
-        public NavTree appendNavTrail(NavTree root)
-        {
-            return root;
-        }
-    }
 
     @RequiresPermission(AdminPermission.class)
     public class TokenBatchAction extends SimpleViewAction
