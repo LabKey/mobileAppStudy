@@ -141,15 +141,17 @@ public class MobileAppSurveyController extends SpringActionController
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format.");
             else if (StringUtils.isEmpty(form.getShortName()))
-                errors.reject(ERROR_REQUIRED, "Study id is required for enrollment");
+                errors.reject(ERROR_REQUIRED, "Study short name is required for enrollment");
             else if (!MobileAppSurveyManager.get().studyExists(form.getShortName()))
-                errors.reject(ERROR_MSG, "Study with id '" + form.getShortName() + "' does not exist");
+                errors.rejectValue("shortName", ERROR_MSG, "Study with short name '" + form.getShortName() + "' does not exist");
             else if (!StringUtils.isEmpty(form.getToken()))
             {
-                if (!MobileAppSurveyManager.get().isChecksumValid(form.getToken()))
-                    errors.reject(ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
+                if (MobileAppSurveyManager.get().hasParticipant(form.getShortName(), form.getToken()))
+                    errors.reject(ERROR_MSG, "Token already in use");
+                else if (!MobileAppSurveyManager.get().isChecksumValid(form.getToken()))
+                    errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
                 else if (!MobileAppSurveyManager.get().isValidStudyToken(form.getToken(), form.getShortName()))
-                    errors.reject(ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
+                    errors.rejectValue("token", ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
             }
             // we allow for the possibility that someone can enroll without using an enrollment token
             else if (MobileAppSurveyManager.get().enrollmentTokenRequired(form.getShortName()))

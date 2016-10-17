@@ -23,6 +23,7 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -111,6 +112,22 @@ public class MobileAppSurveyManager
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Container"), container);
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentTokenBatch(), filter, null);
+        return selector.exists();
+    }
+
+    public boolean hasParticipant(String shortName, String tokenValue)
+    {
+        MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
+        TableInfo participantTable = schema.getTableInfoParticipant();
+        TableInfo tokenTable = schema.getTableInfoEnrollmentToken();
+        TableInfo studyTable = schema.getTableInfoStudy();
+
+        SQLFragment sql = new SQLFragment("SELECT p.* from ").append(participantTable, "p");
+        sql.append(" JOIN ").append(tokenTable, "t").append(" ON t.participantId = p.rowId");
+        sql.append(" JOIN ").append(studyTable, "s").append(" ON p.studyId = s.rowId");
+        sql.append(" WHERE t.token = ? AND s.shortName = ?");
+
+        SqlSelector selector = new SqlSelector(schema.getSchema(), sql.getSQL(), tokenValue, shortName);
         return selector.exists();
     }
 
