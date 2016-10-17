@@ -193,7 +193,7 @@ public class MobileAppSurveyController extends SpringActionController
 
         public void setToken(String token)
         {
-            _token = token;
+            _token = token == null ? token : token.trim().toUpperCase();
         }
 
         public String getShortName()
