@@ -14,27 +14,13 @@
                     <name>Mobile App Study Setup</name>
                     <location>body</location>
                 </webPart>
-            </preferredWebParts>
-            <permissions>
-                <permission>org.labkey.api.security.permissions.AdminPermission</permission>
-            </permissions>
-        </folderTab>
-        <folderTab>
-            <name>enrollmentTokens</name>
-            <caption>Enrollment Tokens</caption>
-            <selectors>
-
-            </selectors>
-            <requiredWebParts>
-            </requiredWebParts>
-            <preferredWebParts>
                 <webPart>
                     <name>Enrollment Token Batches</name>
                     <location>body</location>
                 </webPart>
             </preferredWebParts>
             <permissions>
-                <permission>org.labkey.api.security.permissions.InsertPermission</permission>
+                <permission>org.labkey.api.security.permissions.AdminPermission</permission>
             </permissions>
         </folderTab>
         <!--<folderTab>-->

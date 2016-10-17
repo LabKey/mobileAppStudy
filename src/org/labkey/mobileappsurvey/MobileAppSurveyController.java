@@ -60,7 +60,7 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root.addChild("Enrollment Token Batches");
+            return root;
         }
 
         @Override
