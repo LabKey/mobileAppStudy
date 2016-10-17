@@ -35,7 +35,7 @@ public class MobileAppSurveyContainerListener implements ContainerListener
     @Override
     public void containerDeleted(Container c, User user)
     {
-        MobileAppSurveyManager.purgeContainer(c, user);
+        MobileAppSurveyManager.purgeContainer(c);
     }
 
     @Override

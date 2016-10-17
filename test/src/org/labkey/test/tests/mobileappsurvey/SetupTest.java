@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.TestTimeoutException;
-import org.labkey.test.categories.InDevelopment;
+import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappsurvey.TokenBatchPopup;
 import org.labkey.test.pages.mobileappsurvey.TokenBatchPage;
 import org.labkey.test.pages.mobileappsurvey.TokenListPage;
@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-@Category({InDevelopment.class})
+@Category({Git.class})
 public class SetupTest extends BaseWebDriverTest
 {
     @Override

@@ -168,7 +168,7 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
         btn.setDisabled(true);
 
         function onSuccess(response, options){
-            var batchId = JSON.parse(response.responseText).data;
+            var batchId = JSON.parse(response.responseText).data.batchId;
             if (batchId)
             {
                 btn.up('window').close();
