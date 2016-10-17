@@ -24,13 +24,16 @@
             </ns:column>
             <ns:column columnName="Token"/>
             <ns:column columnName="BatchId">
+                <ns:isHidden>true</ns:isHidden>
                 <ns:fk>
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                     <ns:fkTable>EnrollmentTokenBatch</ns:fkTable>
                     <ns:fkDbSchema>mobileappsurvey</ns:fkDbSchema>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="ParticipantId"/>
+            <ns:column columnName="ParticipantId">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
             <ns:column columnName="Created">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
