@@ -137,7 +137,6 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
                                             var window = cmp.up('window');
                                             var submitBtn = window.getSubmitButton();
                                             submitBtn.setDisabled(!cmp.getValue());
-                                            console.log("otherCount changed", cmp);
                                         }
                                     }
                                 }
