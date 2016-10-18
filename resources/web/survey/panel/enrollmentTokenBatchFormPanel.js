@@ -177,7 +177,7 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
             var batchId = JSON.parse(response.responseText).data.batchId;
             if (batchId)
             {
-                window.location = LABKEY.ActionURL.buildURL('mobileappsurvey', 'tokenList.view', null, {'query.BatchId/RowId~eq': batchId});
+                window.location = LABKEY.ActionURL.buildURL('mobileappsurvey', 'tokenList.view', null, {'enrollmentTokens.BatchId/RowId~eq': batchId});
             }
         }
 

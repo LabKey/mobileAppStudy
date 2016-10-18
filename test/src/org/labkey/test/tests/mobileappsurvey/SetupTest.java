@@ -88,7 +88,7 @@ public class SetupTest extends BaseWebDriverTest
         popup.createNewBatch("100");
         TokenListPage tokenListPage = new TokenListPage(this);
         Assert.assertEquals("Number of tokens generated not as expected", 100, tokenListPage.getNumTokens());
-        Integer rowId = Integer.valueOf(getUrlParam("query.BatchId%2FRowId~eq"));
+        Integer rowId = Integer.valueOf(getUrlParam("enrollmentTokens.BatchId%2FRowId~eq"));
         log("Returning to token batches page");
         tokenListPage.goToBatches();
         Map<String, String> batchData = tokenBatchPage.getBatchData(rowId);
