@@ -41,7 +41,7 @@ public class TokenListPage extends LabKeyPage
 
     public int getNumTokens()
     {
-        DataRegionTable dataRegion = new DataRegionTable("query", getDriver());
+        DataRegionTable dataRegion = new DataRegionTable("enrollmentTokens", getDriver());
         return dataRegion.getDataRowCount();
     }
 
