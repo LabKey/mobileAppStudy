@@ -269,7 +269,7 @@ public class MobileAppSurveyManager
 
 
     /**
-     * Get the study associated with a given contianer
+     * Get the study associated with a given container
      * @param c the container in question
      * @return the associated study, or null if there is no such study
      */
