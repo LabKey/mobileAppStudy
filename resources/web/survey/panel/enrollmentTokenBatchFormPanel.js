@@ -164,14 +164,19 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
         return this.dockedItems.items[1].items.items[1];
     },
 
+    getCancelButton: function()
+    {
+        return this.dockedItems.items[1].items.items[2];
+    },
+
     doSubmit: function(btn){
         btn.setDisabled(true);
+        btn.up('window').getCancelButton().setDisabled(true);
 
         function onSuccess(response, options){
             var batchId = JSON.parse(response.responseText).data.batchId;
             if (batchId)
             {
-                btn.up('window').close();
                 window.location = LABKEY.ActionURL.buildURL('mobileappsurvey', 'tokenList.view', null, {'query.BatchId/RowId~eq': batchId});
             }
         }
@@ -194,6 +199,7 @@ Ext4.define('LABKEY.MobileAppSurvey.EnrollmentTokenBatchFormPanel', {
             failure: onError,
             scope: this
         });
+        btn.up('window').close();
 
     },
 
