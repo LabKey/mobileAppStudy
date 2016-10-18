@@ -48,11 +48,10 @@
 <script type="text/javascript">
     Ext4.onReady(function(){
 
-        console.log("short name is <%=h(shortName)%>");
         Ext4.create('LABKEY.MobileAppSurvey.StudySetupPanel',
                 {
                     renderTo   : <%= q(renderId) %>,
-                    shortName  : <%= q(shortName) %>,
+                    shortName  : <%= qh(shortName) %>,
                     isEditable : <%= isEditable %>
                 }
         );
