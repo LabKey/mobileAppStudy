@@ -155,12 +155,15 @@ public class MobileAppSurveyManager
             participant.setContainer(study.getContainer());
             participant.setCreatedBy(user);
             participant = Table.insert(user, schema.getTableInfoParticipant(), participant);
-            EnrollmentToken eToken = getEnrollmentToken(study.getContainer(), tokenValue);
-            if (eToken == null)
-                throw new RuntimeValidationException("Invalid token '" + tokenValue + "' in this container. Participant cannot be enrolled.");
+            if (tokenValue != null)
+            {
+                EnrollmentToken eToken = getEnrollmentToken(study.getContainer(), tokenValue);
+                if (eToken == null)
+                    throw new RuntimeValidationException("Invalid token '" + tokenValue + "' in this container. Participant cannot be enrolled.");
 
-            eToken.setParticipantId(participant.getRowId());
-            Table.update(user, schema.getTableInfoEnrollmentToken(), eToken, eToken.getRowId());
+                eToken.setParticipantId(participant.getRowId());
+                Table.update(user, schema.getTableInfoEnrollmentToken(), eToken, eToken.getRowId());
+            }
 
             transaction.commit();
 
@@ -237,10 +240,10 @@ public class MobileAppSurveyManager
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         try (DbScope.Transaction transaction = schema.getSchema().getScope().ensureTransaction())
         {
-            ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
-            ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoEnrollmentToken(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoEnrollmentTokenBatch(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
 
             transaction.commit();
         }
