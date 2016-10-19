@@ -18,6 +18,7 @@ package org.labkey.mobileappsurvey;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
@@ -332,6 +333,23 @@ public class MobileAppSurveyManager
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
 
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName);
+        TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("ShortName"), filter, null);
+        return selector.exists();
+    }
+
+    /**
+     * Determines if the given study short name that identifies the study is associated with
+     * a container other than the one provided
+     * @param shortName identifier for the study
+     * @param container current container (the opposite of 'elsewhere')
+     * @return true if there is another container that has this study id associated with it; false otherwise
+     */
+    public boolean studyExistsElsewhere(String shortName, Container container)
+    {
+        MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
+
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName);
+        filter.addCondition(FieldKey.fromString("Container"), container, CompareType.NEQ);
         TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("ShortName"), filter, null);
         return selector.exists();
     }

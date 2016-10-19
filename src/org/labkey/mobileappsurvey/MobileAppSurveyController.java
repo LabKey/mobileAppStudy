@@ -118,8 +118,8 @@ public class MobileAppSurveyController extends SpringActionController
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
                 errors.reject(ERROR_REQUIRED, "Study Id must be provided.");
-            else if (MobileAppSurveyManager.get().studyExists(form.getShortName()))
-                errors.rejectValue("shortName", ERROR_MSG, "Study Id '" + form.getShortName() + "' is already associated with a container. Each study can be associated with only one container.");
+            else if (MobileAppSurveyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
+                errors.rejectValue("shortName", ERROR_MSG, "Study Id '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
             else if (MobileAppSurveyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
         }
@@ -127,8 +127,12 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public Object execute(StudyConfigForm form, BindException errors) throws Exception
         {
-            MobileAppStudy study = MobileAppSurveyManager.get().insertOrUpdateStudy(form.getShortName(), getContainer(), getUser());
-            return success(PageFlowUtil.map("rowId", study.getRowId()));
+            // if submitting again with the same id in the same container, return the existing study object
+            MobileAppStudy study = MobileAppSurveyManager.get().getStudy(getContainer());
+            if (study == null || study.getShortName().equals(form.getShortName()))
+                study = MobileAppSurveyManager.get().insertOrUpdateStudy(form.getShortName(), getContainer(), getUser());
+
+            return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName()));
         }
     }
 
@@ -195,7 +199,7 @@ public class MobileAppSurveyController extends SpringActionController
 
         public void setToken(String token)
         {
-            _token = token == null ? token : token.trim().toUpperCase();
+            _token = token == null ? null : token.trim().toUpperCase();
         }
 
         public String getShortName()
