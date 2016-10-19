@@ -38,7 +38,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
-                html: 'The study ID associated with this folder is ' + this.shortName + ".",
+                html: 'The study ID associated with this folder is ' + this.shortName + '.',
                 border: false
             });
         }
