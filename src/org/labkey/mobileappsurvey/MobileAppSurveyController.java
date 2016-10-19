@@ -129,7 +129,7 @@ public class MobileAppSurveyController extends SpringActionController
         {
             // if submitting again with the same id in the same container, return the existing study object
             MobileAppStudy study = MobileAppSurveyManager.get().getStudy(getContainer());
-            if (study == null || study.getShortName().equals(form.getShortName()))
+            if (study == null || !study.getShortName().equals(form.getShortName()))
                 study = MobileAppSurveyManager.get().insertOrUpdateStudy(form.getShortName(), getContainer(), getUser());
 
             return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName()));

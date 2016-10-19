@@ -16,17 +16,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                 xtype: 'toolbar',
                 dock: 'bottom',
                 ui: 'footer',
-                items: [
-                    {
-                        text: 'Submit',
-                        itemId: 'submitBtn',
-                        formBind: true,
-                        handler: function (btn)
-                        {
-                            btn.up('form').doSubmit(btn);
-                        }
-                    }
-                ]
+                items: [this.getSubmitButton()]
             }];
 
 
@@ -40,15 +30,6 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
             });
 
             this.add(this.getFormFields());
-
-            this.on(
-                    {
-                        afterRender: function ()
-                        {
-                            this.getSubmitButton().setDisabled(true);
-                        }
-                    }
-            )
         }
         else
         {
@@ -61,47 +42,69 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                 border: false
             });
         }
-
-
-    },
-
-    getFormFields : function()
-    {
-        var items = [];
-        items.push(
-                {
-                    xtype: 'textfield',
-                    width: 200,
-                    name: 'shortName',
-                    value: this.shortName,
-                    padding: '10px 10px 0px 10px',
-                    allowBlank: false,
-                    emptyText: "Enter Study Id",
-                    submitEmptyText: false,
-                    disabled: !this.isEditable,
-                    validateOnChange: false,
-                    allowOnlyWhitespace: false,
-                    listeners: {
-                        change: function(field, newValue, oldValue){
-                            var submitBtn = field.up('form').getSubmitButton();
-                            submitBtn.setDisabled(newValue == undefined || newValue.trim() == "");
-                        }
-                    }
-                }
-        );
-        return items;
     },
 
     getSubmitButton: function()
     {
-        return this.dockedItems.items[0].items.items[0];
+        if (!this.submitButton)
+        {
+            this.submitButton = Ext4.create('Ext.button.Button', {
+                text: 'Submit',
+                itemId: 'submitBtn',
+                disabled: true,
+                handler: function (btn)
+                {
+                    btn.up('form').doSubmit(btn);
+                }
+            })
+        }
+        return this.submitButton;
+    },
+
+    getStudyIdField : function()
+    {
+        if (!this.studyIdField)
+        {
+            this.studyIdField = Ext4.create("Ext.form.field.Text",
+                    {
+                        width: 200,
+                        name: 'shortName',
+                        value: this.shortName,
+                        padding: '10px 10px 0px 10px',
+                        allowBlank: false,
+                        emptyText: "Enter Study Id",
+                        submitEmptyText: false,
+                        disabled: !this.isEditable,
+                        validateOnChange: true,
+                        allowOnlyWhitespace: false,
+                        listeners: {
+                            change: function(field, newValue, oldValue){
+                                var submitBtn = field.up('form').getSubmitButton();
+                                submitBtn.setDisabled(!field.isValid() || newValue == this.up('form').shortName);
+                            }
+                        }
+                    }
+            );
+        }
+        return this.studyIdField;
+    },
+
+    getFormFields : function()
+    {
+        return [this.getStudyIdField()];
     },
 
     doSubmit: function(btn){
         btn.setDisabled(true);
 
-        function onSuccess(response, options){
-            console.log("Study configuration succeeded.");
+        function onSuccess(response, options) {
+            var obj = Ext4.decode(response.responseText);
+            if (obj.success)
+                this.shortName = obj.data.shortName;
+            else
+            {
+                Ext4.Msg.alert("Error", "There was a problem storing the study id.  Please check the logs or contact an administrator.");
+            }
         }
 
         function onError(response, options){
@@ -110,7 +113,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
             var obj = Ext4.decode(response.responseText);
             if (obj.errors)
             {
-                Ext4.Msg.alert("Error", "There were problems string the study id. " + obj.errors[0].message);
+                Ext4.Msg.alert("Error", "There were problems storing the study id. " + obj.errors[0].message);
             }
         }
 
