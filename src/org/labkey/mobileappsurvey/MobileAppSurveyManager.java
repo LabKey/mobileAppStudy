@@ -18,6 +18,7 @@ package org.labkey.mobileappsurvey;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
@@ -76,7 +77,7 @@ public class MobileAppSurveyManager
      */
     public boolean isChecksumValid(@NotNull String token)
     {
-        return _checksumUtil.isValid(token);
+        return _checksumUtil.isValid(token.toUpperCase());
     }
 
     /**
@@ -93,7 +94,7 @@ public class MobileAppSurveyManager
             return false;
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Container"), container);
-        filter.addCondition(FieldKey.fromString("Token"), token);
+        filter.addCondition(FieldKey.fromString("Token"), token.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
         return selector.exists();
     }
@@ -105,7 +106,7 @@ public class MobileAppSurveyManager
      * @param shortName unique string identifier for the study
      * @return true if a token is required and false otherwise
      */
-    public boolean enrollmentTokenRequired(String shortName)
+    public boolean enrollmentTokenRequired(@NotNull String shortName)
     {
         Container container = getStudyContainer(shortName);
         if (container == null)
@@ -116,7 +117,7 @@ public class MobileAppSurveyManager
         return selector.exists();
     }
 
-    public boolean hasParticipant(String shortName, String tokenValue)
+    public boolean hasParticipant(@NotNull String shortName, @NotNull String tokenValue)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         TableInfo participantTable = schema.getTableInfoParticipant();
@@ -128,7 +129,7 @@ public class MobileAppSurveyManager
         sql.append(" JOIN ").append(studyTable, "s").append(" ON p.studyId = s.rowId");
         sql.append(" WHERE t.token = ? AND s.shortName = ?");
 
-        SqlSelector selector = new SqlSelector(schema.getSchema(), sql.getSQL(), tokenValue, shortName);
+        SqlSelector selector = new SqlSelector(schema.getSchema(), sql.getSQL(), tokenValue.toUpperCase(), shortName.toUpperCase());
         return selector.exists();
     }
 
@@ -141,7 +142,7 @@ public class MobileAppSurveyManager
      * @param user the user who is issuing the enrollment request
      * @return an object representing the participant that was created
      */
-    public Participant enrollParticipant(String shortName, String tokenValue, User user)
+    public Participant enrollParticipant(@NotNull String shortName, @Nullable String tokenValue, User user)
     {
         DbScope scope = MobileAppSurveySchema.getInstance().getSchema().getScope();
 
@@ -151,7 +152,7 @@ public class MobileAppSurveyManager
             Participant participant = new Participant();
             MobileAppStudy study = getStudy(shortName);
             participant.setStudyId(study.getRowId());
-            participant.setAppToken(GUID.makeGUID());
+            participant.setAppToken(GUID.makeHash());
             participant.setCreated(new Date());
             participant.setContainer(study.getContainer());
             participant.setCreatedBy(user);
@@ -178,11 +179,11 @@ public class MobileAppSurveyManager
      * @param tokenValue the value of the token
      * @return object representation of the database record for this token.
      */
-    private EnrollmentToken getEnrollmentToken(Container container, String tokenValue)
+    private EnrollmentToken getEnrollmentToken(@NotNull Container container, @NotNull String tokenValue)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Container"), container);
-        filter.addCondition(FieldKey.fromString("Token"), tokenValue);
+        filter.addCondition(FieldKey.fromString("Token"), tokenValue.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
         return selector.getObject(EnrollmentToken.class);
     }
@@ -194,7 +195,7 @@ public class MobileAppSurveyManager
      * @param container container in which the tokens are being generated
      * @return an enrollment token batch object representing the newly created batch.
      */
-    public EnrollmentTokenBatch createTokenBatch(Integer count, User user, Container container)
+    public EnrollmentTokenBatch createTokenBatch(@NotNull Integer count, @NotNull User user, @NotNull Container container)
     {
         DbScope scope = MobileAppSurveySchema.getInstance().getSchema().getScope();
 
@@ -236,7 +237,7 @@ public class MobileAppSurveyManager
      * Remove data associated with the given contianer from the tables for this module
      * @param c container that is being removed
      */
-    public static void purgeContainer(Container c)
+    public static void purgeContainer(@NotNull Container c)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         try (DbScope.Transaction transaction = schema.getSchema().getScope().ensureTransaction())
@@ -260,10 +261,10 @@ public class MobileAppSurveyManager
      * @param shortName identifier for the study
      * @return the associated study, or null if these is no such study
      */
-    public MobileAppStudy getStudy(String shortName)
+    public MobileAppStudy getStudy(@NotNull String shortName)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoStudy(), filter, null);
         return selector.getObject(MobileAppStudy.class);
     }
@@ -274,7 +275,7 @@ public class MobileAppSurveyManager
      * @param c the container in question
      * @return the associated study, or null if there is no such study
      */
-    public MobileAppStudy getStudy(Container c)
+    public MobileAppStudy getStudy(@NotNull Container c)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Container"), c);
@@ -288,7 +289,7 @@ public class MobileAppSurveyManager
      * @param shortName identifier for the study
      * @return the associated container, or null if there is no such container.
      */
-    public Container getStudyContainer(String shortName)
+    public Container getStudyContainer(@NotNull String shortName)
     {
         MobileAppStudy study = getStudy(shortName);
 
@@ -304,7 +305,7 @@ public class MobileAppSurveyManager
      * @param c container in question
      * @return the short name identifier for the study associated with the container or null if there is no such study.
      */
-    public String getStudyShortName(Container c)
+    public String getStudyShortName(@NotNull Container c)
     {
         MobileAppStudy study = getStudy(c);
         return study == null ? null : study.getShortName();
@@ -315,7 +316,7 @@ public class MobileAppSurveyManager
      * @param c the container in question
      * @return true if there are any participants associated with the given container, false otherwise.
      */
-    public boolean hasStudyParticipants(Container c)
+    public boolean hasStudyParticipants(@NotNull Container c)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Container"), c);
@@ -328,11 +329,11 @@ public class MobileAppSurveyManager
      * @param shortName identifier for the study
      * @return true or false, depending on whether the study short name already exists in the database.
      */
-    public boolean studyExists(String shortName)
+    public boolean studyExists(@NotNull String shortName)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
 
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("ShortName"), filter, null);
         return selector.exists();
     }
@@ -344,11 +345,11 @@ public class MobileAppSurveyManager
      * @param container current container (the opposite of 'elsewhere')
      * @return true if there is another container that has this study id associated with it; false otherwise
      */
-    public boolean studyExistsElsewhere(String shortName, Container container)
+    public boolean studyExistsElsewhere(@NotNull String shortName, @NotNull Container container)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
 
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName.toUpperCase());
         filter.addCondition(FieldKey.fromString("Container"), container, CompareType.NEQ);
         TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("ShortName"), filter, null);
         return selector.exists();
@@ -358,17 +359,16 @@ public class MobileAppSurveyManager
      * Updates the study short name for a given study
      * @param study the existing study object
      * @param newShortName the new short name for the study
-     * @param container the container with which the study is associated
      * @param user the user making the update request
      * @return the updated study object
      */
-    private MobileAppStudy updateShortName(MobileAppStudy study, String newShortName, Container container, User user)
+    private MobileAppStudy updateShortName(@NotNull MobileAppStudy study, @NotNull String newShortName, @NotNull User user)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
 
         TableInfo studyTable = schema.getTableInfoStudy();
 
-        study.setShortName(newShortName);
+        study.setShortName(newShortName.toUpperCase());
 
         return Table.update(user, studyTable, study, study.getRowId());
     }
@@ -380,14 +380,14 @@ public class MobileAppSurveyManager
      * @param user the user making the insert request
      * @return the object representing the newly inserted study.
      */
-    private MobileAppStudy insertStudy(String shortName, Container container, User user)
+    private MobileAppStudy insertStudy(@NotNull String shortName, @NotNull Container container, @NotNull User user)
     {
         MobileAppSurveySchema schema = MobileAppSurveySchema.getInstance();
 
         TableInfo studyTable = schema.getTableInfoStudy();
 
         MobileAppStudy study = new MobileAppStudy();
-        study.setShortName(shortName);
+        study.setShortName(shortName.toUpperCase());
         study.setContainer(container);
         study.setCreated(new Date());
         study.setCreatedBy(user);
@@ -401,13 +401,13 @@ public class MobileAppSurveyManager
      * @param user the user making the request
      * @return the object representing the newly updated or inserted study.
      */
-    public MobileAppStudy insertOrUpdateStudy(String shortName, Container container, User user)
+    public MobileAppStudy insertOrUpdateStudy(@NotNull String shortName, @NotNull Container container, @NotNull User user)
     {
         MobileAppStudy study = getStudy(container);
         if (study == null)
             return insertStudy(shortName, container, user);
         else
-            return updateShortName(study, shortName, container, user);
+            return updateShortName(study, shortName, user);
     }
 
 }

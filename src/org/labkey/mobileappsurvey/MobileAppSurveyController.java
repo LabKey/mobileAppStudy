@@ -209,7 +209,7 @@ public class MobileAppSurveyController extends SpringActionController
 
         public void setShortName(String shortName)
         {
-            _shortName = shortName;
+            _shortName = shortName == null ? null : shortName.trim().toUpperCase();
         }
     }
 
