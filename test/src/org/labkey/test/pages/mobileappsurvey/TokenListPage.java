@@ -18,17 +18,20 @@ package org.labkey.test.pages.mobileappsurvey;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.DataRegionTable;
 import org.openqa.selenium.WebElement;
 
+import java.util.Map;
+
 public class TokenListPage extends LabKeyPage
 {
     Elements _elements;
 
-    public TokenListPage(BaseWebDriverTest test)
+    public TokenListPage(WebDriverWrapper test)
     {
         super(test);
     }
@@ -48,6 +51,20 @@ public class TokenListPage extends LabKeyPage
     public void goToBatches()
     {
         doAndWaitForPageToLoad(() -> elements().tokenBatchLink.click());
+    }
+
+    public String getBatchId()
+    {
+        // There are two different urls to get to this page. However both urls have only one parameter, which is the batch id.
+        Map<String, String> params;
+        params = getUrlParameters();
+        return (String)params.values().toArray()[0];
+    }
+
+    public String getToken(int index)
+    {
+        DataRegionTable dataRegion = new DataRegionTable("enrollmentTokens", getDriver());
+        return dataRegion.getDataAsText(index, "Token");
     }
 
     public Elements elements()

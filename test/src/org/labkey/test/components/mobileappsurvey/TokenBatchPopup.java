@@ -16,53 +16,55 @@
 
 package org.labkey.test.components.mobileappsurvey;
 
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.ext4.RadioButton;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.html.Input;
-import org.labkey.test.pages.LabKeyPage;
+import org.labkey.test.pages.mobileappsurvey.TokenListPage;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.Ext4Helper;
+import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.LoggedParam;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import static org.labkey.test.components.html.Input.Input;
 
-public class TokenBatchPopup extends LabKeyPage
+public class TokenBatchPopup extends Window<TokenBatchPopup.ElementCache>
 {
-    Elements _elements;
-
-    public TokenBatchPopup(BaseWebDriverTest test)
+//    Elements _elements;
+    public TokenBatchPopup(WebDriver wd)
     {
-        super(test);
+        super("Generate Tokens", wd);
     }
 
     public boolean isSubmitEnabled()
     {
-        return Locators.enabledSubmitButton.findElements(this.getDriver()).size() > 0;
+        return Locators.enabledSubmitButton.findElements(this).size() > 0;
     }
 
     public boolean isCancelEnabled()
     {
-        return Locators.enabledCancelButton.findElements(this.getDriver()).size() > 0;
+        return Locators.enabledCancelButton.findElements(this).size() > 0;
     }
 
     public void selectOtherBatchSize()
     {
-        RadioButton otherCount = elements().findCountChoice("Other");
+        RadioButton otherCount = elementCache().findCountChoice("Other");
         otherCount.check();
     }
 
-    public void setOtherBatchSize(String size)
+    @LogMethod(quiet = true)
+    public void setOtherBatchSize(@LoggedParam String size)
     {
-        log("Selecting (other) batch size " + size);
-        elements().otherCountInput.set(size);
-        waitForElement(Locators.enabledSubmitButton);
+        elementCache().otherCountInput.set(size);
+        Locators.enabledSubmitButton.waitForElement(this, 1000);
     }
 
-    public void selectBatchSize(String size)
+    @LogMethod(quiet = true)
+    public void selectBatchSize(@LoggedParam String size)
     {
-        log("Selecting batch size " + size);
-        RadioButton countButton = elements().findCountChoice(size);
+        RadioButton countButton = elementCache().findCountChoice(size);
         if (countButton.isDisplayed())
             countButton.check();
         else
@@ -72,30 +74,48 @@ public class TokenBatchPopup extends LabKeyPage
         }
     }
 
-    public void createNewBatch(String size)
+    @LogMethod(quiet = true)
+    public TokenListPage createNewBatch(@LoggedParam String size)
     {
-        log("Creating new batch of size " + size);
         selectBatchSize(size);
-        clickAndWait(elements().submitButton);
+        return createNewBatch();
     }
 
+    @LogMethod(quiet = true)
+    public TokenListPage createNewBatch()
+    {
+        clickButton("Submit");
+        return new TokenListPage(getWrapper());
+    }
+
+    @LogMethod(quiet = true)
     public void cancelNewBatch()
     {
-        log("Canceling new batch");
-        elements().cancelButton.click();
+        elementCache().cancelButton.click();
     }
 
-    public Elements elements()
+//    public Elements elements()
+//    {
+//        if (_elements == null)
+//            _elements = new Elements();
+//        return _elements;
+//    }
+
+//    @Override
+//    protected ElementCache newElementCache()
+//    {
+//        return new ElementCache();
+//    }
+
+    protected TokenBatchPopup.ElementCache elementCache()
     {
-        if (_elements == null)
-            _elements = new Elements();
-        return _elements;
+        return new TokenBatchPopup.ElementCache();
     }
 
-    private class Elements extends ElementCache
+    protected class ElementCache extends Window.Elements
     {
-        Input otherCountInput = Input(Locator.name("otherCount"), getDriver()).findWhenNeeded(this);
-        WebElement submitButton =  new LazyWebElement(Ext4Helper.Locators.ext4Button("Submit"), this);
+        Input otherCountInput = Input(Locator.name("otherCount"), getWrapper().getDriver()).findWhenNeeded(this);
+        WebElement submitButton =  new LazyWebElement(Locator.xpath("//div[contains(@class, 'x4-window')]").append(Ext4Helper.Locators.ext4Button("Submit")), this);
         WebElement cancelButton =  new LazyWebElement(Ext4Helper.Locators.ext4Button("Cancel"), this);
 
         RadioButton findCountChoice(String size)
@@ -110,4 +130,5 @@ public class TokenBatchPopup extends LabKeyPage
         public static final Locator.XPathLocator enabledSubmitButton = Ext4Helper.Locators.ext4Button("Submit").enabled();
         public static final Locator.XPathLocator enabledCancelButton = Ext4Helper.Locators.ext4Button("Cancel").enabled();
     }
+
 }
