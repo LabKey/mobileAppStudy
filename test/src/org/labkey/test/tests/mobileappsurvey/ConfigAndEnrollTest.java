@@ -69,7 +69,6 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
         _containerHelper.deleteProject(PROJECT_NAME02, false);
 
         _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
-        _containerHelper.addCreatedProject(PROJECT_NAME01);
         goToProjectHome(PROJECT_NAME01);
 
         setupPage = new SetupPage(this);
@@ -112,7 +111,6 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
 
         log("Create a new project and try to reuse the study name.");
         _containerHelper.createProject(PROJECT_NAME02, "Mobile App Study");
-        _containerHelper.addCreatedProject(PROJECT_NAME02);
         goToProjectHome(PROJECT_NAME02);
 
         setupPage = new SetupPage(this);
@@ -208,7 +206,6 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
         _containerHelper.deleteProject(PROJECT_NAME02, false);
 
         _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
-        _containerHelper.addCreatedProject(PROJECT_NAME01);
         goToProjectHome(PROJECT_NAME01);
 
         SetupPage setupPage = new SetupPage(this);
@@ -321,7 +318,6 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
 
         log("Now create a second project and validate that tokens from the first project can't be assigned to this project.");
         _containerHelper.createProject(PROJECT_NAME02, "Mobile App Study");
-        _containerHelper.addCreatedProject(PROJECT_NAME02);
         goToProjectHome(PROJECT_NAME02);
 
         setupPage = new SetupPage(this);
