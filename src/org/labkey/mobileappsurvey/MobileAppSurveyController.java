@@ -117,9 +117,9 @@ public class MobileAppSurveyController extends SpringActionController
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
-                errors.reject(ERROR_REQUIRED, "Study Id must be provided.");
+                errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
             else if (MobileAppSurveyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
-                errors.rejectValue("shortName", ERROR_MSG, "Study Id '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
+                errors.rejectValue("shortName", ERROR_MSG, "Study short name '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
             else if (MobileAppSurveyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
         }
@@ -167,7 +167,7 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
         {
-            Participant participant = MobileAppSurveyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken(), getUser());
+            Participant participant = MobileAppSurveyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
             return success(PageFlowUtil.map("appToken", participant.getAppToken()));
         }
     }

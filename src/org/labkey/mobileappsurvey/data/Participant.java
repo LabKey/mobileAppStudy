@@ -1,8 +1,6 @@
 package org.labkey.mobileappsurvey.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.labkey.api.data.Container;
-import org.labkey.api.security.User;
 
 import java.util.Date;
 
@@ -16,7 +14,6 @@ public class Participant
     private Integer _studyId;
     private Container _container;
     private Date _created;
-    private User _createdBy;
 
     public String getAppToken()
     {
@@ -56,17 +53,6 @@ public class Participant
     public void setCreated(Date created)
     {
         _created = created;
-    }
-
-    @JsonIgnore
-    public User getCreatedBy()
-    {
-        return _createdBy;
-    }
-
-    public void setCreatedBy(User createdBy)
-    {
-        _createdBy = createdBy;
     }
 
     public Integer getRowId()

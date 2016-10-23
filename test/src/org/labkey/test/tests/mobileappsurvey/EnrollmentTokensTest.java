@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Category({Git.class})
-public class SetupTest extends BaseWebDriverTest
+public class EnrollmentTokensTest extends BaseWebDriverTest
 {
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
@@ -44,7 +44,7 @@ public class SetupTest extends BaseWebDriverTest
     @BeforeClass
     public static void setupProject()
     {
-        SetupTest init = (SetupTest)getCurrentTest();
+        EnrollmentTokensTest init = (EnrollmentTokensTest)getCurrentTest();
 
         init.doSetup();
     }

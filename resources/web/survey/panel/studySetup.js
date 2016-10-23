@@ -25,7 +25,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
-                html: 'Enter the study ID to be associated with this folder.  The ID should be the same as it appears in the study design interface.',
+                html: 'Enter the study short name to be associated with this folder.  The short name should be the same as it appears in the study design interface.',
                 border: false
             });
 
@@ -38,7 +38,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
-                html: 'The study ID associated with this folder is ' + this.shortName + '.',
+                html: 'The study short name associated with this folder is ' + this.shortName + '.',
                 border: false
             });
         }
@@ -72,7 +72,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                         value: this.shortName,
                         padding: '10px 10px 0px 10px',
                         allowBlank: false,
-                        emptyText: "Enter Study Id",
+                        emptyText: "Enter Study Short Name",
                         submitEmptyText: false,
                         disabled: !this.isEditable,
                         validateOnChange: true,
@@ -103,7 +103,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
                 this.shortName = obj.data.shortName;
             else
             {
-                Ext4.Msg.alert("Error", "There was a problem storing the study id.  Please check the logs or contact an administrator.");
+                Ext4.Msg.alert("Error", "There was a problem storing the study short name.  Please check the logs or contact an administrator.");
             }
         }
 
@@ -113,7 +113,7 @@ Ext4.define('LABKEY.MobileAppSurvey.StudySetupPanel', {
             var obj = Ext4.decode(response.responseText);
             if (obj.errors)
             {
-                Ext4.Msg.alert("Error", "There were problems storing the study id. " + obj.errors[0].message);
+                Ext4.Msg.alert("Error", "There were problems storing the study short name. " + obj.errors[0].message);
             }
         }
 

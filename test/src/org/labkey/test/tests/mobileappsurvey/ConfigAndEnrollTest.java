@@ -53,11 +53,11 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
     @Test
     public void testStudyName()
     {
-        final String PROMPT_NOT_ASSIGNED = "Enter the study ID to be associated with this folder. The ID should be the same as it appears in the study design interface.";
-        final String PROMPT_ASSIGNED = "The study ID associated with this folder is $STUDY_NAME$.";
+        final String PROMPT_NOT_ASSIGNED = "Enter the study short name to be associated with this folder. The short name should be the same as it appears in the study design interface.";
+        final String PROMPT_ASSIGNED = "The study short name associated with this folder is $STUDY_NAME$.";
         final String STUDY_NAME01 = "StudyName01";  // Study names are case insensitive, so test it once.
         final String STUDY_NAME02 = "STUDYNAME02";
-        final String REUSED_STUDY_NAME_ERROR = "There were problems storing the study id. Study Id '$STUDY_NAME$' is already associated with a different container. Each study can be associated with only one container.";
+        final String REUSED_STUDY_NAME_ERROR = "There were problems storing the study short name. Study short name '$STUDY_NAME$' is already associated with a different container. Each study can be associated with only one container.";
         final String PROJECT_NAME01 = getProjectName() + " TestStudyName01";
         final String PROJECT_NAME02 = getProjectName() + " TestStudyName02";
 

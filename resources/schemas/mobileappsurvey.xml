@@ -83,7 +83,6 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy"/>
             <ns:column columnName="Container"/>
         </ns:columns>
     </ns:table>
