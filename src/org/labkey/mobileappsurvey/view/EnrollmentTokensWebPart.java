@@ -27,6 +27,6 @@ public class EnrollmentTokensWebPart extends QueryView
     private QuerySettings createQuerySettings(ViewContext viewContext)
     {
         UserSchema schema = getSchema();
-        return schema.getSettings(viewContext,  QueryView.DATAREGIONNAME_DEFAULT,  MobileAppSurveySchema.ENROLLMENT_TOKEN_TABLE);
+        return schema.getSettings(viewContext,  "enrollmentTokens",  MobileAppSurveySchema.ENROLLMENT_TOKEN_TABLE);
     }
 }

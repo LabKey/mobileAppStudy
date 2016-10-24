@@ -1,6 +1,5 @@
-<%
 /*
- * Copyright (c) 2015 LabKey Corporation
+ * Copyright (c) 2016 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-%>
-<%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.security.User" %>
-<%@ page extends="org.labkey.api.jsp.JspBase" %>
-<%
-    Container c = getContainer();
-    User user = getUser();
-%>
-Hello, and welcome to the MobileAppSurvey module.
+ALTER TABLE mobileappsurvey.Participant DROP COLUMN CreatedBy;

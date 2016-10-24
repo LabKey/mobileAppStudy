@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Category({Git.class})
-public class SetupTest extends BaseWebDriverTest
+public class EnrollmentTokensTest extends BaseWebDriverTest
 {
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
@@ -44,7 +44,7 @@ public class SetupTest extends BaseWebDriverTest
     @BeforeClass
     public static void setupProject()
     {
-        SetupTest init = (SetupTest)getCurrentTest();
+        EnrollmentTokensTest init = (EnrollmentTokensTest)getCurrentTest();
 
         init.doSetup();
     }
@@ -67,7 +67,7 @@ public class SetupTest extends BaseWebDriverTest
         TokenBatchPage tokenBatchPage = TokenBatchPage.beginAt(this, getProjectName());
         tokenBatchPage.openNewBatchPopup();
         Assert.assertTrue("New Batch button on grid should be disabled", tokenBatchPage.isNewBatchEnabled());
-        TokenBatchPopup popup = new TokenBatchPopup(this);
+        TokenBatchPopup popup = new TokenBatchPopup(getWrappedDriver());
         Assert.assertFalse("Submit button should not be enabled", popup.isSubmitEnabled());
         Assert.assertTrue("Cancel button should not be enabled", popup.isCancelEnabled());
         log("Selecting a valid batch size");
@@ -84,11 +84,11 @@ public class SetupTest extends BaseWebDriverTest
         TokenBatchPage tokenBatchPage = TokenBatchPage.beginAt(this, getProjectName());
         Assert.assertTrue(tokenBatchPage.isNewBatchPresent());
         tokenBatchPage.openNewBatchPopup();
-        TokenBatchPopup popup = new TokenBatchPopup(this);
+        TokenBatchPopup popup = new TokenBatchPopup(getWrappedDriver());
         popup.createNewBatch("100");
         TokenListPage tokenListPage = new TokenListPage(this);
         Assert.assertEquals("Number of tokens generated not as expected", 100, tokenListPage.getNumTokens());
-        Integer rowId = Integer.valueOf(getUrlParam("query.BatchId%2FRowId~eq"));
+        Integer rowId = Integer.valueOf(getUrlParam("enrollmentTokens.BatchId%2FRowId~eq"));
         log("Returning to token batches page");
         tokenListPage.goToBatches();
         Map<String, String> batchData = tokenBatchPage.getBatchData(rowId);
@@ -101,7 +101,7 @@ public class SetupTest extends BaseWebDriverTest
     {
         TokenBatchPage tokenBatchPage = TokenBatchPage.beginAt(this, getProjectName());
         tokenBatchPage.openNewBatchPopup();
-        TokenBatchPopup popup = new TokenBatchPopup(this);
+        TokenBatchPopup popup = new TokenBatchPopup(getWrappedDriver());
         popup.selectBatchSize("1,000");
         popup.cancelNewBatch();
         Assert.assertTrue("New batch button should be enabled", tokenBatchPage.isNewBatchEnabled());

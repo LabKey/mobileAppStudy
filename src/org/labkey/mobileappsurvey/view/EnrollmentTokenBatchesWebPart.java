@@ -12,13 +12,15 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.mobileappsurvey.MobileAppSurveySchema;
 
 /**
- * Created by susanh on 10/10/16.
+ * Web part for displaying current enrollment token batches and allowing
+ * for the generation of new batches.
  */
 public class EnrollmentTokenBatchesWebPart extends QueryView
 {
     public EnrollmentTokenBatchesWebPart(ViewContext viewContext)
     {
         super(QueryService.get().getUserSchema(viewContext.getUser(), viewContext.getContainer(), MobileAppSurveySchema.NAME));
+        setTitle("Enrollment Token Batches");
         setSettings(createQuerySettings(viewContext));
         addClientDependency(ClientDependency.fromPath("survey/panel/enrollmentTokenBatchFormPanel.js"));
         setShowInsertNewButton(false);
@@ -32,9 +34,7 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     private QuerySettings createQuerySettings(ViewContext viewContext)
     {
         UserSchema schema = getSchema();
-        QuerySettings settings = schema.getSettings(viewContext,  QueryView.DATAREGIONNAME_DEFAULT,  MobileAppSurveySchema.ENROLLMENT_TOKEN_BATCH_TABLE);
-
-        return settings;
+        return schema.getSettings(viewContext, "enrollmentTokenBatches", MobileAppSurveySchema.ENROLLMENT_TOKEN_BATCH_TABLE);
     }
 
     protected void populateButtonBar(DataView view, ButtonBar bar)

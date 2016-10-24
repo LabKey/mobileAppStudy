@@ -30,6 +30,7 @@ public class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileApp
 
         // don't link out to the schema browser details (where the data can be edited).
         getColumn("Token").setURL(null);
+        getColumn("ParticipantId").setURL(null);
 
     }
 }

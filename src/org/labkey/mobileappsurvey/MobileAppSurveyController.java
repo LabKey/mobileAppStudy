@@ -16,17 +16,21 @@
 
 package org.labkey.mobileappsurvey;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
+import org.labkey.mobileappsurvey.data.EnrollmentTokenBatch;
+import org.labkey.mobileappsurvey.data.MobileAppStudy;
+import org.labkey.mobileappsurvey.data.Participant;
 import org.labkey.mobileappsurvey.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappsurvey.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
@@ -49,19 +53,6 @@ public class MobileAppSurveyController extends SpringActionController
         return new ActionURL(TokenBatchAction.class, getContainer());
     }
 
-    @RequiresPermission(ReadPermission.class)
-    public class BeginAction extends SimpleViewAction
-    {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
-        {
-            return new JspView("/org/labkey/mobileappsurvey/view/hello.jsp");
-        }
-
-        public NavTree appendNavTrail(NavTree root)
-        {
-            return root;
-        }
-    }
 
     @RequiresPermission(AdminPermission.class)
     public class TokenBatchAction extends SimpleViewAction
@@ -69,7 +60,7 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root.addChild("Enrollment Token Batches");
+            return root;
         }
 
         @Override
@@ -111,9 +102,114 @@ public class MobileAppSurveyController extends SpringActionController
         @Override
         public Object execute(GenerateTokensForm form, BindException errors) throws Exception
         {
-            Integer batchId = MobileAppSurveyManager.get().insertNewTokenBatch(form.getCount(), getUser(), getContainer());
+            EnrollmentTokenBatch batch = MobileAppSurveyManager.get().createTokenBatch(form.getCount(), getUser(), getContainer());
 
-            return success(batchId);
+            return success(PageFlowUtil.map("batchId", batch.getRowId()));
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class StudyConfigAction extends ApiAction<StudyConfigForm>
+    {
+        @Override
+        public void validateForm(StudyConfigForm form, Errors errors)
+        {
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
+            else if (StringUtils.isEmpty(form.getShortName()))
+                errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
+            else if (MobileAppSurveyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
+                errors.rejectValue("shortName", ERROR_MSG, "Study short name '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
+            else if (MobileAppSurveyManager.get().hasStudyParticipants(getContainer()))
+                errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
+        }
+
+        @Override
+        public Object execute(StudyConfigForm form, BindException errors) throws Exception
+        {
+            // if submitting again with the same id in the same container, return the existing study object
+            MobileAppStudy study = MobileAppSurveyManager.get().getStudy(getContainer());
+            if (study == null || !study.getShortName().equals(form.getShortName()))
+                study = MobileAppSurveyManager.get().insertOrUpdateStudy(form.getShortName(), getContainer(), getUser());
+
+            return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName()));
+        }
+    }
+
+    @RequiresNoPermission
+    public class EnrollAction extends ApiAction<EnrollmentForm>
+    {
+
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format.");
+            else if (StringUtils.isEmpty(form.getShortName()))
+                errors.reject(ERROR_REQUIRED, "Study short name is required for enrollment");
+            else if (!MobileAppSurveyManager.get().studyExists(form.getShortName()))
+                errors.rejectValue("shortName", ERROR_MSG, "Study with short name '" + form.getShortName() + "' does not exist");
+            else if (!StringUtils.isEmpty(form.getToken()))
+            {
+                if (MobileAppSurveyManager.get().hasParticipant(form.getShortName(), form.getToken()))
+                    errors.reject(ERROR_MSG, "Token already in use");
+                else if (!MobileAppSurveyManager.get().isChecksumValid(form.getToken()))
+                    errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
+                else if (!MobileAppSurveyManager.get().isValidStudyToken(form.getToken(), form.getShortName()))
+                    errors.rejectValue("token", ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
+            }
+            // we allow for the possibility that someone can enroll without using an enrollment token
+            else if (MobileAppSurveyManager.get().enrollmentTokenRequired(form.getShortName()))
+            {
+                errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+            }
+        }
+
+        @Override
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
+        {
+            Participant participant = MobileAppSurveyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
+            return success(PageFlowUtil.map("appToken", participant.getAppToken()));
+        }
+    }
+
+    public static class StudyConfigForm
+    {
+        private String _shortName;
+
+        public String getShortName()
+        {
+            return _shortName;
+        }
+
+        public void setShortName(String shortName)
+        {
+            _shortName = shortName;
+        }
+    }
+
+    public static class EnrollmentForm
+    {
+        private String _token;
+        private String _shortName;
+
+        public String getToken()
+        {
+            return _token;
+        }
+
+        public void setToken(String token)
+        {
+            _token = token == null ? null : token.trim().toUpperCase();
+        }
+
+        public String getShortName()
+        {
+            return _shortName;
+        }
+
+        public void setShortName(String shortName)
+        {
+            _shortName = shortName == null ? null : shortName.trim().toUpperCase();
         }
     }
 
