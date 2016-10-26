@@ -1,12 +1,16 @@
 package org.labkey.mobileappstudy.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.DataColumn;
+import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.view.ActionURL;
 import org.labkey.mobileappstudy.MobileAppStudyController;
 import org.labkey.mobileappstudy.MobileAppStudySchema;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 
 /**
@@ -30,6 +34,21 @@ public class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileApp
 
         // don't link out to the schema browser details (where the data can be edited).
         getColumn("Token").setURL(null);
+
+        ColumnInfo tokenColumn = getColumn("Token");
+        tokenColumn.setDisplayColumnFactory(colInfo -> new DataColumn(colInfo)
+        {
+            @Override
+            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+            {
+                if (null != getValue(ctx))
+                {
+                    out.write("<span style='font-family: monospace'>" + getValue(ctx) + "</span>");
+                }
+
+            }
+        });
+
         getColumn("ParticipantId").setURL(null);
 
     }
