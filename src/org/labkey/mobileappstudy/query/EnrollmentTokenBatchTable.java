@@ -27,7 +27,7 @@ public class EnrollmentTokenBatchTable extends SimpleUserSchema.SimpleTable<Mobi
         ColumnInfo idColumn = getColumn("RowId");
 
         ActionURL base = new ActionURL(MobileAppStudyController.TokenListAction.class, getContainer());
-        DetailsURL detailsURL = new DetailsURL(base, Collections.singletonMap("query.BatchId/RowId~eq", "rowId"));
+        DetailsURL detailsURL = new DetailsURL(base, Collections.singletonMap("enrollmentTokens.BatchId/RowId~eq", "rowId"));
 
         idColumn.setURL(detailsURL);
         addCountColumn();
