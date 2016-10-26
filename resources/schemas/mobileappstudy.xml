@@ -61,6 +61,7 @@
             </ns:column>
             <ns:column columnName="Count">
                 <ns:columnTitle>Tokens Generated</ns:columnTitle>
+                <ns:formatString>#,###</ns:formatString>
             </ns:column>
             <ns:column columnName="Created"/>
             <ns:column columnName="CreatedBy"/>

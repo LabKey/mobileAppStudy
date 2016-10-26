@@ -38,6 +38,7 @@ public class EnrollmentTokenBatchTable extends SimpleUserSchema.SimpleTable<Mobi
         SQLFragment sql = new SQLFragment("(SELECT COUNT(*) FROM " + MobileAppStudySchema.NAME + "." + MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE + " T  WHERE T.BatchId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId" +
                 " AND T.ParticipantId IS NOT NULL)");
         ExprColumn col = new ExprColumn(this, "TokensInUse", sql, JdbcType.INTEGER);
+        col.setFormat("#,###");
         addColumn(col);
     }
 }
