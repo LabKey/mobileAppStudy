@@ -47,7 +47,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
     @Override
     public List<String> getAssociatedModules()
     {
-        return Collections.singletonList("MobileAppSurvey");
+        return Collections.singletonList("MobileAppStudy");
     }
 
     @Test
