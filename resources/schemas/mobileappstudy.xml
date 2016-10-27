@@ -51,6 +51,8 @@
             <ns:column columnName="ShortName"/>
             <ns:column columnName="Created"/>
             <ns:column columnName="CreatedBy"/>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="ModifiedBy"/>
             <ns:column columnName="Container"/>
         </ns:columns>
     </ns:table>
