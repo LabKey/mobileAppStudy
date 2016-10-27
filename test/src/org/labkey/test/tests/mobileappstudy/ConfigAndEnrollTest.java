@@ -453,7 +453,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest
         Map<String, String> batchData = setupPage.tokenBatchesWebPart.getBatchData(batchId);
 
         Assert.assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
-        Assert.assertEquals("Expected number of tokens not created.", expectedTokenCount.replace(",", ""), batchData.get("Count"));
+        Assert.assertEquals("Expected number of tokens not created.", expectedTokenCount, batchData.get("Count"));
         Assert.assertEquals("Number of tokens in use not as expected.", expectedUsedCount, batchData.get("TokensInUse"));
     }
 }
