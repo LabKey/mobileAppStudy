@@ -27,6 +27,7 @@ import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
 import org.labkey.test.util.PortalHelper;
+import org.labkey.test.util.PostgresOnlyTest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 @Category({Git.class})
-public class ConfigAndEnrollTest extends BaseWebDriverTest
+public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
     protected final PortalHelper _portalHelper = new PortalHelper(this);
 

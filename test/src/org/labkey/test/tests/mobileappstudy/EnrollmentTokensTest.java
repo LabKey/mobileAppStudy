@@ -27,13 +27,14 @@ import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.TokenBatchPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
+import org.labkey.test.util.PostgresOnlyTest;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Category({Git.class})
-public class EnrollmentTokensTest extends BaseWebDriverTest
+public class EnrollmentTokensTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
