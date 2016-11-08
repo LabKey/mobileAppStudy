@@ -35,10 +35,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.ChecksumUtil;
 import org.labkey.api.util.ContainerUtil;
 import org.labkey.api.util.GUID;
-import org.labkey.mobileappstudy.data.EnrollmentToken;
-import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
-import org.labkey.mobileappstudy.data.MobileAppStudy;
-import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.*;
 
 import java.util.Collections;
 import java.util.Date;
@@ -241,6 +238,7 @@ public class MobileAppStudyManager
             ContainerUtil.purgeTable(schema.getTableInfoEnrollmentTokenBatch(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoResponse(),c,null);
 
             transaction.commit();
         }
@@ -403,4 +401,50 @@ public class MobileAppStudyManager
             return updateShortName(study, shortName, user);
     }
 
+    public MobileAppStudy updateResponseCollection(MobileAppStudy study, Boolean collectionEnabled, User user)
+    {
+        study.setCollectionEnabled(collectionEnabled);
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo studyTable = schema.getTableInfoStudy();
+        return Table.update(user, studyTable, study, study.getRowId());
+    }
+
+    public boolean surveyExists(String surveyId, Container container, User user)
+    {
+        //TODO: check if survey exists in DB
+        return true;
+    }
+
+    public boolean participantExists(String participantId)
+    {
+        return getParticipantFromAppToken(participantId) != null;
+    }
+
+    public Participant getParticipantFromAppToken(String appToken)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        FieldKey pKey = FieldKey.fromParts("apptoken");
+
+        SimpleFilter filter = new SimpleFilter(pKey, appToken);
+        return new TableSelector(schema.getTableInfoParticipant(), filter, null).getObject(Participant.class);
+    }
+
+    public SurveyResponse insertResponse(SurveyResponse resp)
+    {
+        Participant participant = getParticipantFromAppToken(resp.getAppToken());
+        resp.setContainer(participant.getContainer());
+        resp.setParticipantId(participant.getRowId());
+
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo responseTable = schema.getTableInfoResponse();
+        return Table.insert(null, responseTable, resp);
+    }
+
+    public boolean collectionActive(SurveyInfo info)
+    {
+        MobileAppStudy study =
+        getStudy(info.getStudyId());
+
+        return study != null && study.getCollectionEnabled();
+    }
 }

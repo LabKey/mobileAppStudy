@@ -54,6 +54,7 @@
             <ns:column columnName="Modified"/>
             <ns:column columnName="ModifiedBy"/>
             <ns:column columnName="Container"/>
+            <ns:column columnName="CollectionEnabled" />
         </ns:columns>
     </ns:table>
     <ns:table tableName="EnrollmentTokenBatch" tableDbType="TABLE">
@@ -87,6 +88,29 @@
             </ns:column>
             <ns:column columnName="Created"/>
             <ns:column columnName="Container"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="Response" tableDbType="TABLE">
+        <ns:columns>
+            <ns:column columnName="RowId" />
+            <ns:column columnName="Participant Id">
+                <ns:fk>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkTable>Participant</ns:fkTable>
+                    <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Response" />
+            <ns:column columnName="Survey Id" />
+            <ns:column columnName="Survey Version" />
+            <ns:column columnName="Status" />
+            <ns:column columnName="Processed" />
+            <ns:column columnName="Processed By" />
+            <ns:column columnName="Error Message" />
+            <ns:column columnName="Created" />
+            <ns:column columnName="Container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
         </ns:columns>
     </ns:table>
 </ns:tables>

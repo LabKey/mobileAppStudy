@@ -16,26 +16,23 @@
 
 package org.labkey.mobileappstudy;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
-import org.labkey.api.action.ApiAction;
-import org.labkey.api.action.Marshal;
-import org.labkey.api.action.Marshaller;
-import org.labkey.api.action.SimpleViewAction;
-import org.labkey.api.action.SpringActionController;
+import org.labkey.api.action.*;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
-import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
-import org.labkey.mobileappstudy.data.MobileAppStudy;
-import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.*;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Marshal(Marshaller.Jackson)
 public class MobileAppStudyController extends SpringActionController
@@ -137,6 +134,82 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
+    public class ProcessResponseAction extends ApiAction<MobileAppSurveyResponseForm>
+    {
+        @Override
+        public void validateForm(MobileAppSurveyResponseForm form, Errors errors)
+        {
+            //TODO: improve error messages
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
+            else if (StringUtils.isBlank(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "ParticipantId was not included in request");
+            else if (!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "Unable to identify participant");
+            else if (form.getResponse() == null)
+                errors.reject(ERROR_REQUIRED, "Responses not found");
+
+            if (errors.hasErrors())
+                return;
+
+            SurveyInfo info = form.getSurveyInfo();
+            if (info == null)
+                errors.reject(ERROR_REQUIRED, "SurveyInfo not found");
+//TODO: not needed because of AppToken?
+//            else if (isBlank(info.getStudyId()))
+//                errors.reject(ERROR_REQUIRED, "Invalid StudyId. StudyId not included in request");
+//            else if (!MobileAppStudyManager.get().studyExists(info.getStudyId()))
+//                errors.reject(ERROR_REQUIRED, "Invalid StudyId. Study not found");
+            else if (isBlank(info.getSurveyId()))
+                errors.reject(ERROR_REQUIRED, "Invalid SurveyId. SurveyId not included in request");
+            else if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), getContainer(), getUser()))
+                errors.reject(ERROR_REQUIRED, "Invalid SurveyId. Survey not found");
+            else if (isBlank(info.getVersion()))
+                errors.reject(ERROR_REQUIRED, "Invalid Survey version. Survey version not included in request");
+            else if (!MobileAppStudyManager.get().collectionActive(info))
+                errors.reject(ERROR_MSG, "Response collection is not currently enabled for this survey [Study: " + info.getStudyId() + ", Survey: " + info.getSurveyId() + "].");
+
+            //TODO: Check version against DB?
+        }
+
+        @Override
+        public Object execute(MobileAppSurveyResponseForm form, BindException errors) throws Exception
+        {
+            MobileAppStudyManager manager = MobileAppStudyManager.get();
+            MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
+            SurveyResponse resp = form.getResponseRow();
+            resp = manager.insertResponse(resp);
+
+            return success(PageFlowUtil.map("rowId", resp.getRowId(), "shortName", study.getShortName()));
+        }
+    }
+
+
+    @RequiresPermission(AdminPermission.class)
+    public class StudyCollectionAction extends ApiAction<StudyCollectionForm>
+    {
+        @Override
+        public void validateForm(StudyCollectionForm form, Errors errors)
+        {
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
+            else if (StringUtils.isEmpty(form.getShortName()))
+                errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
+        }
+
+        @Override
+        public Object execute(StudyCollectionForm form, BindException errors) throws Exception
+        {
+            MobileAppStudyManager manager = MobileAppStudyManager.get();
+            MobileAppStudy study = manager.getStudy(getContainer());
+            if (!study.getCollectionEnabled().equals(form.getCollectionEnabled()))
+                study = manager.updateResponseCollection(study, form.getCollectionEnabled(), getUser());
+
+            return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName(), "collectionEnabled", study.getCollectionEnabled()));
+        }
+    }
+
+    @RequiresNoPermission
     public class EnrollAction extends ApiAction<EnrollmentForm>
     {
 
@@ -187,6 +260,30 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
+    public static class StudyCollectionForm
+    {
+        private String _shortName;
+        private Boolean _collectionEnabled;
+
+        public Boolean getCollectionEnabled() {
+            return _collectionEnabled;
+        }
+
+        public void setCollectionEnabled(Boolean collectionEnabled) {
+            _collectionEnabled = collectionEnabled;
+        }
+
+        public String getShortName()
+        {
+            return _shortName;
+        }
+
+        public void setShortName(String shortName)
+        {
+            _shortName = shortName;
+        }
+    }
+
     public static class EnrollmentForm
     {
         private String _token;
@@ -199,7 +296,7 @@ public class MobileAppStudyController extends SpringActionController
 
         public void setToken(String token)
         {
-            _token = token == null ? null : token.trim().toUpperCase();
+            _token = isBlank(token) ? null : token.trim().toUpperCase();
         }
 
         public String getShortName()
@@ -209,7 +306,7 @@ public class MobileAppStudyController extends SpringActionController
 
         public void setShortName(String shortName)
         {
-            _shortName = shortName == null ? null : shortName.trim().toUpperCase();
+            _shortName = isBlank(shortName) ? null : shortName.trim().toUpperCase();
         }
     }
 
@@ -225,6 +322,75 @@ public class MobileAppStudyController extends SpringActionController
         public void setCount(Integer count)
         {
             _count = count;
+        }
+    }
+
+    public static class MobileAppSurveyResponseForm
+    {
+        private String _type;
+        private String _participantId;
+
+        private JsonNode _response;
+        private SurveyInfo _surveyInfo;
+
+//        public MobileAppSurveyResponseForm()
+//        {
+//
+//        }
+
+        public SurveyInfo getSurveyInfo()
+        {
+            return _surveyInfo;
+        }
+        public void setSurveyInfo(SurveyInfo surveyInfo)
+        {
+            _surveyInfo = surveyInfo;
+        }
+
+        public JsonNode getResponse()
+        {
+            return _response;
+        }
+
+        public void setResponse (JsonNode response)
+        {
+            _response = response;
+        }
+
+        public String getParticipantId()
+        {
+            return _participantId;
+        }
+        public void setParticipantId(String participantId)
+        {
+            _participantId = participantId;
+        }
+
+        public String getType()
+        {
+            return _type;
+        }
+        public void setType(String type)
+        {
+            _type = type;
+        }
+
+        public SurveyResponse getResponseRow()
+        {
+            SurveyResponse resp = new SurveyResponse();
+            resp.setStatus(SurveyResponse.ResponseStatus.RECEIVED);
+            resp.setAppToken(getParticipantId());
+
+            if(getResponse() != null)
+                resp.setResponse(getResponse().toString());
+
+            if(getSurveyInfo() != null)
+            {
+                resp.setSurveyVersion(getSurveyInfo().getVersion());
+                resp.setSurveyId(getSurveyInfo().getSurveyId());
+            }
+
+            return resp;
         }
     }
 }

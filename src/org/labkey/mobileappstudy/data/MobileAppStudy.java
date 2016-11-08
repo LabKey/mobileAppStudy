@@ -32,6 +32,8 @@ public class MobileAppStudy
     private Container _container;
     private Date _created;
     private User _createdBy;
+    private Boolean _collectionEnabled;
+    private Boolean _canChangeCollection;
 
     public String getShortName()
     {
@@ -93,4 +95,22 @@ public class MobileAppStudy
     {
         _rowId = rowId;
     }
+
+    public Boolean getCollectionEnabled() {
+        return _collectionEnabled;
+    }
+
+    public void setCollectionEnabled(Boolean collectionEnabled) {
+        _collectionEnabled = collectionEnabled;
+    }
+
+    public Boolean getCanChangeCollection() {
+        return _canChangeCollection;
+    }
+
+    public void setCanChangeCollection(Boolean canChangeCollection) {
+        _canChangeCollection = canChangeCollection;
+    }
+
+
 }
