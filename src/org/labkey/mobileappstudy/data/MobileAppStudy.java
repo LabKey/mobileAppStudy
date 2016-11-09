@@ -32,7 +32,7 @@ public class MobileAppStudy
     private Container _container;
     private Date _created;
     private User _createdBy;
-    private Boolean _collectionEnabled;
+    private boolean _collectionEnabled;
     private Boolean _canChangeCollection;
 
     public String getShortName()
@@ -96,11 +96,11 @@ public class MobileAppStudy
         _rowId = rowId;
     }
 
-    public Boolean getCollectionEnabled() {
+    public boolean getCollectionEnabled() {
         return _collectionEnabled;
     }
 
-    public void setCollectionEnabled(Boolean collectionEnabled) {
+    public void setCollectionEnabled(boolean collectionEnabled) {
         _collectionEnabled = collectionEnabled;
     }
 

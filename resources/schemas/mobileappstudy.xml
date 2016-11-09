@@ -54,7 +54,9 @@
             <ns:column columnName="Modified"/>
             <ns:column columnName="ModifiedBy"/>
             <ns:column columnName="Container"/>
-            <ns:column columnName="CollectionEnabled" />
+            <ns:column columnName="CollectionEnabled" >
+                <ns:defaultValue>false</ns:defaultValue>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableName="EnrollmentTokenBatch" tableDbType="TABLE">
@@ -101,6 +103,7 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="Response" />
+            <ns:column columnName="AppToken" />
             <ns:column columnName="Survey Id" />
             <ns:column columnName="Survey Version" />
             <ns:column columnName="Status" />

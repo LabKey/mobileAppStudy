@@ -17,24 +17,17 @@
 package org.labkey.mobileappstudy;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.CompareType;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.DbScope;
-import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.SqlExecutor;
-import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.*;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.util.ChecksumUtil;
 import org.labkey.api.util.ContainerUtil;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.JobRunner;
 import org.labkey.mobileappstudy.data.*;
 
 import java.util.Collections;
@@ -46,6 +39,10 @@ public class MobileAppStudyManager
     private static final String TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final MobileAppStudyManager _instance = new MobileAppStudyManager();
     private static final ChecksumUtil _checksumUtil = new ChecksumUtil(TOKEN_CHARS);
+
+    private static final int THREAD_COUNT = 2;
+    private static JobRunner _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
+    private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
 
     private MobileAppStudyManager()
     {
@@ -401,7 +398,47 @@ public class MobileAppStudyManager
             return updateShortName(study, shortName, user);
     }
 
-    public MobileAppStudy updateResponseCollection(MobileAppStudy study, Boolean collectionEnabled, User user)
+    /**
+     * Add response processing job to queue
+     * @param run Runnable to add to processing queue
+     */
+    void enqueueSurveyResponse(Runnable run)
+    {
+        _shredder.execute(run);
+    }
+
+    /**
+     * Method to processes Survey Responses
+     * @param rowId mobileappstudy.Response.RowId to process
+     */
+    void shredSurveyResponses(Integer rowId)
+    {
+        SurveyResponse response = getResponse(rowId);
+        logger.info(String.format("Processing %s", rowId));
+    }
+
+    /**
+     * Get Response from DB
+     * @param rowId mobileappstudy.Response.RowId to retrieve
+     * @return SurveyResponse object representing row
+     */
+    SurveyResponse getResponse(Integer rowId)
+    {
+        FieldKey fkey = FieldKey.fromParts("rowId");
+        SimpleFilter filter = new SimpleFilter(fkey, rowId);
+
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
+                .getObject(SurveyResponse.class);
+    }
+
+    /**
+     * Set study's response collection flag
+     * @param study to change
+     * @param collectionEnabled value to set
+     * @param user making change
+     * @return Updated study object from DB
+     */
+    MobileAppStudy updateResponseCollection(MobileAppStudy study, Boolean collectionEnabled, User user)
     {
         study.setCollectionEnabled(collectionEnabled);
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
@@ -409,18 +446,30 @@ public class MobileAppStudyManager
         return Table.update(user, studyTable, study, study.getRowId());
     }
 
-    public boolean surveyExists(String surveyId, Container container, User user)
+    /**
+     * Verify if survey exists
+     * @param surveyId to verify
+     * @param container holding study/survey
+     * @param user executing query
+     * @return true if survey found
+     */
+    boolean surveyExists(String surveyId, Container container, User user)
     {
         //TODO: check if survey exists in DB
         return true;
     }
 
-    public boolean participantExists(String participantId)
+    /**
+     * Verify if appToken is assigned to participant
+     * @param appToken to look up
+     * @return true if apptoken found in mobilestudy.Participant.appToken
+     */
+    boolean participantExists(String appToken)
     {
-        return getParticipantFromAppToken(participantId) != null;
+        return getParticipantFromAppToken(appToken) != null;
     }
 
-    public Participant getParticipantFromAppToken(String appToken)
+    Participant getParticipantFromAppToken(String appToken)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         FieldKey pKey = FieldKey.fromParts("apptoken");
@@ -429,7 +478,12 @@ public class MobileAppStudyManager
         return new TableSelector(schema.getTableInfoParticipant(), filter, null).getObject(Participant.class);
     }
 
-    public SurveyResponse insertResponse(SurveyResponse resp)
+    /**
+     * Insert new row into the mobileappstudy.Response table
+     * @param resp to insert
+     * @return updated object representing row
+     */
+    SurveyResponse insertResponse(SurveyResponse resp)
     {
         Participant participant = getParticipantFromAppToken(resp.getAppToken());
         resp.setContainer(participant.getContainer());
@@ -440,11 +494,21 @@ public class MobileAppStudyManager
         return Table.insert(null, responseTable, resp);
     }
 
-    public boolean collectionActive(SurveyInfo info)
+    /**
+     * Verification method to determine if Survey/Study response collection is active
+     * @param info SurveyInfo to look up
+     * @return true if both Survey and parent Study are collecting responses
+     */
+    boolean collectionActive(SurveyInfo info)
     {
-        MobileAppStudy study =
-        getStudy(info.getStudyId());
-
+        MobileAppStudy study = getStudy(info.getStudyId());
         return study != null && study.getCollectionEnabled();
+    }
+
+    public MobileAppStudy getStudyFromApptoken(String appToken)
+    {
+        Participant participant = getParticipantFromAppToken(appToken);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), participant.getStudyId());
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoStudy(),  filter, null).getObject(MobileAppStudy.class);
     }
 }

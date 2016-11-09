@@ -11,11 +11,10 @@ import java.util.Date;
 public class SurveyResponse
 {
     public enum ResponseStatus {
-        RECEIVED,
         PENDING,
         PROCESSING,
         PROCESSED,
-        ERROR
+        ERROR;
     }
 
     private Integer _rowId;

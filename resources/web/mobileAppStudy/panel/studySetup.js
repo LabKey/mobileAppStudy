@@ -19,9 +19,6 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
 
     initComponent: function()
     {
-        this.canChangeCollection = true;
-        this.collectionEnabled = true;
-
         if (this.isEditable) {
             this.dockedItems = [{
                 xtype: 'toolbar',
@@ -60,8 +57,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 border: false
             });
 
-            if (this.canChangeCollection)
-                this.add(this.getEnableCollectionControl());
+            this.add(this.getEnableCollectionControl());
         }
     },
 
@@ -95,7 +91,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 listeners: {
                     change: function(field, newValue, oldValue){
                         var submitBtn = field.up('form').getSubmitButton();
-                        submitBtn.setDisabled(!field.isValid() || newValue == this.up('form').collectionEnabled);
+                        submitBtn.setDisabled(!field.isValid() || newValue == this.up('form').shortName);
                     }
                 }
             });
@@ -175,6 +171,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 name: 'enableCollection',
                 value: this.collectionEnabled,
                 validateOnChange: true,
+                disabled: !this.canChangeCollection,
                 listeners: {
                     change: function(field, newValue){
                         var form = field.up('form');

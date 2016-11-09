@@ -16,6 +16,7 @@
 
 package org.labkey.mobileappstudy;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.action.*;
@@ -133,6 +134,9 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
+    /*
+    Ignores container POST-ed to. Pulls container context from the appToken used in request
+     */
     @RequiresNoPermission
     public class ProcessResponseAction extends ApiAction<MobileAppSurveyResponseForm>
     {
@@ -152,17 +156,14 @@ public class MobileAppStudyController extends SpringActionController
             if (errors.hasErrors())
                 return;
 
+            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromApptoken(form.getAppToken());
+
             SurveyInfo info = form.getSurveyInfo();
             if (info == null)
                 errors.reject(ERROR_REQUIRED, "SurveyInfo not found");
-//TODO: not needed because of AppToken?
-//            else if (isBlank(info.getStudyId()))
-//                errors.reject(ERROR_REQUIRED, "Invalid StudyId. StudyId not included in request");
-//            else if (!MobileAppStudyManager.get().studyExists(info.getStudyId()))
-//                errors.reject(ERROR_REQUIRED, "Invalid StudyId. Study not found");
             else if (isBlank(info.getSurveyId()))
                 errors.reject(ERROR_REQUIRED, "Invalid SurveyId. SurveyId not included in request");
-            else if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), getContainer(), getUser()))
+            else if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
                 errors.reject(ERROR_REQUIRED, "Invalid SurveyId. Survey not found");
             else if (isBlank(info.getVersion()))
                 errors.reject(ERROR_REQUIRED, "Invalid Survey version. Survey version not included in request");
@@ -175,15 +176,19 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public Object execute(MobileAppSurveyResponseForm form, BindException errors) throws Exception
         {
+            //Record response blob
             MobileAppStudyManager manager = MobileAppStudyManager.get();
-            MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
             SurveyResponse resp = form.getResponseRow();
             resp = manager.insertResponse(resp);
 
-            return success(PageFlowUtil.map("rowId", resp.getRowId(), "shortName", study.getShortName()));
+            //Add a parsing job
+            final Integer rowId = resp.getRowId();
+            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponses(rowId));
+
+            //TODO: Determine appropriate properties to return
+            return success();
         }
     }
-
 
     @RequiresPermission(AdminPermission.class)
     public class StudyCollectionAction extends ApiAction<StudyCollectionForm>
@@ -202,7 +207,7 @@ public class MobileAppStudyController extends SpringActionController
         {
             MobileAppStudyManager manager = MobileAppStudyManager.get();
             MobileAppStudy study = manager.getStudy(getContainer());
-            if (!study.getCollectionEnabled().equals(form.getCollectionEnabled()))
+            if (study.getCollectionEnabled() != form.getCollectionEnabled())
                 study = manager.updateResponseCollection(study, form.getCollectionEnabled(), getUser());
 
             return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName(), "collectionEnabled", study.getCollectionEnabled()));
@@ -333,11 +338,6 @@ public class MobileAppStudyController extends SpringActionController
         private JsonNode _response;
         private SurveyInfo _surveyInfo;
 
-//        public MobileAppSurveyResponseForm()
-//        {
-//
-//        }
-
         public SurveyInfo getSurveyInfo()
         {
             return _surveyInfo;
@@ -357,6 +357,14 @@ public class MobileAppStudyController extends SpringActionController
             _response = response;
         }
 
+        //ParticipantId from JSON request is really the apptoken internally
+        @JsonIgnore
+        public String getAppToken()
+        {
+            return getParticipantId();
+        }
+
+        //ParticipantId from JSON request is really the apptoken internally
         public String getParticipantId()
         {
             return _participantId;
@@ -378,7 +386,7 @@ public class MobileAppStudyController extends SpringActionController
         public SurveyResponse getResponseRow()
         {
             SurveyResponse resp = new SurveyResponse();
-            resp.setStatus(SurveyResponse.ResponseStatus.RECEIVED);
+            resp.setStatus(SurveyResponse.ResponseStatus.PENDING);
             resp.setAppToken(getParticipantId());
 
             if(getResponse() != null)

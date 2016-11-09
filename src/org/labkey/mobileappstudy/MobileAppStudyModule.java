@@ -45,8 +45,8 @@ public class MobileAppStudyModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 16.30;
-    } //TODO: bump for SQL script
+        return 16.31;
+    }
 
     @Override
     public boolean hasScripts()

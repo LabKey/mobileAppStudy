@@ -22,6 +22,7 @@ CREATE TABLE mobileappstudy.Response
   RowId serial NOT NULL,
   Response text NOT NULL,
   ParticipantId Integer NOT NULL,
+  AppToken entityid NOT NULL,
   SurveyVersion varchar(5) NOT NULL,
   SurveyId VARCHAR(200) NOT NULL,
   Status VARCHAR(20),
@@ -47,5 +48,6 @@ CREATE INDEX "IX_Response_Participant"
 
 -- Add Column: mobileappstudy.study.CollectionEnabled
 ALTER TABLE mobileappstudy.study ADD COLUMN CollectionEnabled boolean;
+UPDATE mobileappstudy.study SET CollectionEnabled = false;
 ALTER TABLE mobileappstudy.study ALTER COLUMN CollectionEnabled SET NOT NULL;
-ALTER TABLE mobileappstudy.study ALTER COLUMN CollectionEnabled SET DEFAULT true;
+ALTER TABLE mobileappstudy.study ALTER COLUMN CollectionEnabled SET DEFAULT false;
