@@ -19,6 +19,7 @@ package org.labkey.mobileappstudy;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.action.*;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
@@ -112,13 +113,15 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public void validateForm(StudyConfigForm form, Errors errors)
         {
+            MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
                 errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
             else if (MobileAppStudyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "Study short name '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
-            else if (MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
+            //Check if study exists, name has changed, and at least one participant has enrolled
+            else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
         }
 
@@ -127,10 +130,14 @@ public class MobileAppStudyController extends SpringActionController
         {
             // if submitting again with the same id in the same container, return the existing study object
             MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
-            if (study == null || !study.getShortName().equals(form.getShortName()))
-                study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), getContainer(), getUser());
+            if (study == null || !study.getShortName().equals(form.getShortName()) || study.getCollectionEnabled() != form.getCollectionEnabled())
+                study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), form.getCollectionEnabled(), getContainer(), getUser());
 
-            return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName()));
+            return success(PageFlowUtil.map(
+                "rowId", study.getRowId(),
+                "shortName", study.getShortName(),
+                "collectionEnabled", study.getCollectionEnabled()
+            ));
         }
     }
 
@@ -143,34 +150,51 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public void validateForm(MobileAppSurveyResponseForm form, Errors errors)
         {
-            //TODO: improve error messages
+            //Check if form is valid
             if (form == null)
-                errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
-            else if (StringUtils.isBlank(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "ParticipantId was not included in request");
-            else if (!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "Unable to identify participant");
-            else if (form.getResponse() == null)
-                errors.reject(ERROR_REQUIRED, "Responses not found");
+            {
+                errors.reject(ERROR_MSG, "Please check the log for errors.");
+                return;
+            }
 
+            //Check if form's required fields are present
+            SurveyInfo info = form.getSurveyInfo();
+            if (info == null)
+                errors.reject(ERROR_REQUIRED, "SurveyInfo not found.");
+            else
+            {
+                if (isBlank(info.getStudyId()))
+                    errors.reject(ERROR_REQUIRED, "StudyId not included in request");
+                if (isBlank(info.getSurveyId()))
+                    errors.reject(ERROR_REQUIRED, "SurveyId not included in request");
+                if (isBlank(info.getVersion()))
+                    errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request.");
+            }
+            if (form.getResponse() == null)
+                errors.reject(ERROR_REQUIRED, "Response not included in request.");
+            if (StringUtils.isBlank(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
             if (errors.hasErrors())
                 return;
 
-            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromApptoken(form.getAppToken());
 
-            SurveyInfo info = form.getSurveyInfo();
-            if (info == null)
-                errors.reject(ERROR_REQUIRED, "SurveyInfo not found");
-            else if (isBlank(info.getSurveyId()))
-                errors.reject(ERROR_REQUIRED, "Invalid SurveyId. SurveyId not included in request");
-            else if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
-                errors.reject(ERROR_REQUIRED, "Invalid SurveyId. Survey not found");
-            else if (isBlank(info.getVersion()))
-                errors.reject(ERROR_REQUIRED, "Invalid Survey version. Survey version not included in request");
-            else if (!MobileAppStudyManager.get().collectionActive(info))
-                errors.reject(ERROR_MSG, "Response collection is not currently enabled for this survey [Study: " + info.getStudyId() + ", Survey: " + info.getSurveyId() + "].");
+            //Check if there is an associated participant for the appToken
+            if (!MobileAppStudyManager.get().participantExists(form.getAppToken()))
+                errors.reject(ERROR_MSG, "Unable to identify participant.");
 
-            //TODO: Check version against DB?
+            //Check if there is an associated study for the appToken
+            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
+            if(study == null)
+                errors.reject(ERROR_MSG, "Apptoken not associated with study");
+            else
+            {
+                if (!info.getStudyId().equals(study.getShortName()))
+                    errors.reject(ERROR_MSG, "StudyId does not match appToken");
+                else if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
+                    errors.reject(ERROR_MSG, "Survey not found.");
+                else if (!study.getCollectionEnabled())
+                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", info.getStudyId()));
+            }
         }
 
         @Override
@@ -178,39 +202,20 @@ public class MobileAppStudyController extends SpringActionController
         {
             //Record response blob
             MobileAppStudyManager manager = MobileAppStudyManager.get();
-            SurveyResponse resp = form.getResponseRow();
+            //Null checks are done in the validate method
+            SurveyResponse resp = new SurveyResponse(
+                    form.getParticipantId(),
+                    form.getResponse().toString(),
+                    form.getSurveyInfo().getSurveyId(),
+                    form.getSurveyInfo().getVersion()
+            );
             resp = manager.insertResponse(resp);
 
             //Add a parsing job
             final Integer rowId = resp.getRowId();
-            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponses(rowId));
+            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId));
 
-            //TODO: Determine appropriate properties to return
             return success();
-        }
-    }
-
-    @RequiresPermission(AdminPermission.class)
-    public class StudyCollectionAction extends ApiAction<StudyCollectionForm>
-    {
-        @Override
-        public void validateForm(StudyCollectionForm form, Errors errors)
-        {
-            if (form == null)
-                errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
-            else if (StringUtils.isEmpty(form.getShortName()))
-                errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
-        }
-
-        @Override
-        public Object execute(StudyCollectionForm form, BindException errors) throws Exception
-        {
-            MobileAppStudyManager manager = MobileAppStudyManager.get();
-            MobileAppStudy study = manager.getStudy(getContainer());
-            if (study.getCollectionEnabled() != form.getCollectionEnabled())
-                study = manager.updateResponseCollection(study, form.getCollectionEnabled(), getUser());
-
-            return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName(), "collectionEnabled", study.getCollectionEnabled()));
         }
     }
 
@@ -253,6 +258,7 @@ public class MobileAppStudyController extends SpringActionController
     public static class StudyConfigForm
     {
         private String _shortName;
+        private boolean _collectionEnabled;
 
         public String getShortName()
         {
@@ -263,29 +269,12 @@ public class MobileAppStudyController extends SpringActionController
         {
             _shortName = shortName;
         }
-    }
 
-    public static class StudyCollectionForm
-    {
-        private String _shortName;
-        private Boolean _collectionEnabled;
-
-        public Boolean getCollectionEnabled() {
+        public boolean getCollectionEnabled() {
             return _collectionEnabled;
         }
-
-        public void setCollectionEnabled(Boolean collectionEnabled) {
+        public void setCollectionEnabled(boolean collectionEnabled) {
             _collectionEnabled = collectionEnabled;
-        }
-
-        public String getShortName()
-        {
-            return _shortName;
-        }
-
-        public void setShortName(String shortName)
-        {
-            _shortName = shortName;
         }
     }
 
@@ -342,7 +331,7 @@ public class MobileAppStudyController extends SpringActionController
         {
             return _surveyInfo;
         }
-        public void setSurveyInfo(SurveyInfo surveyInfo)
+        public void setSurveyInfo(@NotNull SurveyInfo surveyInfo)
         {
             _surveyInfo = surveyInfo;
         }
@@ -351,8 +340,7 @@ public class MobileAppStudyController extends SpringActionController
         {
             return _response;
         }
-
-        public void setResponse (JsonNode response)
+        public void setResponse (@NotNull JsonNode response)
         {
             _response = response;
         }
@@ -381,24 +369,6 @@ public class MobileAppStudyController extends SpringActionController
         public void setType(String type)
         {
             _type = type;
-        }
-
-        public SurveyResponse getResponseRow()
-        {
-            SurveyResponse resp = new SurveyResponse();
-            resp.setStatus(SurveyResponse.ResponseStatus.PENDING);
-            resp.setAppToken(getParticipantId());
-
-            if(getResponse() != null)
-                resp.setResponse(getResponse().toString());
-
-            if(getSurveyInfo() != null)
-            {
-                resp.setSurveyVersion(getSurveyInfo().getVersion());
-                resp.setSurveyId(getSurveyInfo().getSurveyId());
-            }
-
-            return resp;
         }
     }
 }

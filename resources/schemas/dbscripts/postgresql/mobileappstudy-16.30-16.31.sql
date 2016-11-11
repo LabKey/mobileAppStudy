@@ -19,35 +19,33 @@
 -- Add Table: mobileappstudy.Responses
 CREATE TABLE mobileappstudy.Response
 (
-  RowId serial NOT NULL,
-  Response text NOT NULL,
-  ParticipantId Integer NOT NULL,
-  AppToken entityid NOT NULL,
-  SurveyVersion varchar(5) NOT NULL,
+  RowId SERIAL NOT NULL,
+  Response TEXT NOT NULL,
+  ParticipantId INTEGER NOT NULL,
+  AppToken ENTITYID NOT NULL,
+  SurveyVersion VARCHAR(5) NOT NULL,
   SurveyId VARCHAR(200) NOT NULL,
-  Status VARCHAR(20),
-  Processed timestamp,
-  ProcessedBy userid,
+  Status INTEGER,
+  Processed TIMESTAMP,
+  ProcessedBy USERID,
   ErrorMessage VARCHAR(1000),
   Container ENTITYID NOT NULL,
   Created TIMESTAMP NOT NULL,
-  CreatedBy userid,
+  CreatedBy USERID,
 
   CONSTRAINT PK_Response PRIMARY KEY (RowId),
-  CONSTRAINT "FK_Response_Participant" FOREIGN KEY (participantid)
-    REFERENCES mobileappstudy.participant (rowid) MATCH SIMPLE
-    ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT FK_Response_Participant FOREIGN KEY (participantid)
+    REFERENCES mobileappstudy.participant (rowid)
 );
 
---TODO Not sure if this is needed, if kept does it need to be added to cleanup methods?
-CREATE INDEX "IX_Response_Participant"
+CREATE INDEX IX_Response_Participant
   ON mobileappstudy.response
   USING btree
   (participantid);
 
 
 -- Add Column: mobileappstudy.study.CollectionEnabled
-ALTER TABLE mobileappstudy.study ADD COLUMN CollectionEnabled boolean;
-UPDATE mobileappstudy.study SET CollectionEnabled = false;
+ALTER TABLE mobileappstudy.study ADD COLUMN CollectionEnabled BOOLEAN;
+UPDATE mobileappstudy.study SET CollectionEnabled = FALSE;
 ALTER TABLE mobileappstudy.study ALTER COLUMN CollectionEnabled SET NOT NULL;
-ALTER TABLE mobileappstudy.study ALTER COLUMN CollectionEnabled SET DEFAULT false;
+ALTER TABLE mobileappstudy.study ALTER COLUMN CollectionEnabled SET DEFAULT FALSE;

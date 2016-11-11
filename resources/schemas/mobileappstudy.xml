@@ -111,9 +111,7 @@
             <ns:column columnName="Processed By" />
             <ns:column columnName="Error Message" />
             <ns:column columnName="Created" />
-            <ns:column columnName="Container">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
+            <ns:column columnName="Container" />
         </ns:columns>
     </ns:table>
 </ns:tables>

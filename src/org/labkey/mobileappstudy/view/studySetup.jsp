@@ -38,7 +38,7 @@
     String shortName = bean.getShortName();
     Boolean isEditable = bean.getEditable();
     Boolean canChangeCollection = bean.getCanChangeCollection();
-    Boolean collectionEnabled = bean.getCollectionEnabled();
+    boolean collectionEnabled = bean.getCollectionEnabled();
 %>
 <style type="text/css">
     .labkey-warning  { color: red; }

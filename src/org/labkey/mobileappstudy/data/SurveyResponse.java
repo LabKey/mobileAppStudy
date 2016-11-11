@@ -5,16 +5,37 @@ import org.labkey.api.security.User;
 
 import java.util.Date;
 
-/**
- * Created by iansigmon on 11/4/16.
- */
 public class SurveyResponse
 {
+
     public enum ResponseStatus {
-        PENDING,
-        PROCESSING,
-        PROCESSED,
-        ERROR;
+
+        /** list order doesn't matter, but don't change id's unless you also update mobileappstudy.response.status **/
+        PENDING(0, "Pending"),
+        PROCESSING(1, "Processing"),
+        PROCESSED(2, "Processed"),
+        ERROR(3, "Error");
+
+        private final int pkId;
+        private final String displayText;
+
+        ResponseStatus(int pkId, String displayText)
+        {
+            this.pkId = pkId;
+            this.displayText = displayText;
+        }
+
+        public String getDisplayText()
+        {
+            return displayText;
+        }
+
+        public final int getPkId()
+        {
+            return pkId;
+        }
+
+
     }
 
     private Integer _rowId;
@@ -30,6 +51,18 @@ public class SurveyResponse
     private Container _container;
     private String _appToken;
 
+    public SurveyResponse()
+    {
+    }
+
+    public SurveyResponse(String participantId, String response, String surveyId, String version)
+    {
+        setStatus(SurveyResponse.ResponseStatus.PENDING);
+        setAppToken(participantId);
+        setResponse(response);
+        setSurveyVersion(version);
+        setSurveyId(surveyId);
+    }
 
     public Container getContainer()
     {
