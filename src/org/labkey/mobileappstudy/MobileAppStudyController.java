@@ -163,8 +163,6 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_REQUIRED, "SurveyInfo not found.");
             else
             {
-                if (isBlank(info.getStudyId()))
-                    errors.reject(ERROR_REQUIRED, "StudyId not included in request");
                 if (isBlank(info.getSurveyId()))
                     errors.reject(ERROR_REQUIRED, "SurveyId not included in request");
                 if (isBlank(info.getVersion()))
@@ -185,15 +183,13 @@ public class MobileAppStudyController extends SpringActionController
             //Check if there is an associated study for the appToken
             MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
             if(study == null)
-                errors.reject(ERROR_MSG, "Apptoken not associated with study");
+                errors.reject(ERROR_MSG, "AppToken not associated with study");
             else
             {
-                if (!info.getStudyId().equals(study.getShortName()))
-                    errors.reject(ERROR_MSG, "StudyId does not match appToken");
-                else if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
+                if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
                     errors.reject(ERROR_MSG, "Survey not found.");
                 else if (!study.getCollectionEnabled())
-                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", info.getStudyId()));
+                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
             }
         }
 
@@ -222,7 +218,6 @@ public class MobileAppStudyController extends SpringActionController
     @RequiresNoPermission
     public class EnrollAction extends ApiAction<EnrollmentForm>
     {
-
         public void validateForm(EnrollmentForm form, Errors errors)
         {
             if (form == null)
