@@ -18,10 +18,12 @@ package org.labkey.test.components.mobileappstudy;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.WebPart;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
@@ -101,7 +103,14 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
     public void clickSubmit()
     {
         getWrapper().sleep(500);
+
+        boolean collectionEnabled = getWrapper().isChecked(Locators.collectionEnabledCheckbox);
         elementCache().submitButton.click();
+        if (!collectionEnabled)
+        {
+            ResponseCollectionDialog warning = new ResponseCollectionDialog(getDriver());
+            warning.clickOk();
+        }
     }
 
     protected ElementCache elementCache()
@@ -111,9 +120,10 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
 
     public class ElementCache extends WebPart.ElementCache
     {
-        WebElement submitButton = new LazyWebElement(Locators.submitButton, _test.getDriver());
-        WebElement shortNameField = new LazyWebElement(Locators.shortNameField, _test.getDriver());
-        WebElement shortNamePrompt = new LazyWebElement(Locators.shortNamePrompt, _test.getDriver());
+        WebElement submitButton = new LazyWebElement(Locators.submitButton, getDriver());
+        WebElement shortNameField = new LazyWebElement(Locators.shortNameField, getDriver());
+        WebElement shortNamePrompt = new LazyWebElement(Locators.shortNamePrompt, getDriver());
+
     }
 
     public static class Locators extends org.labkey.test.Locators
@@ -122,6 +132,35 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
         protected static final Locator.XPathLocator shortNamePrompt = dataRegionLocator.append("//div[@id='labkey-mobileappstudy-studysetup']//span/div/div/div[contains(@class, 'x4-panel-body')]/span/div");
         protected static final Locator.XPathLocator shortNameField = Locator.input("shortName");
         protected static final Locator.XPathLocator submitButton = dataRegionLocator.append(Ext4Helper.Locators.ext4Button("Submit"));
+        protected static final Locator.XPathLocator collectionEnabledCheckbox = Locator.tag("input").withAttribute("type", "button").withAttributeContaining("id", "collectionEnabled");
     }
 
+    public class ResponseCollectionDialog extends Window
+    {
+        public ResponseCollectionDialog(WebDriver wd)
+        {
+            super("Response collection stopped", wd);
+        }
+
+        public void clickCancel()
+        {
+            clickButton("Cancel", 0);
+            waitForClose();
+        }
+
+        public void clickOk()
+        {
+            clickButton("OK", 0);
+
+            //TODO: Issue 28463: Ext.Msg reuses the WebElement for the dialog so dont wait for close, as may already be reopened Issue:
+            //waitForClose();     //
+            getWrapper().longWait();
+        }
+
+        public class Locators extends org.labkey.test.Locators
+        {
+            public final Locator.XPathLocator okButton = Ext4Helper.Locators.ext4Button("OK");
+            public final Locator.XPathLocator cancelButton = Ext4Helper.Locators.ext4Button("Cancel");
+        }
+    }
 }

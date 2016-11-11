@@ -15,6 +15,14 @@
  */
 package org.labkey.test.tests.mobileappstudy;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,6 +37,7 @@ import org.labkey.test.pages.mobileappstudy.TokenListPage;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.PostgresOnlyTest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -250,7 +259,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         proj01_tokensNotAssignBatch01.add(proj01_tokensToAssignBatch01.get(5));
         proj01_tokensNotAssignBatch01.add(proj01_tokensToAssignBatch01.get(4));
 
-        // Remove those tokens fromt his list.
+        // Remove those tokens from this list.
         proj01_tokensToAssignBatch01.remove(6);
         proj01_tokensToAssignBatch01.remove(5);
         proj01_tokensToAssignBatch01.remove(4);
@@ -433,7 +442,6 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     private void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
@@ -449,8 +457,38 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
             waitForText("\"success\" : true");
             log("Token assigned.");
         }
-
     }
+
+    private void submitResponse(String token, String responseJson) throws IOException
+    {
+        HttpPost post = new HttpPost(WebTestHelper.buildRelativeUrl("mobileappstudy","ProcessResponse"));
+        post.setEntity(new StringEntity(responseJson.replace("$appToken$", token), ContentType.APPLICATION_JSON));
+
+        HttpResponse response = null;
+        log("Submitting response using token: " + token + " using url: " + post.getURI());
+        try (CloseableHttpClient client = HttpClients.createDefault())
+        {
+            response = client.execute(post);
+            int status = response.getStatusLine().getStatusCode();
+            String responseBody = WebTestHelper.getHttpResponseBody(response);
+
+            if (status == HttpStatus.SC_OK)
+            {
+
+            }
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Test failed requesting the URL,", e);
+        }
+        finally
+        {
+            if (response != null)
+                EntityUtils.consumeQuietly(response.getEntity());
+        }
+        log("Survey response posted.");
+    }
+
 
     private String assignTokenAndFail(String tokenToAssign, String projectName, String studyName)
     {
