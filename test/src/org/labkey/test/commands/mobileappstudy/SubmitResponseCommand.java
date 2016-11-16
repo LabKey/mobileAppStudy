@@ -8,9 +8,6 @@ import org.labkey.test.WebTestHelper;
 
 import java.util.function.Consumer;
 
-/**
- * Created by iansigmon on 11/14/16.
- */
 public class SubmitResponseCommand extends MobileAppCommand
 {
     public static final String  SURVEYINFO_MISSING_MESSAGE = "SurveyInfo not found.",
@@ -89,6 +86,7 @@ public class SubmitResponseCommand extends MobileAppCommand
         if (getLogRequest())
             log("Request body:\n\n" + getBody() + "\n\n");
 
+        log("Posting response to LabKey");
         execute(post, expectedStatusCode);
     }
 

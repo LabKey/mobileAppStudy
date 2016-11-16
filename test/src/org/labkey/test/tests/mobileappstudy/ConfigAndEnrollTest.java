@@ -92,16 +92,11 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         log("Validate the prompt.");
         assertEquals("The prompt is not as expected.", PROMPT_NOT_ASSIGNED, setupPage.studySetupWebPart.getPrompt());
-
-        log("Validate that the submit button is disabled.");
-        assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
+        setupPage.validateSubmitButtonDisabled();
 
         log("Set a study name.");
         setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
-
-        log("Validate that the submit button is now enabled.");
-        assertTrue("Submit button is not showing as enabled, it should be.", setupPage.studySetupWebPart.isSubmitEnabled());
-
+        setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
 
         log("Validate that the submit button is disabled after you click it.");
@@ -114,16 +109,11 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         log("Validate that the Study Short Name field is still set.");
         assertEquals("Study name did not persist after removing the web part.", STUDY_NAME01.toUpperCase(), setupPage.studySetupWebPart.getShortName());
-
-        log("Validate that the submit button is disabled.");
-        assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
+        setupPage.validateSubmitButtonDisabled();
 
         log("Change the study name and submit.");
         setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
-
-        log("Validate that the submit button is now enabled.");
-        assertTrue("Submit button is not showing as enabled, it should be.", setupPage.studySetupWebPart.isSubmitEnabled());
-
+        setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
 
         log("Create a new project and try to reuse the study name.");
@@ -189,7 +179,37 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         log("Prompt was as expected. Go home.");
         goToHome();
+    }
 
+    @Test
+    public void testCollectionToggling()
+    {
+        final String STUDY_NAME01 = "STUDYNAME01";
+        final String PROJECT_NAME01 = getProjectName() + " TestStudyName01";
+
+        _containerHelper.deleteProject(PROJECT_NAME01, false);
+
+        _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
+
+        goToProjectHome(PROJECT_NAME01);
+        SetupPage setupPage = new SetupPage(this);
+
+        //Validate collection checkbox behavior
+        log("Collection is initially disabled");
+        assertFalse("Response collection is enabled at study creation", setupPage.studySetupWebPart.isResponseCollectionChecked());
+
+        log("Enabling response collection doesn't allow submit prior to a valid study name");
+        setupPage.studySetupWebPart.checkResponseCollection();
+        setupPage.validateSubmitButtonDisabled();
+
+        log("Set a study name.");
+        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.validateSubmitButtonEnabled();
+
+        log("Disabling response collection allows study config submission");
+        setupPage.studySetupWebPart.uncheckResponseCollection();
+        setupPage.validateSubmitButtonEnabled();
+        setupPage.studySetupWebPart.clickSubmit();
     }
 
     @Test

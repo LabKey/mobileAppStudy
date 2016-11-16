@@ -1,5 +1,6 @@
 package org.labkey.test.tests.mobileappstudy;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
@@ -8,7 +9,6 @@ import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
-import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.PostgresOnlyTest;
 
 import java.util.Collections;
@@ -19,7 +19,15 @@ import static org.junit.Assert.*;
 @Category({Git.class})
 public class ResponseSubmissionTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
-    protected final PortalHelper _portalHelper = new PortalHelper(this);
+    //Create study
+    private final static String STUDY_NAME01 = "Study01";  // Study names are case insensitive
+    private final static String STUDY_NAME02 = "Study02";
+    private final static String STUDY_NAME03 = "Study03";
+    private final static String BASE_PROJECT_NAME = "Response Submission Test Project";
+    private final static String PROJECT_NAME01 = BASE_PROJECT_NAME + " " + STUDY_NAME01;
+    private final static String PROJECT_NAME02 = BASE_PROJECT_NAME + " " + STUDY_NAME02;
+    private final static String PROJECT_NAME03 = BASE_PROJECT_NAME + " " + STUDY_NAME03;
+    private final static String SURVEY_NAME = "Fake_Survey 1";
 
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
@@ -39,7 +47,7 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
     @Override
     protected String getProjectName()
     {
-        return "Response Submission Test Project";
+        return BASE_PROJECT_NAME;
     }
 
     @Override
@@ -58,53 +66,52 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
      */
     private String getNewAppToken(String project, String studyShortName, String batchToken)
     {
+        log("Requesting app token for project [" + PROJECT_NAME01 +"] and study [" + STUDY_NAME01 + "]");
         EnrollParticipantCommand cmd = new EnrollParticipantCommand(project, studyShortName, batchToken, this::log);
 
         cmd.execute(200);
-        return cmd.getAppToken();
+        String appToken = cmd.getAppToken();
+        assertNotNull("AppToken was null", appToken);
+        log("AppToken received: " + appToken);
+
+        return appToken;
     }
 
-    @Test
-    public void testAppStudyResponseRequests()
+    @BeforeClass
+    public static void doSetup() throws Exception
     {
-        //Create study
-        final String STUDY_NAME01 = "Study01";  // Study names are case insensitive, so test it once.
-        final String STUDY_NAME02 = "Study02";
-        final String PROJECT_NAME01 = getProjectName() + " " + STUDY_NAME01;
-        final String PROJECT_NAME02 = getProjectName() + " " + STUDY_NAME02;
-        final String SURVEY_NAME = "Fake_Survey 1";
+        ResponseSubmissionTest initTest = (ResponseSubmissionTest)getCurrentTest();
+        initTest.setupProjects();
 
-        SetupPage setupPage;
+    }
 
+    public void setupProjects()
+    {
         _containerHelper.deleteProject(PROJECT_NAME01, false);
         _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
-        goToProjectHome(PROJECT_NAME01);
-
-        setupPage = new SetupPage(this);
-
-        //Validate collection checkbox behavior
-        log("Collection is initially disabled");
-        assertFalse("Response collection is enabled at study creation", setupPage.studySetupWebPart.isResponseCollectionChecked());
-
-        log("Enabling response collection doesn't allow submit prior to a valid study name");
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.validateSubmitButtonDisabled();
-
         log("Set a study name.");
+        goToProjectHome(PROJECT_NAME01);
+        SetupPage setupPage = new SetupPage(this);
         setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
-        setupPage.validateSubmitButtonEnabled();
-
-        log("Disabling response collection allows study config submission");
-        setupPage.studySetupWebPart.uncheckResponseCollection();
         setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
 
-        //Capture a participant appToken
-        log("Requesting app token");
-        String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
-        assertNotNull("Apptoken was null", appToken);
-        log("AppToken received: " + appToken);
+        //Setup a secondary study
+        _containerHelper.deleteProject(PROJECT_NAME02, false);
+        _containerHelper.createProject(PROJECT_NAME02, "Mobile App Study");
+        goToProjectHome(PROJECT_NAME02);
+        setupPage = new SetupPage(this);
+        setupPage.studySetupWebPart.checkResponseCollection();
+        setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
+        setupPage.validateSubmitButtonEnabled();
+        setupPage.studySetupWebPart.clickSubmit();
+    }
 
+
+
+    @Test
+    public void testRequestBodyNotPresent()
+    {
         //refresh the page
         goToProjectHome(PROJECT_NAME01);
 
@@ -114,35 +121,51 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log);
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYINFO_MISSING_MESSAGE, cmd.getExceptionMessage());
+    }
+
+    @Test
+    public void testAppToken()
+    {
+        //refresh the page
+        goToProjectHome(PROJECT_NAME01);
 
         //        2. AppToken not present
         log("Testing AppToken not present");
-        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", "", "{}" );
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", "", "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.PARTICIPANTID_MISSING_MESSAGE, cmd.getExceptionMessage());
 
         //        3. Invalid AppToken Participant
         log("Testing invalid apptoken");
-        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", "INVALIDPARTICIPANTID", "{}" );
+        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", "INVALIDPARTICIPANTID", "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.NO_PARTICIPANT_MESSAGE, cmd.getExceptionMessage());
+    }
+
+    @Test
+    public void testSurveyInfo()
+    {
+        //refresh the page
+        goToProjectHome(PROJECT_NAME01);
+        //Capture a participant appToken
+        String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
 
         //        4. Invalid SurveyInfo
         //            A. SurveyInfo element missing
         log("Testing SurveyInfo element not present");
-        cmd = new SubmitResponseCommand(this::log, null, null, appToken, "{}" );
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, null, null, appToken, "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYINFO_MISSING_MESSAGE, cmd.getExceptionMessage());
 
         //            B. Survey Version
         log("Testing SurveyVersion not present");
-        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, null, appToken, "{}" );
+        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, null, appToken, "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYVERSION_MISSING_MESSAGE, cmd.getExceptionMessage());
 
         //            C. Survey SurveyId
         log("Testing SurveyId not present");
-        cmd = new SubmitResponseCommand(this::log, null, "1", appToken, "{}" );
+        cmd = new SubmitResponseCommand(this::log, null, "1", appToken, "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYID_MISSING_MESSAGE, cmd.getExceptionMessage());
 
@@ -151,56 +174,137 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
 //        cmd = new SubmitResponseCommand(this::log, "INvAlID SUrVEY NaM3", "1", appToken, "{}" );
 //        cmd.execute(400);
 //        assertEquals("Unexpected error message", cmd.SURVEY_NOT_FOUND_MESSAGE, cmd.getExceptionMessage());
+    }
+
+    @Test
+    public void testResponseNotPresent()
+    {
+        //refresh the page
+        goToProjectHome(PROJECT_NAME01);
+        String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
 
         //        5. Response not present
         log("Testing Response element not present");
-        cmd = new SubmitResponseCommand(this::log);
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log);
         cmd.setBody(String.format(SubmitResponseCommand.MISSING_RESPONSE_JSON_FORMAT, SURVEY_NAME, "1", appToken));
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.RESPONSE_MISSING_MESSAGE, cmd.getExceptionMessage());
+    }
+
+    @Test
+    public void testResponseCollection()
+    {
+        //refresh the page
+        goToProjectHome(PROJECT_NAME01);
+        String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
+        SetupPage setupPage = new SetupPage(this);
+        if (setupPage.studySetupWebPart.isResponseCollectionChecked())
+        {
+            setupPage.studySetupWebPart.uncheckResponseCollection();
+            log("Disabling response collection for " + STUDY_NAME01);
+            setupPage.studySetupWebPart.clickSubmit();
+        }
 
         //        6. Study not collecting
-        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}" );
+        log("Testing Response Submission with Study collection turned off");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
         cmd.execute(400);
         assertTrue("Unexpected error message", String.format(SubmitResponseCommand.COLLECTION_DISABLED_MESSAGE_FORMAT, STUDY_NAME01)
                 .equalsIgnoreCase(cmd.getExceptionMessage()));
 
         //        7. Success
         //Enable study collection
+        log("Enabling response collection for " + STUDY_NAME01);
         goToProjectHome(PROJECT_NAME01);
         setupPage = new SetupPage(this);
         setupPage.studySetupWebPart.checkResponseCollection();
         setupPage.studySetupWebPart.clickSubmit();
         goToProjectHome(PROJECT_NAME01);
 
-        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}" );
+        log("Testing Response Submission with Study collection turned on");
+        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
+        cmd.execute(200);
+        assertTrue("Submission failed, expected success", cmd.getSuccess());
+
+        goToProjectHome(PROJECT_NAME01);
+        log("Disabling response collection for " + STUDY_NAME01);
+        setupPage = new SetupPage(this);
+        setupPage.studySetupWebPart.uncheckResponseCollection();
+        setupPage.studySetupWebPart.clickSubmit();
+        goToProjectHome(PROJECT_NAME01);
+
+        //        8. Test submitting to a Study previously collecting, but not currently accepting results
+        log("Testing Response Submission with Study collection turned off after previously being on");
+        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
+        cmd.execute(400);
+        assertTrue("Unexpected error message", String.format(SubmitResponseCommand.COLLECTION_DISABLED_MESSAGE_FORMAT, STUDY_NAME01)
+                .equalsIgnoreCase(cmd.getExceptionMessage()));
+    }
+
+    @Test
+    public void testContainerSubmission()
+    {
+        //        8. Verify submission is container agnostic
+        log("Testing Response Submission is container agnostic");
+        goToProjectHome(PROJECT_NAME02);  //Setup Previously
+        //Capture a participant appToken
+        String appToken = getNewAppToken(PROJECT_NAME02, STUDY_NAME02, null);
+
+        log("Verifying " + STUDY_NAME02 + " collecting responses.");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
+        log("Testing submission to root container");
         cmd.execute(200);
         assertTrue("Submission failed, expected success", cmd.getSuccess());
         String originalUrl = cmd.getTargetURL();
 
-        //        8. Verify submission is container agnostic
-        //Setup a secondary study
-        _containerHelper.deleteProject(PROJECT_NAME02, false);
-        _containerHelper.createProject(PROJECT_NAME02, "Mobile App Study");
-        goToProjectHome(PROJECT_NAME02);
-
-        setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
-        setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
-
         //Submit API call using apptoken associated to original study
-        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}" );
+        log("Submitting from " + PROJECT_NAME02 + " container");
+        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
         cmd.changeProjectTarget(PROJECT_NAME02);
         assertNotEquals("Attempting to test container agnostic submission and URL targets are the same", originalUrl, cmd.getTargetURL());
+        log("Testing submission to matching container");
         cmd.execute(200);
         assertTrue("Submission failed, expected success", cmd.getSuccess());
 
-        _containerHelper.deleteProject(PROJECT_NAME01, false);
+        //Submit API call using apptoken associated to original study
+        log("Submitting from " + PROJECT_NAME01 + " container");
+        cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
+        cmd.changeProjectTarget(PROJECT_NAME01);
+        assertNotEquals("Attempting to test container agnostic submission and URL targets are the same", originalUrl, cmd.getTargetURL());
+        log("Testing submission to appToken/container mismatch");
+        cmd.execute(200);
+        assertTrue("Submission failed, expected success", cmd.getSuccess());
+    }
+
+    @Test
+    public void testSubmissionToDeletedProject()
+    {
+        //Setup a third study that we can delete
+        _containerHelper.deleteProject(PROJECT_NAME03, false);
+        _containerHelper.createProject(PROJECT_NAME03, "Mobile App Study");
+        goToProjectHome(PROJECT_NAME03);
+        SetupPage setupPage = new SetupPage(this);
+        setupPage.studySetupWebPart.checkResponseCollection();
+        setupPage.studySetupWebPart.setShortName(STUDY_NAME03);
+        setupPage.validateSubmitButtonEnabled();
+        setupPage.studySetupWebPart.clickSubmit();
+        longWait();
+        goToProjectHome(PROJECT_NAME03);
+
+        //Capture a participant appToken
+        String appToken = getNewAppToken(PROJECT_NAME03, STUDY_NAME03, null);
+
+        log("Verifying Response Submission prior to study deletion");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
+        cmd.execute(200);
+        assertTrue("Submission failed, expected success", cmd.getSuccess());
+        log("successful submission to " + STUDY_NAME03);
+
+        _containerHelper.deleteProject(PROJECT_NAME03, false);
 
         //        9. Check submission to deleted project
-        //Submit API call using appToken associated to original study
+        //Submit API call using appToken associated to deleted study
+        log("Verifying Response Submission after study deletion");
         cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}" );
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.NO_PARTICIPANT_MESSAGE, cmd.getExceptionMessage());

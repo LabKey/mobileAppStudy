@@ -1,5 +1,6 @@
 package org.labkey.test.commands.mobileappstudy;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -90,13 +91,15 @@ public abstract class MobileAppCommand
         {
             response = client.execute(request);
             isExecuted = true;
-            log("Survey response posted.");
+            log("Post completed.");
 
             int statusCode = response.getStatusLine().getStatusCode();
-            assertEquals("Unexpected response status", statusCode, expectedStatusCode);
-
             String body = EntityUtils.toString(response.getEntity());
             parseResponse(new JSONObject(body));
+
+            if (expectedStatusCode < 400 && StringUtils.isNotBlank(getExceptionMessage()))
+                log("Unexpected error message: " + getExceptionMessage());
+            assertEquals("Unexpected response status", expectedStatusCode, statusCode);
         }
         catch (IOException e)
         {
