@@ -34,7 +34,8 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
-                html: 'Enter the study short name to be associated with this folder.  The short name should be the same as it appears in the study design interface.',
+                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName   Issue #28419
+                html: 'Enter the StudyId to be associated with this folder.  The StudyId should be the same as it appears in the study design interface.',
                 border: false
             });
         }
@@ -53,7 +54,8 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
-                html: 'The study short name associated with this folder is ' + this.shortName + '.',
+                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName   Issue #28419
+                html: 'The StudyId associated with this folder is ' + this.shortName + '.',
                 border: false
             });
         }
@@ -84,9 +86,9 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 value: this.shortName,
                 padding: '10px 10px 0px 10px',
                 allowBlank: false,
-                emptyText: "Enter Study Short Name",
+                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName   Issue #28419
+                emptyText: "Enter StudyId",
                 submitEmptyText: false,
-                // disabled: !this.isEditable,
                 hidden: !this.isEditable,
                 readOnly: !this.isEditable,
                 validateOnChange: true,
@@ -105,7 +107,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
     enableCollectionWarning: function(btn) {
         btn.setDisabled(true);
         var collectionCheckbox = this.getEnableCollectionControl();
-        if (!collectionCheckbox.checked)// && collectionCheckbox.isDirty())
+        if (!collectionCheckbox.checked)
             Ext4.Msg.show({
                 title: 'Response collection stopped',
                 msg: 'Response collection is disabled for this study. No data will be collected until it is enabled.',
@@ -150,7 +152,8 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             var obj = Ext4.decode(response.responseText);
             if (obj.errors)
             {
-                Ext4.Msg.alert("Error", "There were problems storing the study short name. " + obj.errors[0].message);
+                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName
+                Ext4.Msg.alert("Error", "There were problems storing the configuration. " + obj.errors[0].message);
             }
         }
 

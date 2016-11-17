@@ -68,7 +68,7 @@ public class EnrollParticipantCommand extends MobileAppCommand
     public String getTargetURL()
     {
         Map<String, String> params = new HashMap<>();
-        params.put("shortName", getStudyName());
+        params.put("studyId", getStudyName());
         if (StringUtils.isNotBlank(getBatchToken()))
             params.put("token", getBatchToken());
         return WebTestHelper.buildURL(CONTROLLER_NAME, getProjectName(), ACTION_NAME, params);

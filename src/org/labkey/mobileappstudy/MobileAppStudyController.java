@@ -117,9 +117,9 @@ public class MobileAppStudyController extends SpringActionController
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
-                errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
+                errors.reject(ERROR_REQUIRED, "StudyId must be provided.");
             else if (MobileAppStudyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
-                errors.rejectValue("shortName", ERROR_MSG, "Study short name '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
+                errors.rejectValue("shortName", ERROR_MSG, "StudyId '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
             //Check if study exists, name has changed, and at least one participant has enrolled
             else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
@@ -223,9 +223,10 @@ public class MobileAppStudyController extends SpringActionController
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format.");
             else if (StringUtils.isEmpty(form.getShortName()))
-                errors.reject(ERROR_REQUIRED, "Study short name is required for enrollment");
+                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
+                errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
             else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
-                errors.rejectValue("shortName", ERROR_MSG, "Study with short name '" + form.getShortName() + "' does not exist");
+                errors.rejectValue("shortName", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
             else if (!StringUtils.isEmpty(form.getToken()))
             {
                 if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
@@ -271,6 +272,13 @@ public class MobileAppStudyController extends SpringActionController
         public void setCollectionEnabled(boolean collectionEnabled) {
             _collectionEnabled = collectionEnabled;
         }
+
+        //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
+        //Adding this since it could potentially be exposed
+        public void setStudyId(String studyId)
+        {
+            setShortName(studyId);
+        }
     }
 
     public static class EnrollmentForm
@@ -282,7 +290,6 @@ public class MobileAppStudyController extends SpringActionController
         {
             return _token;
         }
-
         public void setToken(String token)
         {
             _token = isBlank(token) ? null : token.trim().toUpperCase();
@@ -292,10 +299,15 @@ public class MobileAppStudyController extends SpringActionController
         {
             return _shortName;
         }
-
         public void setShortName(String shortName)
         {
             _shortName = isBlank(shortName) ? null : shortName.trim().toUpperCase();
+        }
+
+        //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
+        public void setStudyId(String studyId)
+        {
+            setShortName(studyId);
         }
     }
 

@@ -70,11 +70,11 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
     @Test
     public void testStudyName()
     {
-        final String PROMPT_NOT_ASSIGNED = "Enter the study short name to be associated with this folder. The short name should be the same as it appears in the study design interface.";
-        final String PROMPT_ASSIGNED = "The study short name associated with this folder is $STUDY_NAME$.";
+        final String PROMPT_NOT_ASSIGNED = "Enter the StudyId to be associated with this folder. The StudyId should be the same as it appears in the study design interface.";
+        final String PROMPT_ASSIGNED = "The StudyId associated with this folder is $STUDY_NAME$.";
         final String STUDY_NAME01 = "StudyName01";  // Study names are case insensitive, so test it once.
         final String STUDY_NAME02 = "STUDYNAME02";
-        final String REUSED_STUDY_NAME_ERROR = "There were problems storing the study short name. Study short name '$STUDY_NAME$' is already associated with a different container. Each study can be associated with only one container.";
+        final String REUSED_STUDY_NAME_ERROR = "There were problems storing the configuration. StudyId '$STUDY_NAME$' is already associated with a different container. Each study can be associated with only one container.";
         final String PROJECT_NAME01 = getProjectName() + " TestStudyName01";
         final String PROJECT_NAME02 = getProjectName() + " TestStudyName02";
 
@@ -396,12 +396,12 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         log("Do not provide a study name (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error msg \"Study short name is required for enrollment\".", failurePage.contains("Study short name is required for enrollment"));
+        assertTrue("Json result did not contain error msg \"StudyId is required for enrollment\".", failurePage.contains("StudyId is required for enrollment"));
 
         log("Provide a study name that doesn't exists (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "THIS_STUDY_IS_NOT_HERE");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error message: \"Study with short name 'THIS_STUDY_IS_NOT_HERE' does not exist\"", failurePage.contains("Study with short name 'THIS_STUDY_IS_NOT_HERE' does not exist"));
+        assertTrue("Json result did not contain error message: \"Study with StudyId 'THIS_STUDY_IS_NOT_HERE' does not exist\"", failurePage.contains("StudyId 'THIS_STUDY_IS_NOT_HERE' does not exist"));
 
         log("Try to assign a token that has already been assigned.");
         failurePage = assignTokenAndFail(proj01_tokensToAssignBatch03.get(0), PROJECT_NAME01, PROJECT01_STUDY_NAME);
@@ -442,7 +442,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         log("Provide a valid token but no study name.");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(2), PROJECT_NAME01, "");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error: \"Study short name is required for enrollment\".", failurePage.contains("Study short name is required for enrollment"));
+        assertTrue("Json result did not contain error: \"StudyId is required for enrollment\".", failurePage.contains("StudyId is required for enrollment"));
 
         log("Looks good. Go home.");
         goToHome();
