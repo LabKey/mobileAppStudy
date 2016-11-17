@@ -17,20 +17,51 @@ package org.labkey.test.components.mobileappstudy;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.WebPart;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
 public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
 {
-
+    private final Ext4Helper _ext4Helper = new Ext4Helper(getWrapper());
     public StudySetupWebPart(BaseWebDriverTest test)
     {
         super(test.getWrappedDriver(), StudySetupWebPart.Locators.dataRegionLocator.findElement(test.getDriver()));
         waitForReady();
+    }
+
+    public void checkResponseCollection()
+    {
+        _ext4Helper.checkCheckbox(Locators.collectionEnabledCheckbox);
+    }
+
+    public void uncheckResponseCollection()
+    {
+        _ext4Helper.uncheckCheckbox(Locators.collectionEnabledCheckbox);
+    }
+
+    public boolean isResponseCollectionChecked()
+    {
+        return _ext4Helper.isChecked(Locators.collectionEnabledCheckbox);
+    }
+
+    public boolean isCollectionCheckboxVisible()
+    {
+        return elementCache().collectionCheckbox.isDisplayed();
+    }
+
+    public boolean isCollectionCheckboxEnabled()
+    {
+        return elementCache().collectionCheckbox.isEnabled();
     }
 
     @Override
@@ -38,7 +69,7 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
     {
         try
         {
-            return StudySetupWebPart.Locators.dataRegionLocator.findElement(_test.getDriver());
+            return StudySetupWebPart.Locators.dataRegionLocator.findElement(getDriver());
         }
         catch(NoSuchElementException nsee)
         {
@@ -49,7 +80,7 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
     @Override
     protected void waitForReady()
     {
-        _test.waitForElement(StudySetupWebPart.Locators.dataRegionLocator);
+        getWrapper().waitForElement(StudySetupWebPart.Locators.dataRegionLocator);
     }
 
     @Override
@@ -67,7 +98,7 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
     {
         String textValue;
 
-        if((getWrapper().isElementPresent(Locators.shortNameField)) && (elementCache().shortNameField.isDisplayed()))
+        if(isShortNameVisible())
             textValue = getWrapper().getFormElement(elementCache().shortNameField);
         else
             textValue = "";
@@ -79,29 +110,32 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
     {
         getWrapper().setFormElement(elementCache().shortNameField, shortName);
         getWrapper().waitForFormElementToEqual(elementCache().shortNameField, shortName);
-        getWrapper().sleep(500);
+        WebDriverWrapper.sleep(500);
         return this;
     }
 
     public boolean isShortNameVisible()
     {
-        if(getWrapper().isElementPresent(Locators.shortNameField))
-            return elementCache().shortNameField.isDisplayed();
-        else
-            return false;
+        return getWrapper().isElementPresent(Locators.shortNameField) && elementCache().shortNameField.isDisplayed();
     }
 
     public boolean isSubmitEnabled()
     {
-        getWrapper().sleep(500);
+        WebDriverWrapper.sleep(500);
         String classValue = elementCache().submitButton.getAttribute("class");
         return !classValue.toLowerCase().contains("x4-btn-disabled");
     }
 
     public void clickSubmit()
     {
-        getWrapper().sleep(500);
+        WebDriverWrapper.sleep(500);
+
+        boolean collectionEnabled = isResponseCollectionChecked();
         elementCache().submitButton.click();
+        if (!collectionEnabled)
+        {
+            acceptCollectionWarning();
+        }
     }
 
     protected ElementCache elementCache()
@@ -109,11 +143,19 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
         return new ElementCache();
     }
 
+    public void acceptCollectionWarning()
+    {
+        ResponseCollectionDialog warning = new ResponseCollectionDialog(getDriver());
+        assertNotNull("Warning dialog not found", warning);
+        warning.clickOk();
+    }
+
     public class ElementCache extends WebPart.ElementCache
     {
-        WebElement submitButton = new LazyWebElement(Locators.submitButton, _test.getDriver());
-        WebElement shortNameField = new LazyWebElement(Locators.shortNameField, _test.getDriver());
-        WebElement shortNamePrompt = new LazyWebElement(Locators.shortNamePrompt, _test.getDriver());
+        WebElement submitButton = new LazyWebElement(Locators.submitButton, getDriver());
+        WebElement shortNameField = new LazyWebElement(Locators.shortNameField, getDriver());
+        WebElement shortNamePrompt = new LazyWebElement(Locators.shortNamePrompt, getDriver());
+        WebElement collectionCheckbox = new LazyWebElement(Locators.collectionEnabledCheckbox, getDriver());
     }
 
     public static class Locators extends org.labkey.test.Locators
@@ -122,6 +164,38 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
         protected static final Locator.XPathLocator shortNamePrompt = dataRegionLocator.append("//div[@id='labkey-mobileappstudy-studysetup']//span/div/div/div[contains(@class, 'x4-panel-body')]/span/div");
         protected static final Locator.XPathLocator shortNameField = Locator.input("shortName");
         protected static final Locator.XPathLocator submitButton = dataRegionLocator.append(Ext4Helper.Locators.ext4Button("Submit"));
+        protected static final Locator.XPathLocator collectionEnabledCheckbox = Locator.tag("input").withAttribute("type", "button").withAttributeContaining("id", "collectionEnabled");
     }
 
+    public class ResponseCollectionDialog extends Window
+    {
+        public static final String WARNING_TITLE = "Response collection stopped";
+
+        public ResponseCollectionDialog(WebDriver wd)
+        {
+            super(WARNING_TITLE, wd);
+            assertTrue("Dialog's title is not as expected", WARNING_TITLE.equals(this.getTitle()));
+        }
+
+        public void clickCancel()
+        {
+            clickButton("Cancel", 0);
+            waitForClose();
+        }
+
+        public void clickOk()
+        {
+            clickButton("OK", 0);
+
+            //TODO: Issue 28463: Ext.Msg reuses the WebElement for the dialog so don't wait for close, as may already be reopened
+            // waitForClose();     //
+            getWrapper().longWait();
+        }
+
+        public class Locators extends org.labkey.test.Locators
+        {
+            public final Locator.XPathLocator okButton = Ext4Helper.Locators.ext4Button("OK");
+            public final Locator.XPathLocator cancelButton = Ext4Helper.Locators.ext4Button("Cancel");
+        }
+    }
 }

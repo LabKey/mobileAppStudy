@@ -37,6 +37,8 @@
     String renderId = "labkey-mobileappstudy-studysetup";
     String shortName = bean.getShortName();
     Boolean isEditable = bean.getEditable();
+    Boolean canChangeCollection = bean.getCanChangeCollection();
+    boolean collectionEnabled = bean.getCollectionEnabled();
 %>
 <style type="text/css">
     .labkey-warning  { color: red; }
@@ -50,9 +52,11 @@
 
         Ext4.create('LABKEY.MobileAppStudy.StudySetupPanel',
                 {
-                    renderTo   : <%= q(renderId) %>,
-                    shortName  : <%= qh(shortName) %>,
-                    isEditable : <%= isEditable %>
+                    renderTo            : <%= q(renderId) %>,
+                    shortName           : <%= qh(shortName) %>,
+                    isEditable          : <%= isEditable %>,
+                    canChangeCollection : <%= canChangeCollection %>,
+                    collectionEnabled   : <%= collectionEnabled %>
                 }
         );
     });

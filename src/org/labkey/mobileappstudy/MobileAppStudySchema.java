@@ -29,6 +29,8 @@ public class MobileAppStudySchema
     public static final String ENROLLMENT_TOKEN_TABLE = "EnrollmentToken";
     public static final String STUDY_TABLE = "Study";
     public static final String PARTICIPANT_TABLE = "Participant";
+    public static final String RESPONSE_TABLE = "Response";
+    public static final String RESPONSE_STATUS_TABLE = "ResponseStatus";
 
     public static MobileAppStudySchema getInstance()
     {
@@ -71,4 +73,10 @@ public class MobileAppStudySchema
     {
         return getSchema().getTable(STUDY_TABLE);
     }
+
+    public TableInfo getTableInfoResponse()
+    {
+        return getSchema().getTable(RESPONSE_TABLE);
+    }
+
 }

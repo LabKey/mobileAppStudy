@@ -15,6 +15,7 @@
  */
 package org.labkey.mobileappstudy.view;
 
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.MobileAppStudyManager;
@@ -30,9 +31,13 @@ public class StudyConfigWebPart extends JspView<MobileAppStudy>
         super("/org/labkey/mobileappstudy/view/studySetup.jsp");
         setTitle("Study Setup");
 
-        MobileAppStudy bean = new MobileAppStudy();
-        bean.setShortName(MobileAppStudyManager.get().getStudyShortName(viewContext.getContainer()));
+        MobileAppStudy bean = MobileAppStudyManager.get().getStudy(viewContext.getContainer());
+        bean = bean != null ? bean : new MobileAppStudy();
+
+        //TODO: Determine permission level needed
         bean.setEditable(!MobileAppStudyManager.get().hasStudyParticipants(viewContext.getContainer()));
+        bean.setCanChangeCollection(viewContext.getContainer().hasPermission(viewContext.getUser(), AdminPermission.class));
+
         this.setModelBean(bean);
     }
 }

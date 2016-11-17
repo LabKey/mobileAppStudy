@@ -20,6 +20,9 @@ import org.labkey.test.components.mobileappstudy.StudySetupWebPart;
 import org.labkey.test.components.mobileappstudy.TokenBatchesWebPart;
 import org.labkey.test.pages.LabKeyPage;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 public class SetupPage extends LabKeyPage
 {
 
@@ -35,4 +38,15 @@ public class SetupPage extends LabKeyPage
         studySetupWebPart = new StudySetupWebPart(_test);
     }
 
+    public void validateSubmitButtonDisabled()
+    {
+        log("Validate that the submit button is disabled.");
+        assertFalse("Submit button is showing as enabled, it should not be.", studySetupWebPart.isSubmitEnabled());
+    }
+
+    public void validateSubmitButtonEnabled()
+    {
+        log("Validate that the submit button is now enabled.");
+        assertTrue("Submit button is not showing as enabled, it should be.", studySetupWebPart.isSubmitEnabled());
+    }
 }

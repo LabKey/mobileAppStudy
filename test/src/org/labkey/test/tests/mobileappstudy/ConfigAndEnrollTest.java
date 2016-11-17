@@ -15,7 +15,6 @@
  */
 package org.labkey.test.tests.mobileappstudy;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
@@ -33,6 +32,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 @Category({Git.class})
 public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOnlyTest
@@ -90,21 +91,16 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         setupPage = new SetupPage(this);
 
         log("Validate the prompt.");
-        Assert.assertEquals("The prompt is not as expected.", PROMPT_NOT_ASSIGNED, setupPage.studySetupWebPart.getPrompt());
-
-        log("Validate that the submit button is disabled.");
-        Assert.assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
+        assertEquals("The prompt is not as expected.", PROMPT_NOT_ASSIGNED, setupPage.studySetupWebPart.getPrompt());
+        setupPage.validateSubmitButtonDisabled();
 
         log("Set a study name.");
         setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
-
-        log("Validate that the submit button is now enabled.");
-        Assert.assertTrue("Submit button is not showing as enabled, it should be.", setupPage.studySetupWebPart.isSubmitEnabled());
-
+        setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
 
         log("Validate that the submit button is disabled after you click it.");
-        Assert.assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
+        assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
 
         log("Remove the web part,bring it back and validate the study name is still there.");
         setupPage.studySetupWebPart.delete();
@@ -112,17 +108,12 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         _portalHelper.addWebPart("Mobile App Study Setup");
 
         log("Validate that the Study Short Name field is still set.");
-        Assert.assertEquals("Study name did not persist after removing the web part.", STUDY_NAME01.toUpperCase(), setupPage.studySetupWebPart.getShortName());
-
-        log("Validate that the submit button is disabled.");
-        Assert.assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
+        assertEquals("Study name did not persist after removing the web part.", STUDY_NAME01.toUpperCase(), setupPage.studySetupWebPart.getShortName());
+        setupPage.validateSubmitButtonDisabled();
 
         log("Change the study name and submit.");
         setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
-
-        log("Validate that the submit button is now enabled.");
-        Assert.assertTrue("Submit button is not showing as enabled, it should be.", setupPage.studySetupWebPart.isSubmitEnabled());
-
+        setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
 
         log("Create a new project and try to reuse the study name.");
@@ -143,7 +134,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         // So I did it the hard way.
         waitForElement(Locator.css("div.x4-message-box"));
-        Assert.assertEquals(REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), getText(Locator.css("div.x4-message-box div.x4-form-display-field")));
+        assertEquals(REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), getText(Locator.css("div.x4-message-box div.x4-form-display-field")));
         clickButton("OK", 0);
 
         log("Reuse the first study name");
@@ -169,11 +160,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         clickTab("Setup");
 
         log("Validate that the correct info for the tokens is shown in the grid.");
-        Map<String, String> batchData = setupPage.tokenBatchesWebPart.getBatchData(batchId);
-
-        Assert.assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
-        Assert.assertEquals("Expected number of tokens not created.", expectedTokenCount.replace(",", ""), batchData.get("Count"));
-        Assert.assertEquals("Number of tokens in use not as expected.", "0", batchData.get("TokensInUse"));
+        validateGridInfo(setupPage, batchId, expectedTokenCount, "0");
 
         log("Now assign some of the tokens.");
         assignTokens(tokensToAssign, PROJECT_NAME02, STUDY_NAME01);
@@ -184,19 +171,45 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         // Get a new setupPage.
         setupPage = new SetupPage(this);
-
-        batchData = setupPage.tokenBatchesWebPart.getBatchData(batchId);
-        Assert.assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
-        Assert.assertEquals("Expected number of tokens not created.", expectedTokenCount.replace(",", ""), batchData.get("Count"));
-        Assert.assertEquals("Number of tokens in use not as expected.", Integer.toString(tokensToAssign.size()), batchData.get("TokensInUse"));
+        validateGridInfo(setupPage, batchId, expectedTokenCount, Integer.toString(tokensToAssign.size()));
 
         log("Validate the prompt.");
-        Assert.assertEquals("The prompt is not as expected.", PROMPT_ASSIGNED.replace("$STUDY_NAME$", STUDY_NAME01.toUpperCase()), setupPage.studySetupWebPart.getPrompt());
-        Assert.assertFalse("The short name field is visible and it should not be.", setupPage.studySetupWebPart.isShortNameVisible());
+        assertEquals("The prompt is not as expected.", PROMPT_ASSIGNED.replace("$STUDY_NAME$", STUDY_NAME01.toUpperCase()), setupPage.studySetupWebPart.getPrompt());
+        assertFalse("The short name field is visible and it should not be.", setupPage.studySetupWebPart.isShortNameVisible());
 
         log("Prompt was as expected. Go home.");
         goToHome();
+    }
 
+    @Test
+    public void testCollectionToggling()
+    {
+        final String STUDY_NAME01 = "STUDYNAME01";
+        final String PROJECT_NAME01 = getProjectName() + " TestStudyName01";
+
+        _containerHelper.deleteProject(PROJECT_NAME01, false);
+
+        _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
+
+        goToProjectHome(PROJECT_NAME01);
+        SetupPage setupPage = new SetupPage(this);
+
+        //Validate collection checkbox behavior
+        log("Collection is initially disabled");
+        assertFalse("Response collection is enabled at study creation", setupPage.studySetupWebPart.isResponseCollectionChecked());
+
+        log("Enabling response collection doesn't allow submit prior to a valid study name");
+        setupPage.studySetupWebPart.checkResponseCollection();
+        setupPage.validateSubmitButtonDisabled();
+
+        log("Set a study name.");
+        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.validateSubmitButtonEnabled();
+
+        log("Disabling response collection allows study config submission");
+        setupPage.studySetupWebPart.uncheckResponseCollection();
+        setupPage.validateSubmitButtonEnabled();
+        setupPage.studySetupWebPart.clickSubmit();
     }
 
     @Test
@@ -250,7 +263,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         proj01_tokensNotAssignBatch01.add(proj01_tokensToAssignBatch01.get(5));
         proj01_tokensNotAssignBatch01.add(proj01_tokensToAssignBatch01.get(4));
 
-        // Remove those tokens fromt his list.
+        // Remove those tokens from this list.
         proj01_tokensToAssignBatch01.remove(6);
         proj01_tokensToAssignBatch01.remove(5);
         proj01_tokensToAssignBatch01.remove(4);
@@ -378,32 +391,32 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         log("Give data that can not be parsed.");
         String invalidToken = proj01_tokensNotAssignBatch01.get(1) + 1;
         failurePage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        Assert.assertTrue("Json result did not contain error message: \"Input string '" + invalidToken + "' not from valid input character set 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'\".", failurePage.contains("Input string '" + invalidToken + "' not from valid input character set 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"));
+        assertTrue("Json result did not contain error message: \"Input string '" + invalidToken + "' not from valid input character set 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'\".", failurePage.contains("Input string '" + invalidToken + "' not from valid input character set 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"));
 
         log("Do not provide a study name (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not contain error msg \"Study short name is required for enrollment\".", failurePage.contains("Study short name is required for enrollment"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not contain error msg \"Study short name is required for enrollment\".", failurePage.contains("Study short name is required for enrollment"));
 
         log("Provide a study name that doesn't exists (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "THIS_STUDY_IS_NOT_HERE");
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not contain error message: \"Study with short name 'THIS_STUDY_IS_NOT_HERE' does not exist\"", failurePage.contains("Study with short name 'THIS_STUDY_IS_NOT_HERE' does not exist"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not contain error message: \"Study with short name 'THIS_STUDY_IS_NOT_HERE' does not exist\"", failurePage.contains("Study with short name 'THIS_STUDY_IS_NOT_HERE' does not exist"));
 
         log("Try to assign a token that has already been assigned.");
         failurePage = assignTokenAndFail(proj01_tokensToAssignBatch03.get(0), PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json did not contain error message: \"Token already in use\"", failurePage.contains("Token already in use"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json did not contain error message: \"Token already in use\"", failurePage.contains("Token already in use"));
 
         log("Try to assign tokens from Project01 to a study in Project02.");
         failurePage = assignTokenAndFail(proj01_tokensToAssignBatch01.get(0), PROJECT_NAME02, PROJECT02_STUDY_NAME);
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not which token was in error.", failurePage.contains("Unknown token: '" + proj01_tokensToAssignBatch01.get(0) + "'"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not which token was in error.", failurePage.contains("Unknown token: '" + proj01_tokensToAssignBatch01.get(0) + "'"));
 
         log("Try to assign tokens from Project02 to a study in Project01.");
         failurePage = assignTokenAndFail(proj02_tokensToAssignBatch01.get(3), PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not which token was in error.", failurePage.contains("Unknown token: '" + proj02_tokensToAssignBatch01.get(3) + "'"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not which token was in error.", failurePage.contains("Unknown token: '" + proj02_tokensToAssignBatch01.get(3) + "'"));
 
         log("Invalidate the checksum of a valid token.");
         invalidToken = proj01_tokensNotAssignBatch01.get(1);
@@ -418,22 +431,21 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         invalidToken = invalidToken.substring(0, invalidToken.length()-1) + checkSum;
         log("Token after changing checksum: " + invalidToken);
         failurePage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not contain error message: \"Invalid token: '" + invalidToken + "'\".", failurePage.contains("Invalid token: '" + invalidToken + "'"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not contain error message: \"Invalid token: '" + invalidToken + "'\".", failurePage.contains("Invalid token: '" + invalidToken + "'"));
 
         log("Provide a token but the wrong (valid) study name.");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME02, PROJECT02_STUDY_NAME);
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not contain error: \"Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'", failurePage.contains("Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not contain error: \"Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'", failurePage.contains("Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'"));
 
         log("Provide a valid token but no study name.");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(2), PROJECT_NAME01, "");
-        Assert.assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        Assert.assertTrue("Json result did not contain error: \"Study short name is required for enrollment\".", failurePage.contains("Study short name is required for enrollment"));
+        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
+        assertTrue("Json result did not contain error: \"Study short name is required for enrollment\".", failurePage.contains("Study short name is required for enrollment"));
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     private void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
@@ -449,7 +461,6 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
             waitForText("\"success\" : true");
             log("Token assigned.");
         }
-
     }
 
     private String assignTokenAndFail(String tokenToAssign, String projectName, String studyName)
@@ -461,15 +472,14 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
         log("Failure url is: " + apiUrl);
         beginAt(apiUrl);
         return getDriver().getPageSource();
-
     }
 
     private void validateGridInfo(SetupPage setupPage, String batchId, String expectedTokenCount, String expectedUsedCount)
     {
         Map<String, String> batchData = setupPage.tokenBatchesWebPart.getBatchData(batchId);
 
-        Assert.assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
-        Assert.assertEquals("Expected number of tokens not created.", expectedTokenCount, batchData.get("Count"));
-        Assert.assertEquals("Number of tokens in use not as expected.", expectedUsedCount, batchData.get("TokensInUse"));
+        assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
+        assertEquals("Expected number of tokens not created.", expectedTokenCount, batchData.get("Count"));
+        assertEquals("Number of tokens in use not as expected.", expectedUsedCount, batchData.get("TokensInUse"));
     }
 }

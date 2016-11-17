@@ -17,29 +17,20 @@
 package org.labkey.mobileappstudy;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.CompareType;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.DbScope;
-import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.SqlExecutor;
-import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.*;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.util.ChecksumUtil;
 import org.labkey.api.util.ContainerUtil;
 import org.labkey.api.util.GUID;
-import org.labkey.mobileappstudy.data.EnrollmentToken;
-import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
-import org.labkey.mobileappstudy.data.MobileAppStudy;
-import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.api.util.JobRunner;
+import org.labkey.mobileappstudy.data.*;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 
@@ -50,9 +41,26 @@ public class MobileAppStudyManager
     private static final MobileAppStudyManager _instance = new MobileAppStudyManager();
     private static final ChecksumUtil _checksumUtil = new ChecksumUtil(TOKEN_CHARS);
 
+    private static final int THREAD_COUNT = 10; //TODO: Verify this is an appropriate number
+    private static JobRunner _shredder;
+    private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
+
     private MobileAppStudyManager()
     {
         // prevent external construction with a private default constructor
+
+        //TODO: Pick-up any pending shredder jobs that might have been lost at shutdown/crash/etc
+        if (_shredder == null)
+            _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
+        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(SurveyResponse.ResponseStatus.PENDING);
+        if (pendingResponses != null)
+        {
+            pendingResponses.forEach(response ->
+            {
+                final Integer rowId = response.getRowId();
+                enqueueSurveyResponse(() -> shredSurveyResponse(rowId));
+            });
+        }
     }
 
     public static MobileAppStudyManager get()
@@ -237,9 +245,10 @@ public class MobileAppStudyManager
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         try (DbScope.Transaction transaction = schema.getSchema().getScope().ensureTransaction())
         {
-            ContainerUtil.purgeTable(schema.getTableInfoEnrollmentToken(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoEnrollmentToken(), c, null); //Has a FKs to TokenBatch and Participant tables
+            ContainerUtil.purgeTable(schema.getTableInfoResponse(), c, null);   //Has a FK to participant table
+            ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null); //Has a FK to study table
             ContainerUtil.purgeTable(schema.getTableInfoEnrollmentTokenBatch(), c, null);
-            ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
 
             transaction.commit();
@@ -357,13 +366,12 @@ public class MobileAppStudyManager
      * @param user the user making the update request
      * @return the updated study object
      */
-    private MobileAppStudy updateShortName(@NotNull MobileAppStudy study, @NotNull String newShortName, @NotNull User user)
+    private MobileAppStudy updateStudy(@NotNull MobileAppStudy study, @NotNull String newShortName, boolean collectionEnabled, @NotNull User user)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-
         TableInfo studyTable = schema.getTableInfoStudy();
-
         study.setShortName(newShortName.toUpperCase());
+        study.setCollectionEnabled(collectionEnabled);
 
         return Table.update(user, studyTable, study, study.getRowId());
     }
@@ -375,14 +383,14 @@ public class MobileAppStudyManager
      * @param user the user making the insert request
      * @return the object representing the newly inserted study.
      */
-    private MobileAppStudy insertStudy(@NotNull String shortName, @NotNull Container container, @NotNull User user)
+    private MobileAppStudy insertStudy(@NotNull String shortName, boolean collectionEnabled, @NotNull Container container, @NotNull User user)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-
         TableInfo studyTable = schema.getTableInfoStudy();
 
         MobileAppStudy study = new MobileAppStudy();
         study.setShortName(shortName.toUpperCase());
+        study.setCollectionEnabled(collectionEnabled);
         study.setContainer(container);
         return Table.insert(user, studyTable, study);
     }
@@ -394,13 +402,128 @@ public class MobileAppStudyManager
      * @param user the user making the request
      * @return the object representing the newly updated or inserted study.
      */
-    public MobileAppStudy insertOrUpdateStudy(@NotNull String shortName, @NotNull Container container, @NotNull User user)
+    public MobileAppStudy insertOrUpdateStudy(@NotNull String shortName, boolean collectionEnabled, @NotNull Container container, @NotNull User user)
     {
         MobileAppStudy study = getStudy(container);
         if (study == null)
-            return insertStudy(shortName, container, user);
+            return insertStudy(shortName, collectionEnabled, container, user);
         else
-            return updateShortName(study, shortName, user);
+            return updateStudy(study, shortName, collectionEnabled, user);
     }
 
+    /**
+     * Add response processing job to queue
+     * @param run Runnable to add to processing queue
+     */
+    void enqueueSurveyResponse(@NotNull Runnable run)
+    {
+        _shredder.execute(run);
+    }
+
+    /**
+     * Method to process Survey Responses
+     * @param rowId mobileappstudy.Response.RowId to process
+     */
+    void shredSurveyResponse(@NotNull Integer rowId)
+    {
+        SurveyResponse response = getResponse(rowId);
+        logger.info(String.format("Processing %s", rowId));
+    }
+
+    /**
+     * Get Response from DB
+     * @param rowId mobileappstudy.Response.RowId to retrieve
+     * @return SurveyResponse object representing row, or null if not found
+     */
+    @Nullable
+    SurveyResponse getResponse(@NotNull Integer rowId)
+    {
+        FieldKey fkey = FieldKey.fromParts("rowId");
+        SimpleFilter filter = new SimpleFilter(fkey, rowId);
+
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
+                .getObject(SurveyResponse.class);
+    }
+
+    Collection<SurveyResponse> getResponsesByStatus(SurveyResponse.ResponseStatus status)
+    {
+        FieldKey fkey = FieldKey.fromParts("Status");
+        SimpleFilter filter = new SimpleFilter(fkey, status.getPkId());
+
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
+                .getCollection(SurveyResponse.class);
+    }
+
+    /**
+     * Verify if survey exists
+     * @param surveyId to verify
+     * @param container holding study/survey
+     * @param user executing query
+     * @return true if survey found
+     */
+    boolean surveyExists(String surveyId, Container container, User user)
+    {
+        //TODO: check if survey exists in DB
+        return true;
+    }
+
+    /**
+     * Verify if appToken is assigned to participant
+     * @param appToken to look up
+     * @return true if apptoken found in mobilestudy.Participant.appToken
+     */
+    boolean participantExists(String appToken)
+    {
+        return getParticipantFromAppToken(appToken) != null;
+    }
+
+    /**
+     * Retrieve the participant record associated with the supplied appToken
+     * @param appToken to lookup
+     * @return Participant if found, null if not
+     */
+    @Nullable
+    Participant getParticipantFromAppToken(String appToken)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        FieldKey pKey = FieldKey.fromParts("apptoken");
+
+        SimpleFilter filter = new SimpleFilter(pKey, appToken);
+        return new TableSelector(schema.getTableInfoParticipant(), filter, null).getObject(Participant.class);
+    }
+
+    /**
+     * Insert new row into the mobileappstudy.Response table
+     * @param resp to insert
+     * @return updated object representing row
+     */
+    @NotNull
+    SurveyResponse insertResponse(@NotNull SurveyResponse resp)
+    {
+        Participant participant = getParticipantFromAppToken(resp.getAppToken());
+        if (participant == null)
+            throw new IllegalStateException("Could not insert Response, Participant associated with appToken not found");
+
+        resp.setContainer(participant.getContainer());
+        resp.setParticipantId(participant.getRowId());
+
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo responseTable = schema.getTableInfoResponse();
+        return Table.insert(null, responseTable, resp);
+    }
+
+    /**
+     * Retrieve the study associated to an appToken via the participant
+     * @param appToken to lookup
+     * @return MobileAppStudy object, will return null if participant or study not found
+     */
+    @Nullable
+    MobileAppStudy getStudyFromAppToken(String appToken)
+    {
+        Participant participant = getParticipantFromAppToken(appToken);
+        if (participant == null)
+            return null;
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), participant.getStudyId());
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoStudy(),  filter, null).getObject(MobileAppStudy.class);
+    }
 }

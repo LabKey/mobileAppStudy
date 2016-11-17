@@ -16,26 +16,25 @@
 
 package org.labkey.mobileappstudy;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
-import org.labkey.api.action.ApiAction;
-import org.labkey.api.action.Marshal;
-import org.labkey.api.action.Marshaller;
-import org.labkey.api.action.SimpleViewAction;
-import org.labkey.api.action.SpringActionController;
+import org.jetbrains.annotations.NotNull;
+import org.labkey.api.action.*;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
-import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
-import org.labkey.mobileappstudy.data.MobileAppStudy;
-import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.*;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Marshal(Marshaller.Jackson)
 public class MobileAppStudyController extends SpringActionController
@@ -114,13 +113,15 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public void validateForm(StudyConfigForm form, Errors errors)
         {
+            MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
             if (form == null)
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
                 errors.reject(ERROR_REQUIRED, "Study short name must be provided.");
             else if (MobileAppStudyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "Study short name '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
-            else if (MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
+            //Check if study exists, name has changed, and at least one participant has enrolled
+            else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
         }
 
@@ -129,17 +130,94 @@ public class MobileAppStudyController extends SpringActionController
         {
             // if submitting again with the same id in the same container, return the existing study object
             MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
-            if (study == null || !study.getShortName().equals(form.getShortName()))
-                study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), getContainer(), getUser());
+            if (study == null || !study.getShortName().equals(form.getShortName()) || study.getCollectionEnabled() != form.getCollectionEnabled())
+                study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), form.getCollectionEnabled(), getContainer(), getUser());
 
-            return success(PageFlowUtil.map("rowId", study.getRowId(), "shortName", study.getShortName()));
+            return success(PageFlowUtil.map(
+                "rowId", study.getRowId(),
+                "shortName", study.getShortName(),
+                "collectionEnabled", study.getCollectionEnabled()
+            ));
+        }
+    }
+
+    /*
+    Ignores container POST-ed to. Pulls container context from the appToken used in request
+     */
+    @RequiresNoPermission
+    public class ProcessResponseAction extends ApiAction<MobileAppSurveyResponseForm>
+    {
+        @Override
+        public void validateForm(MobileAppSurveyResponseForm form, Errors errors)
+        {
+            //Check if form is valid
+            if (form == null)
+            {
+                errors.reject(ERROR_MSG, "Please check the log for errors.");
+                return;
+            }
+
+            //Check if form's required fields are present
+            SurveyInfo info = form.getSurveyInfo();
+            if (info == null)
+                errors.reject(ERROR_REQUIRED, "SurveyInfo not found.");
+            else
+            {
+                if (isBlank(info.getSurveyId()))
+                    errors.reject(ERROR_REQUIRED, "SurveyId not included in request");
+                if (isBlank(info.getVersion()))
+                    errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request.");
+            }
+            if (form.getResponse() == null)
+                errors.reject(ERROR_REQUIRED, "Response not included in request.");
+            if (StringUtils.isBlank(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+            if (errors.hasErrors())
+                return;
+
+
+            //Check if there is an associated participant for the appToken
+            if (!MobileAppStudyManager.get().participantExists(form.getAppToken()))
+                errors.reject(ERROR_MSG, "Unable to identify participant.");
+
+            //Check if there is an associated study for the appToken
+            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
+            if(study == null)
+                errors.reject(ERROR_MSG, "AppToken not associated with study");
+            else
+            {
+                if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
+                    errors.reject(ERROR_MSG, "Survey not found.");
+                else if (!study.getCollectionEnabled())
+                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
+            }
+        }
+
+        @Override
+        public Object execute(MobileAppSurveyResponseForm form, BindException errors) throws Exception
+        {
+            //Record response blob
+            MobileAppStudyManager manager = MobileAppStudyManager.get();
+            //Null checks are done in the validate method
+            SurveyResponse resp = new SurveyResponse(
+                    form.getParticipantId(),
+                    form.getResponse().toString(),
+                    form.getSurveyInfo().getSurveyId(),
+                    form.getSurveyInfo().getVersion()
+            );
+            resp = manager.insertResponse(resp);
+
+            //Add a parsing job
+            final Integer rowId = resp.getRowId();
+            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId));
+
+            return success();
         }
     }
 
     @RequiresNoPermission
     public class EnrollAction extends ApiAction<EnrollmentForm>
     {
-
         public void validateForm(EnrollmentForm form, Errors errors)
         {
             if (form == null)
@@ -175,6 +253,7 @@ public class MobileAppStudyController extends SpringActionController
     public static class StudyConfigForm
     {
         private String _shortName;
+        private boolean _collectionEnabled;
 
         public String getShortName()
         {
@@ -184,6 +263,13 @@ public class MobileAppStudyController extends SpringActionController
         public void setShortName(String shortName)
         {
             _shortName = shortName;
+        }
+
+        public boolean getCollectionEnabled() {
+            return _collectionEnabled;
+        }
+        public void setCollectionEnabled(boolean collectionEnabled) {
+            _collectionEnabled = collectionEnabled;
         }
     }
 
@@ -199,7 +285,7 @@ public class MobileAppStudyController extends SpringActionController
 
         public void setToken(String token)
         {
-            _token = token == null ? null : token.trim().toUpperCase();
+            _token = isBlank(token) ? null : token.trim().toUpperCase();
         }
 
         public String getShortName()
@@ -209,7 +295,7 @@ public class MobileAppStudyController extends SpringActionController
 
         public void setShortName(String shortName)
         {
-            _shortName = shortName == null ? null : shortName.trim().toUpperCase();
+            _shortName = isBlank(shortName) ? null : shortName.trim().toUpperCase();
         }
     }
 
@@ -225,6 +311,59 @@ public class MobileAppStudyController extends SpringActionController
         public void setCount(Integer count)
         {
             _count = count;
+        }
+    }
+
+    public static class MobileAppSurveyResponseForm
+    {
+        private String _type;
+        private String _participantId;
+
+        private JsonNode _response;
+        private SurveyInfo _surveyInfo;
+
+        public SurveyInfo getSurveyInfo()
+        {
+            return _surveyInfo;
+        }
+        public void setSurveyInfo(@NotNull SurveyInfo surveyInfo)
+        {
+            _surveyInfo = surveyInfo;
+        }
+
+        public JsonNode getResponse()
+        {
+            return _response;
+        }
+        public void setResponse (@NotNull JsonNode response)
+        {
+            _response = response;
+        }
+
+        //ParticipantId from JSON request is really the apptoken internally
+        @JsonIgnore
+        public String getAppToken()
+        {
+            return getParticipantId();
+        }
+
+        //ParticipantId from JSON request is really the apptoken internally
+        public String getParticipantId()
+        {
+            return _participantId;
+        }
+        public void setParticipantId(String participantId)
+        {
+            _participantId = participantId;
+        }
+
+        public String getType()
+        {
+            return _type;
+        }
+        public void setType(String type)
+        {
+            _type = type;
         }
     }
 }
