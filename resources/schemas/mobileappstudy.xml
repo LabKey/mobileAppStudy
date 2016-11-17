@@ -106,7 +106,13 @@
             <ns:column columnName="AppToken" />
             <ns:column columnName="SurveyVersion" />
             <ns:column columnName="SurveyId" />
-            <ns:column columnName="Status" />
+            <ns:column columnName="Status">
+                <ns:fk>
+                    <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
+                    <ns:fkTable>ResponseStatus</ns:fkTable>
+                    <ns:fkColumnName>rowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="Processed" />
             <ns:column columnName="ProcessedBy" />
             <ns:column columnName="ErrorMessage" />
