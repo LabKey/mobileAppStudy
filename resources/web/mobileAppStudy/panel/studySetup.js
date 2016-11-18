@@ -26,7 +26,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 xtype: 'toolbar',
                 dock: 'bottom',
                 ui: 'footer',
-                items: [this.getSubmitButton()]
+                items: [this.getSubmitButton(), this.getSuccessMessage()]
             }];
 
             this.callParent();
@@ -45,7 +45,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                     xtype: 'toolbar',
                     dock: 'bottom',
                     ui: 'footer',
-                    items: [this.getSubmitButton()]
+                    items: [this.getSubmitButton(), this.getSuccessMessage()]
                 }];
             }
 
@@ -94,7 +94,8 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 validateOnChange: true,
                 allowOnlyWhitespace: false,
                 listeners: {
-                    change: this.validateForm
+                    change: this.validateForm,
+                    scope: this
                 }
             });
         }
@@ -104,6 +105,18 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
     getFormFields: function() {
         return [this.getStudyIdField()];
     },
+
+    getSuccessMessage: function(){
+        if (!this.successMessage) {
+            this.successMessage = Ext4.create("Ext.form.Label", {
+                text: 'Configuration Saved',
+                cls: 'labkey-message',
+                hidden: true
+            });
+        }
+        return this.successMessage
+    },
+
     enableCollectionWarning: function(btn) {
         btn.setDisabled(true);
         var collectionCheckbox = this.getEnableCollectionControl();
@@ -137,8 +150,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 //Set panel values
                 this.shortName = obj.data.shortName;
                 this.collectionEnabled = obj.data.collectionEnabled;
-
-                //TODO: Display a successful save message?
+                this.getSuccessMessage().show();
             }
             else
             {
@@ -153,7 +165,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             if (obj.errors)
             {
                 //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName
-                Ext4.Msg.alert("Error", "There were problems storing the configuration. " + obj.errors[0].message);
+                Ext4.Msg.alert("Error", "There were problems storing the studyId. " + obj.errors[0].message);
             }
         }
 
@@ -179,13 +191,16 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 value: this.collectionEnabled,
                 disabled: !this.canChangeCollection,
                 listeners: {
-                    change: this.validateForm
+                    change: this.validateForm,
+                    scope: this
                 }
             });
         }
         return this.collectionCheckbox;
     },
     validateForm: function(field){
+        this.getSuccessMessage().hide();
+
         var form = field.up('form');
         var saveBtn = form.getSubmitButton();
         if (saveBtn.hidden)
