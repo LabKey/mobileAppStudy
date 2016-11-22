@@ -147,7 +147,7 @@ public class MobileAppStudyController extends SpringActionController
 
             return success(PageFlowUtil.map(
                 "rowId", study.getRowId(),
-                "shortName", study.getShortName(),
+                "studyId", study.getShortName(),
                 "collectionEnabled", study.getCollectionEnabled()
             ));
         }
@@ -238,7 +238,7 @@ public class MobileAppStudyController extends SpringActionController
                 //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
                 errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
             else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
-                errors.rejectValue("shortName", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
+                errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
             else if (!StringUtils.isEmpty(form.getToken()))
             {
                 if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
@@ -319,6 +319,11 @@ public class MobileAppStudyController extends SpringActionController
         {
             setShortName(studyId);
         }
+
+        public String getStudyId()
+        {
+            return _shortName;
+        }
     }
 
     public static class EnrollmentForm
@@ -348,6 +353,11 @@ public class MobileAppStudyController extends SpringActionController
         public void setStudyId(String studyId)
         {
             setShortName(studyId);
+        }
+
+        public String getStudyId()
+        {
+            return _shortName;
         }
     }
 
