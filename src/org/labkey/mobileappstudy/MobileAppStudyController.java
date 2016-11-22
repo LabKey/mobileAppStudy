@@ -20,19 +20,31 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.action.*;
+import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.Marshal;
+import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.SimpleViewAction;
+import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
-import org.labkey.mobileappstudy.data.*;
+import org.labkey.api.view.ViewForm;
+import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
+import org.labkey.mobileappstudy.data.MobileAppStudy;
+import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.SurveyInfo;
+import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -248,6 +260,34 @@ public class MobileAppStudyController extends SpringActionController
         {
             Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
             return success(PageFlowUtil.map("appToken", participant.getAppToken()));
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class ReprocessResponseAction extends ApiAction<ViewForm>
+    {
+        @Override
+        public void validateForm(ViewForm form, Errors errors)
+        {
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format.");
+
+            Set<Integer> listIds = DataRegionSelection.getSelectedIntegers(form.getViewContext(), false);
+            if (listIds.size() == 0)
+                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
+            String nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(listIds);
+            if (StringUtils.isNotBlank(nonErrorIds))
+                errors.reject(ERROR_MSG, "Cannot re-process Response Id(s) [" + nonErrorIds + "]");
+        }
+
+        @Override
+        public Object execute(ViewForm form, BindException errors) throws Exception
+        {
+            Set<Integer> listIds = DataRegionSelection.getSelectedIntegers(form.getViewContext(), true);
+            int reprocessing = MobileAppStudyManager.get().reprocessResponses(getUser(), listIds);
+
+            //TODO need to redirect ?somewhere?
+            return success("countReprocessed", reprocessing);
         }
     }
 

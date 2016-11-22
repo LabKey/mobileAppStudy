@@ -20,7 +20,16 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.*;
+import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.DbScope;
+import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.User;
@@ -28,11 +37,17 @@ import org.labkey.api.util.ChecksumUtil;
 import org.labkey.api.util.ContainerUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
-import org.labkey.mobileappstudy.data.*;
+import org.labkey.mobileappstudy.data.EnrollmentToken;
+import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
+import org.labkey.mobileappstudy.data.MobileAppStudy;
+import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.SurveyResponse;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MobileAppStudyManager
 {
@@ -525,5 +540,43 @@ public class MobileAppStudyManager
             return null;
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), participant.getStudyId());
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoStudy(),  filter, null).getObject(MobileAppStudy.class);
+    }
+
+    int reprocessResponses(User user, @NotNull Set<Integer> listIds)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo responseTable = schema.getTableInfoResponse();
+        DbScope scope = MobileAppStudySchema.getInstance().getSchema().getScope();
+
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), listIds, CompareType.IN);
+        Collection<SurveyResponse> responses = new TableSelector(
+                MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null).getCollection(SurveyResponse.class);
+
+        responses.forEach(response ->
+        {
+            response.setProcessed(new Date());
+            response.setProcessedBy(user);
+            response.setStatus(SurveyResponse.ResponseStatus.PENDING);
+            //TODO: should we clear the ErrorMessage?
+
+            try (DbScope.Transaction transaction = scope.ensureTransaction())
+            {
+                Table.update(user, responseTable, response, response.getRowId());
+                transaction.commit();
+                enqueueSurveyResponse(() -> shredSurveyResponse(response.getRowId()));
+            }
+        });
+
+        return responses.size();
+    }
+
+    public String getNonErrorResponses(Set<Integer> listIds)
+    {
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), listIds, CompareType.IN);
+        filter.addCondition(FieldKey.fromParts("status"), SurveyResponse.ResponseStatus.ERROR.getPkId(), CompareType.NEQ);
+        Collection<SurveyResponse> responses = new TableSelector(
+                MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null).getCollection(SurveyResponse.class);
+
+        return String.join(", ", responses.stream().map((response) -> response.getRowId().toString()).collect(Collectors.toList()));
     }
 }

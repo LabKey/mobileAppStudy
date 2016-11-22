@@ -16,7 +16,7 @@
  * limitations under the License.
 
  -->
-<ns:tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ns:tables xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://labkey.org/data/xml ../../../../../schemas/tableInfo.xsd">
     <ns:table tableName="EnrollmentToken" tableDbType="TABLE">
         <ns:columns>
             <ns:column columnName="RowId">
@@ -54,7 +54,7 @@
             <ns:column columnName="Modified"/>
             <ns:column columnName="ModifiedBy"/>
             <ns:column columnName="Container"/>
-            <ns:column columnName="CollectionEnabled" >
+            <ns:column columnName="CollectionEnabled">
                 <ns:defaultValue>false</ns:defaultValue>
             </ns:column>
         </ns:columns>
@@ -77,8 +77,8 @@
     </ns:table>
     <ns:table tableName="Participant" tableDbType="TABLE">
         <ns:columns>
-            <ns:column columnName="RowId">
-                <ns:column columnName="Participant Id"/>
+            <ns:column columnName="RowId" >
+                <ns:columnTitle>Participant Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="AppToken"/>
             <ns:column columnName="StudyId">
@@ -94,8 +94,10 @@
     </ns:table>
     <ns:table tableName="Response" tableDbType="TABLE">
         <ns:columns>
-            <ns:column columnName="RowId" />
-            <ns:column columnName="Response" />
+            <ns:column columnName="RowId">
+                <ns:columnTitle>Response Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Response"/>
             <ns:column columnName="ParticipantId">
                 <ns:fk>
                     <ns:fkColumnName>RowId</ns:fkColumnName>
@@ -103,9 +105,9 @@
                     <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="AppToken" />
-            <ns:column columnName="SurveyVersion" />
-            <ns:column columnName="SurveyId" />
+            <ns:column columnName="AppToken"/>
+            <ns:column columnName="SurveyVersion"/>
+            <ns:column columnName="SurveyId"/>
             <ns:column columnName="Status">
                 <ns:fk>
                     <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
@@ -113,12 +115,18 @@
                     <ns:fkColumnName>rowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="Processed" />
-            <ns:column columnName="ProcessedBy" />
-            <ns:column columnName="ErrorMessage" />
-            <ns:column columnName="Container" />
-            <ns:column columnName="Created" />
-            <ns:column columnName="CreatedBy" />
+            <ns:column columnName="Processed"/>
+            <ns:column columnName="ProcessedBy">
+                <ns:fk>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>Users</ns:fkTable>
+                    <ns:fkColumnName>userId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="ErrorMessage"/>
+            <ns:column columnName="Container"/>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy"/>
         </ns:columns>
     </ns:table>
 </ns:tables>
