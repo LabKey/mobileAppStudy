@@ -32,7 +32,6 @@ import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
-import org.labkey.api.view.ViewForm;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
@@ -45,6 +44,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -198,6 +198,7 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_MSG, "AppToken not associated with study");
             else
             {
+                assert info != null; //Null is checked above, but this gets rid of the lint
                 if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
                     errors.reject(ERROR_MSG, "Survey not found.");
                 else if (!study.getCollectionEnabled())
@@ -264,32 +265,52 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ReprocessResponseAction extends ApiAction<ViewForm>
+    public class ReprocessResponseAction extends ApiAction<ReprocessResponseForm>
     {
         @Override
-        public void validateForm(ViewForm form, Errors errors)
+        public void validateForm(ReprocessResponseForm form, Errors errors)
         {
             if (form == null)
+            {
                 errors.reject(ERROR_MSG, "Invalid input format.");
+                return;
+            }
 
-            Set<Integer> listIds = DataRegionSelection.getSelectedIntegers(form.getViewContext(), false);
+            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, false);
+            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
             if (listIds.size() == 0)
                 errors.reject(ERROR_REQUIRED, "No responses to reprocess");
-            String nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(listIds);
+            String nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
             if (StringUtils.isNotBlank(nonErrorIds))
-                errors.reject(ERROR_MSG, "Cannot re-process Response Id(s) [" + nonErrorIds + "]");
+                errors.reject(ERROR_MSG, "Invalid request. Cannot re-process Response Id(s) [" + nonErrorIds + "].");
         }
 
         @Override
-        public Object execute(ViewForm form, BindException errors) throws Exception
+        public Object execute(ReprocessResponseForm form, BindException errors) throws Exception
         {
-            Set<Integer> listIds = DataRegionSelection.getSelectedIntegers(form.getViewContext(), true);
-            int reprocessing = MobileAppStudyManager.get().reprocessResponses(getUser(), listIds);
+            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, true);
+            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
+            int updated = MobileAppStudyManager.get().reprocessResponses(getUser(),
+                    ids);
 
-            //TODO need to redirect ?somewhere?
-            return success("countReprocessed", reprocessing);
+            return success("countReprocessed", updated);
         }
     }
+
+    public static class ReprocessResponseForm
+    {
+        private String _key;
+
+        public String getKey()
+        {
+            return _key;
+        }
+        public void setKey(String key)
+        {
+            _key = key;
+        }
+    }
+
 
     public static class StudyConfigForm
     {

@@ -32,7 +32,6 @@ import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
-import org.labkey.mobileappstudy.MobileAppStudyController;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.springframework.validation.BindException;
@@ -103,7 +102,26 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
                 protected void populateButtonBar(DataView view, ButtonBar bar)
                 {
                     super.populateButtonBar(view, bar);
-                    ActionButton button = new ActionButton(MobileAppStudyController.ReprocessResponseAction.class, "Reprocess");
+                    ActionButton button = new ActionButton("Reprocess");
+                    button.setRequiresSelection(true);
+                    button.setScript("LABKEY.Ajax.request({\n" +
+                            "    url: LABKEY.ActionURL.buildURL('mobileappstudy', 'reprocessResponse.api') ,\n" +
+                            "    method: 'POST',\n" +
+                            "    success: function (request) {\n" +
+                            "        var response = JSON.parse(request.responseText);\n" +
+                            "        if (response.success)\n" +
+                            "            window.location.reload();\n" +
+                            "        else\n" +
+                            "           LABKEY.Utils.displayAjaxErrorResponse(response);" +
+                            "    },\n" +
+                            "    failure: function (response, opts) {\n" +
+                            "        LABKEY.Utils.displayAjaxErrorResponse(response, opts);\n" +
+                            "    },\n" +
+                            "    jsonData: {" +
+                            "       key: LABKEY.DataRegions.query.selectionKey\n" +
+                            "    }, \n" +
+                            "    scope: this\n" +
+                            "});");
                     bar.add(button);
                 }
             };
