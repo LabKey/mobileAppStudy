@@ -62,18 +62,16 @@ public class MobileAppStudyManager
 
     private MobileAppStudyManager()
     {
-        // prevent external construction with a private default constructor
-
-        //TODO: Pick-up any pending shredder jobs that might have been lost at shutdown/crash/etc
         if (_shredder == null)
             _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
+        //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
         Collection<SurveyResponse> pendingResponses = getResponsesByStatus(SurveyResponse.ResponseStatus.PENDING);
         if (pendingResponses != null)
         {
             pendingResponses.forEach(response ->
             {
                 final Integer rowId = response.getRowId();
-                enqueueSurveyResponse(() -> shredSurveyResponse(rowId));
+                enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null));
             });
         }
     }
@@ -438,11 +436,15 @@ public class MobileAppStudyManager
     /**
      * Method to process Survey Responses
      * @param rowId mobileappstudy.Response.RowId to process
+     * @param user the user initiating the shredding request
      */
-    void shredSurveyResponse(@NotNull Integer rowId)
+    void shredSurveyResponse(@NotNull Integer rowId, @Nullable User user)
     {
-        SurveyResponse response = getResponse(rowId);
         logger.info(String.format("Processing %s", rowId));
+
+        SurveyResponse response = getResponse(rowId);
+        if (response != null)
+            response.shred(user);
     }
 
     /**
@@ -563,11 +565,32 @@ public class MobileAppStudyManager
             {
                 Table.update(user, responseTable, response, response.getRowId());
                 transaction.commit();
-                enqueueSurveyResponse(() -> shredSurveyResponse(response.getRowId()));
+                enqueueSurveyResponse(() -> shredSurveyResponse(response.getRowId(), user));
             }
         });
 
         return responses.size();
+    }
+
+    public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull SurveyResponse.ResponseStatus newStatus, @Nullable String errorMessage)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        DbScope scope = schema.getSchema().getScope();
+        TableInfo responseTable = schema.getTableInfoResponse();
+        SurveyResponse response = new TableSelector(responseTable).getObject(rowId, SurveyResponse.class);
+
+        response.setStatus(newStatus);
+        response.setErrorMessage(errorMessage);
+        // we currently have only start and end statuses, so we can safely set the processed and processedBy
+        // fields at this point.
+        response.setProcessed(new Date());
+        response.setProcessedBy(user);
+
+        try (DbScope.Transaction transaction = scope.ensureTransaction())
+        {
+            Table.update(user, responseTable, response, response.getRowId());
+            transaction.commit();
+        }
     }
 
     public String getNonErrorResponses(Set<Integer> listIds)

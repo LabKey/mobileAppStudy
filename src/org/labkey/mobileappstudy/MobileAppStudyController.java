@@ -154,7 +154,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     /*
-    Ignores container POST-ed to. Pulls container context from the appToken used in request
+    Ignores container POST-ed from. Pulls container context from the appToken used in request
      */
     @RequiresNoPermission
     public class ProcessResponseAction extends ApiAction<MobileAppSurveyResponseForm>
@@ -185,7 +185,10 @@ public class MobileAppStudyController extends SpringActionController
             if (StringUtils.isBlank(form.getParticipantId()))
                 errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
             if (errors.hasErrors())
+            {
+                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
                 return;
+            }
 
 
             //Check if there is an associated participant for the appToken
@@ -203,6 +206,10 @@ public class MobileAppStudyController extends SpringActionController
                     errors.reject(ERROR_MSG, "Survey not found.");
                 else if (!study.getCollectionEnabled())
                     errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
+            }
+            if (errors.hasErrors())
+            {
+                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
             }
         }
 
@@ -222,7 +229,7 @@ public class MobileAppStudyController extends SpringActionController
 
             //Add a parsing job
             final Integer rowId = resp.getRowId();
-            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId));
+            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId, getUser()));
 
             return success();
         }
@@ -234,25 +241,30 @@ public class MobileAppStudyController extends SpringActionController
         public void validateForm(EnrollmentForm form, Errors errors)
         {
             if (form == null)
+            {
                 errors.reject(ERROR_MSG, "Invalid input format.");
-            else if (StringUtils.isEmpty(form.getShortName()))
-                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
-                errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
-            else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
-                errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
-            else if (!StringUtils.isEmpty(form.getToken()))
-            {
-                if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
-                    errors.reject(ERROR_MSG, "Token already in use");
-                else if (!MobileAppStudyManager.get().isChecksumValid(form.getToken()))
-                    errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
-                else if (!MobileAppStudyManager.get().isValidStudyToken(form.getToken(), form.getShortName()))
-                    errors.rejectValue("token", ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
             }
-            // we allow for the possibility that someone can enroll without using an enrollment token
-            else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
+            else
             {
-                errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                if (StringUtils.isEmpty(form.getShortName()))
+                    //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
+                    errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
+                else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
+                    errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
+                else if (!StringUtils.isEmpty(form.getToken()))
+                {
+                    if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
+                        errors.reject(ERROR_MSG, "Token already in use");
+                    else if (!MobileAppStudyManager.get().isChecksumValid(form.getToken()))
+                        errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
+                    else if (!MobileAppStudyManager.get().isValidStudyToken(form.getToken(), form.getShortName()))
+                        errors.rejectValue("token", ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
+                }
+                // we allow for the possibility that someone can enroll without using an enrollment token
+                else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
+                {
+                    errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                }
             }
         }
 

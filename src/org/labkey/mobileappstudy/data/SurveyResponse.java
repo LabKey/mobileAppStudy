@@ -1,20 +1,31 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.exp.list.ListDefinition;
+import org.labkey.api.exp.list.ListService;
 import org.labkey.api.security.User;
+import org.labkey.mobileappstudy.MobileAppStudyManager;
 
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SurveyResponse
 {
+    private static final Logger logger = Logger.getLogger(SurveyResponse.class);
+    private static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     public enum ResponseStatus {
 
         /** list order doesn't matter, but don't change id's unless you also update mobileappstudy.response.status **/
         PENDING(0, "Pending"),
-        PROCESSING(1, "Processing"),
-        PROCESSED(2, "Processed"),
-        ERROR(3, "Error");
+        PROCESSED(1, "Processed"),
+        ERROR(2, "Error");
 
         private final int pkId;
         private final String displayText;
@@ -170,5 +181,48 @@ public class SurveyResponse
     public void setAppToken(String appToken)
     {
         _appToken = appToken;
+    }
+
+    public void shred(@Nullable User user)
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            MobileAppStudyManager studyManager = MobileAppStudyManager.get();
+            // first check for the survey list
+            ListDefinition listDef = ListService.get().getList(getContainer(), getSurveyId());
+            if (listDef == null)
+            {
+                logProcessingError(user, "Invalid surveyId (" + getSurveyId() + ") for container " + getContainer().getName());
+                return;
+            }
+            mapper.setDateFormat(DATE_TIME_FORMAT);
+            Response r = mapper.readValue(getResponse(), Response.class);
+        }
+        catch (IOException e)
+        {
+            logProcessingError(user, e);
+            MobileAppStudyManager.get().updateProcessingStatus(user, getRowId(), ResponseStatus.ERROR, e.getMessage());
+        }
+
+    }
+
+    private void logProcessingError(@Nullable User user, @NotNull String message)
+    {
+        logProcessingError(user, message, null);
+    }
+
+    private void logProcessingError(@Nullable User user, @NotNull Exception e)
+    {
+        logProcessingError(user, e.getMessage(), e);
+    }
+
+    private void logProcessingError(@Nullable User user, @Nullable String message, @Nullable Exception e)
+    {
+        if (message == null)
+            message = "Unable to process response for survey " + getSurveyId() + " in container " + getContainer().getName();
+
+        logger.error(message, e);
+        MobileAppStudyManager.get().updateProcessingStatus(user, getRowId(), ResponseStatus.ERROR, message);
     }
 }
