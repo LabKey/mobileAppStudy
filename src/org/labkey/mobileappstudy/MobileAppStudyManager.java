@@ -41,6 +41,7 @@ import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.ResponseMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 
 import java.util.Collection;
@@ -442,9 +443,9 @@ public class MobileAppStudyManager
     {
         logger.info(String.format("Processing %s", rowId));
 
-        SurveyResponse response = getResponse(rowId);
-        if (response != null)
-            response.shred(user);
+//        SurveyResponse response = getResponse(rowId);
+//        if (response != null)
+//            response.shred(user);
     }
 
     /**
@@ -469,6 +470,11 @@ public class MobileAppStudyManager
 
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
                 .getCollection(SurveyResponse.class);
+    }
+
+    public void insertResponseMetadata(@NotNull ResponseMetadata metadata)
+    {
+
     }
 
     /**
@@ -557,7 +563,8 @@ public class MobileAppStudyManager
         responses.forEach(response ->
         {
             response.setProcessed(new Date());
-            response.setProcessedBy(user);
+            if (user != null)
+                response.setProcessedBy(user);
             response.setStatus(SurveyResponse.ResponseStatus.PENDING);
             //TODO: should we clear the ErrorMessage?
 
@@ -584,7 +591,8 @@ public class MobileAppStudyManager
         // we currently have only start and end statuses, so we can safely set the processed and processedBy
         // fields at this point.
         response.setProcessed(new Date());
-        response.setProcessedBy(user);
+        if (user != null)
+            response.setProcessedBy(user);
 
         try (DbScope.Transaction transaction = scope.ensureTransaction())
         {
