@@ -9,5 +9,5 @@ CREATE TABLE mobileappstudy.ResponseMetadata
   EndTime TIMESTAMP,
   Skipped BOOLEAN,
   Created TIMESTAMP NOT NULL,
-  CONSTRAINT PK_ResponseMetadata PRIMARY KEY (RowId),
+  CONSTRAINT PK_ResponseMetadata PRIMARY KEY (RowId)
 );
