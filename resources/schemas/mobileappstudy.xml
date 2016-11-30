@@ -93,11 +93,16 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="Response" tableDbType="TABLE">
+        <ns:titleColumn>RowId</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="RowId">
                 <ns:columnTitle>Response Id</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="Response"/>
+            <ns:column columnName="Response">
+                <ns:displayColumnFactory>
+                    <ns:className>org.labkey.api.data.JsonPrettyPrintDisplayColumnFactory</ns:className>
+                </ns:displayColumnFactory>
+            </ns:column>
             <ns:column columnName="ParticipantId">
                 <ns:fk>
                     <ns:fkColumnName>RowId</ns:fkColumnName>
