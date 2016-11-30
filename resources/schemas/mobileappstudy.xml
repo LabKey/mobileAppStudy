@@ -138,4 +138,20 @@
             <ns:column columnName="CreatedBy"/>
         </ns:columns>
     </ns:table>
+    <ns:table tableName="ResponseMetadata" tableDbType="TABLE">
+        <ns:titleColumn>RowId</ns:titleColumn>
+        <ns:columns>
+            <ns:column columnName="RowId">
+                <ns:columnTitle>Response Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="ListName"/>
+            <ns:column columnName="SurveyId"/>
+            <ns:column columnName="QuestionId"/>
+            <ns:column columnName="StartTime"/>
+            <ns:column columnName="EndTime"/>
+            <ns:column columnName="Skipped"/>
+            <ns:column columnName="Container"/>
+            <ns:column columnName="Created"/>
+        </ns:columns>
+    </ns:table>
 </ns:tables>
