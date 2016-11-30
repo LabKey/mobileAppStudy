@@ -10,7 +10,6 @@ import org.labkey.api.exp.list.ListService;
 import org.labkey.api.security.User;
 import org.labkey.mobileappstudy.MobileAppStudyManager;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,7 +17,7 @@ import java.util.Date;
 public class SurveyResponse
 {
     private static final Logger logger = Logger.getLogger(SurveyResponse.class);
-    private static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    public static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     public enum ResponseStatus {
 
@@ -196,10 +195,13 @@ public class SurveyResponse
                 logProcessingError(user, "Invalid surveyId (" + getSurveyId() + ") for container " + getContainer().getName());
                 return;
             }
+            // now read the response data
             mapper.setDateFormat(DATE_TIME_FORMAT);
-            Response r = mapper.readValue(getResponse(), Response.class);
+            Response response = mapper.readValue(getResponse(), Response.class);
+            // CONSIDER separate shred and store.
+            response.store(user, getContainer(), listDef, getParticipantId());
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             logProcessingError(user, e);
             MobileAppStudyManager.get().updateProcessingStatus(user, getRowId(), ResponseStatus.ERROR, e.getMessage());

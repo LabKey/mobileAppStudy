@@ -41,7 +41,7 @@ import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
-import org.labkey.mobileappstudy.data.ResponseMetadata;
+import org.labkey.mobileappstudy.data.ResultMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 
 import java.util.Collection;
@@ -443,9 +443,9 @@ public class MobileAppStudyManager
     {
         logger.info(String.format("Processing %s", rowId));
 
-//        SurveyResponse response = getResponse(rowId);
-//        if (response != null)
-//            response.shred(user);
+        SurveyResponse response = getResponse(rowId);
+        if (response != null)
+            response.shred(user);
     }
 
     /**
@@ -472,9 +472,17 @@ public class MobileAppStudyManager
                 .getCollection(SurveyResponse.class);
     }
 
-    public void insertResponseMetadata(@NotNull ResponseMetadata metadata)
+    public void insertResultMetadata(@Nullable User user, @NotNull ResultMetadata metadata)
     {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        DbScope scope = schema.getSchema().getScope();
+        TableInfo responseTable = schema.getTableInfoResponseMetadata();
 
+        try (DbScope.Transaction transaction = scope.ensureTransaction())
+        {
+            Table.insert(user, responseTable, metadata);
+            transaction.commit();
+        }
     }
 
     /**
