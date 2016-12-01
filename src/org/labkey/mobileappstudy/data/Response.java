@@ -72,7 +72,7 @@ public class Response
     public List<SurveyResult> getSingleValuedResults()
     {
         List<SurveyResult> results = new ArrayList<>();
-        for (SurveyResult result: getResults())
+        for (SurveyResult result : getResults())
         {
             if (result.getValueType().isSingleValued())
                 results.add(result);
@@ -83,7 +83,7 @@ public class Response
     public List<SurveyResult> getMultiValuedResults()
     {
         List<SurveyResult> results = new ArrayList<>();
-        for (SurveyResult result: getResults())
+        for (SurveyResult result : getResults())
         {
             if (!result.getValueType().isSingleValued())
                 results.add(result);
@@ -173,9 +173,7 @@ public class Response
         ListDefinition listDef = ListService.get().getList(container, listName);
         if (listDef == null)
         {
-            // We had said we wouldn't do this list creation just yet, but seems ok to do it now.
-            listDef = ListService.get().createList(container, listName, ListDefinition.KeyType.AutoIncrementInteger);
-//            throw new Exception("Invalid list '" + listName + "' for container '" + container.getName() + "'");
+            throw new Exception("Invalid list '" + listName + "' for container '" + container.getName() + "'");
         }
         TableInfo resultTable = listDef.getTable(user, container);
         if (resultTable == null)
