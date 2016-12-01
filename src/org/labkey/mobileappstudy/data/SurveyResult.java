@@ -23,7 +23,8 @@ public class SurveyResult extends ResultMetadata
         INTEGER("scale", true, JdbcType.INTEGER),
         FLOAT("number", true, JdbcType.REAL),
         GROUPED_RESULT("groupedResult", false, null),
-        STRING("text", true, JdbcType.LONGVARCHAR);
+        TEXT("text", true, JdbcType.LONGVARCHAR),
+        STRING("string", true, JdbcType.VARCHAR);
 
         private String _typeName;
         private Boolean _singleValued;
@@ -69,10 +70,10 @@ public class SurveyResult extends ResultMetadata
     }
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    private String type;
-    private String identifier;
-    private Object result;
-    private String listName;
+    private String _type;
+    private String _identifier;
+    private Object _value;
+    private String _listName;
 
 
     public ValueType getValueType()
@@ -82,46 +83,53 @@ public class SurveyResult extends ResultMetadata
 
     public String getType()
     {
-        return type;
+        return _type;
     }
 
     public void setType(String type)
     {
-        this.type = type;
+        this._type = type;
     }
 
     public String getIdentifier()
     {
-        return identifier;
+        return _identifier;
     }
 
     public void setIdentifier(String identifier)
     {
-        this.identifier = identifier;
+        this._identifier = identifier;
     }
 
     @Override
     public String getListName()
     {
-        return listName;
+        return _listName;
     }
 
     @Override
     public void setListName(String listName)
     {
-        this.listName = listName;
+        this._listName = listName;
     }
 
     public Object getResult()
     {
-        return result;
+        return _value;
+    }
+
+    public Object getValue() { return _value; }
+
+    public void setValue(Object value)
+    {
+        _value = value;
     }
 
     public void setResult(Object result) throws IllegalArgumentException
     {
         if (getSkipped() || result == null)
         {
-            this.result = null;
+            this._value = null;
             return;
         }
         switch (getValueType())
@@ -131,7 +139,7 @@ public class SurveyResult extends ResultMetadata
                 {
                     try
                     {
-                        this.result = DATE_FORMAT.parse((String) result);
+                        this._value = DATE_FORMAT.parse((String) result);
                     }
                     catch (ParseException e)
                     {
@@ -143,14 +151,14 @@ public class SurveyResult extends ResultMetadata
                 break;
             case BOOLEAN:
                 if (result instanceof Boolean)
-                    this.result = result;
+                    this._value = result;
                 else
                     throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Boolean but got " + result.getClass());
                 break;
             case CHOICE:
                 if (result instanceof List)
                 {
-                    this.result = result;
+                    this._value = result;
                 }
                 else
                     throw new IllegalArgumentException("Value type for choice field '" + getIdentifier() + "' expected to be ArrayList but got " + result.getClass());
@@ -158,7 +166,7 @@ public class SurveyResult extends ResultMetadata
             case INTEGER:
                 if (result instanceof Integer)
                 {
-                    this.result = result;
+                    this._value = result;
                 }
                 else
                     throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer but got " + result.getClass());
@@ -166,7 +174,7 @@ public class SurveyResult extends ResultMetadata
             case FLOAT:
                 if (result instanceof Float || result instanceof Integer)
                 {
-                    this.result = result;
+                    this._value = result;
                 }
                 else
                     throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer or Float but got " + result.getClass());
@@ -174,14 +182,15 @@ public class SurveyResult extends ResultMetadata
             case GROUPED_RESULT:
                 if (result instanceof List)
                 {
-                    this.result = convertSurveyResults((List) result);
+                    this._value = convertSurveyResults((List) result);
                 }
                 else
                     throw new IllegalArgumentException("Value type for grouped result field '" + getIdentifier() + "' expected to be ArrayList but got " + result.getClass());
                 break;
+            case TEXT:
             case STRING:
                 if (result instanceof String)
-                    this.result = result;
+                    this._value = result;
                 else
                     throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be String but got " + result.getClass());
                 break;

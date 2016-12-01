@@ -10,117 +10,116 @@ import java.util.Date;
  */
 public class ResultMetadata
 {
-    private Integer rowId;
-    private Container container;
-    private String listName;
-    private Integer surveyId;
-    private String questionId;
-    private Date startTime;
-    private Date endTime;
-    private Boolean skipped;
-    private Date created;
-
+    private Integer _rowId;
+    private Container _container;
+    private String _listName;
+    private Integer _surveyId;
+    private String _questionId;
+    private Date _startTime;
+    private Date _endTime;
+    private Boolean _skipped;
+    private Date _created;
 
     public Integer getRowId()
     {
-        return rowId;
+        return _rowId;
     }
 
     public void setRowId(Integer rowId)
     {
-        this.rowId = rowId;
+        this._rowId = rowId;
     }
 
     @JsonIgnore
     public Container getContainer()
     {
-        return container;
+        return _container;
     }
 
     @JsonIgnore
     public void setContainer(Container container)
     {
-        this.container = container;
+        this._container = container;
     }
 
     public String getListName()
     {
-        return listName;
+        return _listName;
     }
 
     public void setListName(String listName)
     {
-        this.listName = listName;
+        this._listName = listName;
     }
 
     public Integer getSurveyId()
     {
-        return surveyId;
+        return _surveyId;
     }
 
     public void setSurveyId(Integer surveyId)
     {
-        this.surveyId = surveyId;
+        this._surveyId = surveyId;
     }
 
     public String getQuestionId()
     {
-        return questionId;
+        return _questionId;
     }
 
     public void setQuestionId(String questionId)
     {
-        this.questionId = questionId;
+        this._questionId = questionId;
     }
 
     public Date getStartTime()
     {
-        return startTime;
+        return _startTime;
     }
 
     public void setStart(Date startTime)
     {
-        this.startTime = startTime;
+        this._startTime = startTime;
     }
 
     public void setStartTime(Date startTime)
     {
-        this.startTime = startTime;
+        this._startTime = startTime;
     }
 
     public Date getEndTime()
     {
-        return endTime;
+        return _endTime;
     }
 
     public void setEnd(Date endTime)
     {
-        this.endTime = endTime;
+        this._endTime = endTime;
     }
 
     public void setEndTime(Date endTime)
     {
-        this.endTime = endTime;
+        this._endTime = endTime;
     }
 
     public Boolean getSkipped()
     {
-        return skipped;
+        return _skipped;
     }
 
     public void setSkipped(Boolean skipped)
     {
-        this.skipped = skipped;
+        this._skipped = skipped;
     }
 
     public Date getCreated()
     {
-        return created;
+        return _created;
     }
 
     public void setCreated(Date created)
     {
-        this.created = created;
+        this._created = created;
     }
 
 }

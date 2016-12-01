@@ -199,7 +199,7 @@ public class SurveyResponse
             mapper.setDateFormat(DATE_TIME_FORMAT);
             Response response = mapper.readValue(getResponse(), Response.class);
             // CONSIDER separate shred and store.
-            response.store(user, getContainer(), listDef, getParticipantId());
+            response.store(user, getContainer(), getSurveyId(), getParticipantId());
         }
         catch (Exception e)
         {
