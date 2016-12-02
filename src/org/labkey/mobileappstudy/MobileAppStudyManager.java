@@ -254,7 +254,7 @@ public class MobileAppStudyManager
      * Remove data associated with the given container from the tables for this module
      * @param c container that is being removed
      */
-    public static void purgeContainer(@NotNull Container c)
+    public void purgeContainer(@NotNull Container c)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         try (DbScope.Transaction transaction = schema.getSchema().getScope().ensureTransaction())
