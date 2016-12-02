@@ -17,6 +17,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.security.roles.SubmitterRole;
+import org.labkey.api.view.NotFoundException;
 import org.labkey.mobileappstudy.MobileAppStudySchema;
 
 import java.util.ArrayList;
@@ -69,28 +70,6 @@ public class Response
         return _results;
     }
 
-    public List<SurveyResult> getSingleValuedResults()
-    {
-        List<SurveyResult> results = new ArrayList<>();
-        for (SurveyResult result : getResults())
-        {
-            if (result.getValueType().isSingleValued())
-                results.add(result);
-        }
-        return results;
-    }
-
-    public List<SurveyResult> getMultiValuedResults()
-    {
-        List<SurveyResult> results = new ArrayList<>();
-        for (SurveyResult result : getResults())
-        {
-            if (!result.getValueType().isSingleValued())
-                results.add(result);
-        }
-        return results;
-    }
-
     public void setResults(List<SurveyResult> results)
     {
         this._results = results;
@@ -113,88 +92,83 @@ public class Response
         }
     }
 
-    private Map<String, Object> storeSurveyResult(String listName, Integer participantId, List<SurveyResult> results, List<String> errors, Container container, User user) throws Exception
+    private void storeSurveyResult(String listName, Integer participantId, List<SurveyResult> results, List<String> errors, Container container, User user) throws Exception
     {
-        TableInfo surveyTable = getResultTable(listName, container, user);
-
+        // initialize the data map with the survey result values
         Map<String, Object> data = new ArrayListMap<>();
         data.put("startTime", getStartTime());
         data.put("endTime", getEndTime());
         data.put("participantId", participantId);
 
-        // find all the single-value results, check if they are in the list, check the type, and add them to the
-        // map if everything is good
-        List<SurveyResult> multiValuedResults = new ArrayList<>();
-        List<SurveyResult> singleValuedResults = new ArrayList<>();
+        Map<String, Object> row = storeListResults(container, user, null, listName, results, data, errors);
+        if (!row.isEmpty())
+        {
+            Integer surveyId = (Integer) row.get("Key");
+            List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, results);
+            storeMultiValuedResults(multiValuedResults, surveyId, user, container, errors);
+        }
+    }
 
+    private List<SurveyResult> getSingleValuedResults(Container container, TableInfo list, Map<String, Object> data, List<SurveyResult> results, List<String> errors)
+    {
+        List<SurveyResult> singleValuedResults = new ArrayList<>();
         for (SurveyResult result : results)
         {
             if (result.getValueType().isSingleValued())
             {
-                result.setListName(listName);
-                if (validateListColumn(container, surveyTable, result.getIdentifier(), errors, result.getValueType()))
+                result.setListName(list.getName());
+                if (validateListColumn(container, list, result.getIdentifier(), errors, result.getValueType()))
                 {
                     singleValuedResults.add(result);
-
                     data.put(result.getIdentifier(), result.getResult());
                 }
             }
-            else
+        }
+
+        return singleValuedResults;
+    }
+
+    private List<SurveyResult> getMultiValuedResults(String baseListName, List<SurveyResult> results)
+    {
+        List<SurveyResult> multiValuedResults = new ArrayList<>();
+        for (SurveyResult result : results)
+        {
+            if (!result.getValueType().isSingleValued())
             {
-                result.setListName(listName + StringUtils.capitalize(result.getIdentifier()));
+                result.setListName(baseListName + StringUtils.capitalize(result.getIdentifier()));
                 multiValuedResults.add(result);
             }
         }
 
-        Map<String, Object> row = Collections.emptyMap();
-        if (surveyTable.getUpdateService() != null && errors.isEmpty())
-        {
-            row = storeListData(surveyTable, data, container, user);
-            if (errors.isEmpty())
-            {
-                Integer surveyId = (Integer) row.get("Key");
-
-                storeMultiValuedResults(multiValuedResults, surveyId, participantId, user, container, errors);
-                // Add a resultMetadata row for each of the individual rows using the given surveyId
-                storeResultMetadata(user, container, singleValuedResults, surveyId);
-                // Add a resultMetadata row for each of the multi-valued results as well
-                storeResultMetadata(user, container, multiValuedResults, surveyId);
-            }
-        }
-        if (row.isEmpty())
-            return Collections.emptyMap();
-        else
-            return row;
-
+        return multiValuedResults;
     }
 
-    private TableInfo getResultTable(String listName, Container container, User user) throws Exception
+    private TableInfo getResultTable(String listName, Container container, User user) throws NotFoundException
     {
         ListDefinition listDef = ListService.get().getList(container, listName);
         if (listDef == null)
-        {
-            throw new Exception("Invalid list '" + listName + "' for container '" + container.getName() + "'");
-        }
+            throw new NotFoundException("Invalid list '" + listName + "' for container '" + container.getName() + "'");
+
         TableInfo resultTable = listDef.getTable(user, container);
         if (resultTable == null)
-            throw new Exception("Unable to find table for list '" + listDef.getName() + "' in container '" + container.getName() + "'");
+            throw new NotFoundException("Unable to find table for list '" + listDef.getName() + "' in container '" + container.getName() + "'");
+
         return resultTable;
     }
 
-    private boolean validateListColumn(Container container, TableInfo table, String columnName, List<String> errors, SurveyResult.ValueType resultValueType) throws Exception
+    private boolean validateListColumn(Container container, TableInfo table, String columnName, List<String> errors, SurveyResult.ValueType resultValueType)
     {
         ColumnInfo column = table.getColumn(columnName);
         if (column == null)
         {
             errors.add("Unable to find column '" + columnName + "' in list '" + table.getName() + "' in container '" + container.getName() + "'");
-            return false;
         }
         else if (column.getJdbcType() != resultValueType.getJdbcType())
         {
             errors.add("Type '" + resultValueType + "' (" + resultValueType.getJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
-            return false;
         }
-        return true;
+
+        return errors.isEmpty();
     }
 
     private Map<String, Object> storeListData(TableInfo table, Map<String, Object> data, Container container, User user) throws Exception
@@ -206,7 +180,7 @@ public class Response
                 new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
 
         if (table.getUpdateService() == null)
-            throw new Exception("Unable to get update service for table " + table.getName());
+            throw new NotFoundException("Unable to get update service for table " + table.getName());
         List<Map<String, Object>> rows = table.getUpdateService().insertRows(insertUser, container, Collections.singletonList(data), exception, null, null);
         if (exception.hasErrors())
             throw exception;
@@ -214,69 +188,89 @@ public class Response
             return rows.get(0);
     }
 
-    private void storeMultiValuedResults(List<SurveyResult> results, Integer surveyId, Integer participantId, User user, Container container, List<String> errors) throws Exception
+    private Map<String, Object> storeListResults(Container container, User user, Integer surveyId, String listName, List<SurveyResult> results, Map<String, Object> data, List<String> errors) throws Exception
+    {
+        TableInfo surveyTable = getResultTable(listName, container, user);
+        if (surveyTable.getUpdateService() == null)
+        {
+            errors.add("No update service available for the given survey table: " + listName);
+            return Collections.emptyMap();
+        }
+
+        // find all the single-value results, check if they are in the list, check the type, and add them to the data map if everything is good
+        List<SurveyResult> singleValuedResults = getSingleValuedResults(container, surveyTable, data, results, errors);
+        if (!errors.isEmpty())
+            return Collections.emptyMap();
+
+        Map<String, Object> row = storeListData(surveyTable, data, container, user);
+        if (surveyId == null)
+            surveyId = (Integer) row.get("Key");
+
+        // Add a resultMetadata row for each of the individual rows using the given surveyId
+        storeResultMetadata(user, container, singleValuedResults, surveyId);
+
+        return row;
+    }
+
+    private void storeMultiValuedResults(List<SurveyResult> results, Integer surveyId, User user, Container container, List<String> errors) throws Exception
     {
         for (SurveyResult result : results)
         {
             if (result.getValueType() == SurveyResult.ValueType.CHOICE)
             {
-                TableInfo table = getResultTable(result.getListName(), container, user);
-                validateListColumn(container, table, result.getIdentifier(), errors, SurveyResult.ValueType.STRING);
-
-                if (errors.isEmpty())
+                storeResultChoices(container, user, result, surveyId, errors);
+            }
+            else // result is of type GROUPED_RESULT
+            {
+                // two scenarios, groupedResult is a an array of SurveyResult objects or is an array of an array of SurveyResult objects
+                List<List<SurveyResult>> groupedResultList = new ArrayList<>();
+                for (Object gr : (ArrayList) result.getValue())
                 {
-                    for (Object value : (ArrayList) result.getResult())
+                    if (gr instanceof SurveyResult) // this means we have a single set of grouped results to process.
                     {
-                        Map<String, Object> data = new ArrayListMap<>();
-                        data.put("surveyId", surveyId);
-                        data.put(result.getIdentifier(), value);
-
-                        storeListData(table, data, container, user);
+                        groupedResultList.add((ArrayList) result.getValue());
+                        break;
                     }
-                    storeResultMetadata(user, container, Collections.singletonList(result), surveyId);
+                    else
+                    {
+                        groupedResultList.add((ArrayList) gr);
+                    }
+                }
+
+                // store the data for each of the group result sets
+                for (List<SurveyResult> groupResults : groupedResultList)
+                {
+                    String listName = result.getListName();
+                    Map<String, Object> data = new ArrayListMap<>();
+                    data.put("surveyId", surveyId);
+                    Map<String, Object> row = storeListResults(container, user, surveyId, listName, groupResults, data, errors);
+                    if (!row.isEmpty())
+                    {
+                        // TODO the key should come from row instead of passing along surveyId (i.e. change surveyId to parentListId)
+                        List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, groupResults);
+                        storeMultiValuedResults(multiValuedResults, surveyId, user, container, errors);
+                    }
                 }
             }
-//            else // result is of type GROUPED_RESULT
-//            {
-//                // a grouped result is an array of SurveyResult objects, but there may be multiple of these, so we check which case we have
-//                for (Object gr : (ArrayList) result.getValue())
-//                {
-//                    if (gr instanceof SurveyResult) // this means we have a single set of grouped results to process.
-//                    {
-//                        SurveyResult groupedResult = (SurveyResult) gr;
-//                        Map<String, Object> data = new ArrayListMap<>();
-//                        data.put("surveyId", surveyId);
-//                        if (groupedResult.getValueType().isSingleValued())
-//                        {
-//                            if (validateListColumn(container, surveyTable, result.getIdentifier(), errors, result.getValueType()))
-//                            {
-//                                data.put(groupedResult.getIdentifier(), result.getResult());
-//                            }
-//                        }
-//                        else
-//                        {
-//                            result.setListName(listName + StringUtils.capitalize(result.getIdentifier()));
-//                            multiValuedResults.add(result);
-//                        }
-//                        // for multi-valued results, look for/create separate tables
-//                    }
-//                    else // (groupedResult instanceof ArrayList)
-//                    {
-//                        for (Object groupedResultItem : (ArrayList) gr)
-//                        {
-//
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 
-    private void storeSurveyResultList(List<SurveyResult> results, String listName)
+    private void storeResultChoices(Container container, User user, SurveyResult result, Integer surveyId, List<String> errors) throws Exception
     {
-        for (SurveyResult result : results)
-        {
+        TableInfo table = getResultTable(result.getListName(), container, user);
+        validateListColumn(container, table, result.getIdentifier(), errors, SurveyResult.ValueType.STRING);
 
+        if (errors.isEmpty())
+        {
+            for (Object value : (ArrayList) result.getResult())
+            {
+                Map<String, Object> data = new ArrayListMap<>();
+                data.put("surveyId", surveyId);
+                data.put(result.getIdentifier(), value);
+                storeListData(table, data, container, user);
+            }
+
+            storeResultMetadata(user, container, Collections.singletonList(result), surveyId);
         }
     }
 
