@@ -72,6 +72,7 @@ public class SurveyResult extends ResultMetadata
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private String _type;
     private String _identifier;
+    private Object _result;
     private Object _value;
     private String _listName;
 
@@ -115,86 +116,87 @@ public class SurveyResult extends ResultMetadata
 
     public Object getResult()
     {
+        return _result;
+    }
+
+    public Object getValue()
+    {
+        if (_value == null && !getSkipped() && _result != null)
+            setValue();
         return _value;
     }
 
-    public Object getValue() { return _value; }
-
-    public void setValue(Object value)
+    private void setValue()
     {
-        _value = value;
-    }
-
-    public void setResult(Object result) throws IllegalArgumentException
-    {
-        if (getSkipped() || result == null)
-        {
-            this._value = null;
-            return;
-        }
         switch (getValueType())
         {
             case DATE:
-                if (result instanceof String)
+                if (_result instanceof String)
                 {
                     try
                     {
-                        this._value = DATE_FORMAT.parse((String) result);
+                        this._value = DATE_FORMAT.parse((String) _result);
                     }
                     catch (ParseException e)
                     {
-                        throw new IllegalArgumentException("Invalid date string format for field '" + getIdentifier() + "' ("+ result + ")");
+                        throw new IllegalArgumentException("Invalid date string format for field '" + getIdentifier() + "' ("+ _result + ")");
                     }
                 }
                 else
-                    throw new IllegalArgumentException("Value type for Date field '" + getIdentifier() + "' expected to be String but got "+ result.getClass());
+                    throw new IllegalArgumentException("Value type for Date field '" + getIdentifier() + "' expected to be String but got "+ _result.getClass());
                 break;
             case BOOLEAN:
-                if (result instanceof Boolean)
-                    this._value = result;
+                if (_result instanceof Boolean)
+                    this._value = _result;
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Boolean but got " + result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Boolean but got " + _result.getClass());
                 break;
             case CHOICE:
-                if (result instanceof List)
+                if (_result instanceof List)
                 {
-                    this._value = result;
+                    this._value = _result;
                 }
                 else
-                    throw new IllegalArgumentException("Value type for choice field '" + getIdentifier() + "' expected to be ArrayList but got " + result.getClass());
+                    throw new IllegalArgumentException("Value type for choice field '" + getIdentifier() + "' expected to be ArrayList but got " + _result.getClass());
                 break;
             case INTEGER:
-                if (result instanceof Integer)
+                if (_result instanceof Integer)
                 {
-                    this._value = result;
+                    this._value = _result;
                 }
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer but got " + result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer but got " + _result.getClass());
                 break;
             case FLOAT:
-                if (result instanceof Float || result instanceof Integer)
+                if (_result instanceof Float || _result instanceof Integer)
                 {
-                    this._value = result;
+                    this._value = _result;
                 }
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer or Float but got " + result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer or Float but got " + _result.getClass());
                 break;
             case GROUPED_RESULT:
-                if (result instanceof List)
+                if (_result instanceof List)
                 {
-                    this._value = convertSurveyResults((List) result);
+                    this._value = convertSurveyResults((List) _result);
                 }
                 else
-                    throw new IllegalArgumentException("Value type for grouped result field '" + getIdentifier() + "' expected to be ArrayList but got " + result.getClass());
+                    throw new IllegalArgumentException("Value type for grouped result field '" + getIdentifier() + "' expected to be ArrayList but got " + _result.getClass());
                 break;
             case TEXT:
             case STRING:
-                if (result instanceof String)
-                    this._value = result;
+                if (_result instanceof String)
+                    this._value = _result;
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be String but got " + result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be String but got " + _result.getClass());
                 break;
         }
+    }
+
+
+    public void setResult(Object result) throws IllegalArgumentException
+    {
+        _result = result;
     }
 
     /**

@@ -120,7 +120,7 @@ public class Response
                 if (validateListColumn(container, list, result.getIdentifier(), errors, result.getValueType()))
                 {
                     singleValuedResults.add(result);
-                    data.put(result.getIdentifier(), result.getResult());
+                    data.put(result.getIdentifier(), result.getValue());
                 }
             }
         }
@@ -262,7 +262,7 @@ public class Response
 
         if (errors.isEmpty())
         {
-            for (Object value : (ArrayList) result.getResult())
+            for (Object value : (ArrayList) result.getValue())
             {
                 Map<String, Object> data = new ArrayListMap<>();
                 data.put("surveyId", surveyId);
