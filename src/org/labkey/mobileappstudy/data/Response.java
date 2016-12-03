@@ -7,6 +7,7 @@ import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.list.ListDefinition;
@@ -17,6 +18,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.security.roles.SubmitterRole;
+import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.mobileappstudy.MobileAppStudySchema;
 
@@ -104,8 +106,9 @@ public class Response
         if (!row.isEmpty())
         {
             Integer surveyId = (Integer) row.get("Key");
+            Pair<String, Integer> rowKey = new Pair<>("SurveyId", surveyId);
             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, results);
-            storeMultiValuedResults(multiValuedResults, surveyId, user, container, errors);
+            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, user, container, errors);
         }
     }
 
@@ -163,6 +166,12 @@ public class Response
         {
             errors.add("Unable to find column '" + columnName + "' in list '" + table.getName() + "' in container '" + container.getName() + "'");
         }
+        // special case result type "text" to match multi-line text column type
+        else if (resultValueType == SurveyResult.ValueType.TEXT)
+        {
+            if (column.getJdbcType() != JdbcType.VARCHAR || column.getScale() != 4000)
+                errors.add("Type '" + resultValueType + "' (" + resultValueType.getJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
+        }
         else if (column.getJdbcType() != resultValueType.getJdbcType())
         {
             errors.add("Type '" + resultValueType + "' (" + resultValueType.getJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
@@ -212,13 +221,13 @@ public class Response
         return row;
     }
 
-    private void storeMultiValuedResults(List<SurveyResult> results, Integer surveyId, User user, Container container, List<String> errors) throws Exception
+    private void storeMultiValuedResults(List<SurveyResult> results, Integer surveyId, Pair<String, Integer> parentKey, User user, Container container, List<String> errors) throws Exception
     {
         for (SurveyResult result : results)
         {
             if (result.getValueType() == SurveyResult.ValueType.CHOICE)
             {
-                storeResultChoices(container, user, result, surveyId, errors);
+                storeResultChoices(container, user, result, surveyId, parentKey, errors);
             }
             else // result is of type GROUPED_RESULT
             {
@@ -242,20 +251,20 @@ public class Response
                 {
                     String listName = result.getListName();
                     Map<String, Object> data = new ArrayListMap<>();
-                    data.put("surveyId", surveyId);
+                    data.put(parentKey.getKey(), parentKey.getValue());
                     Map<String, Object> row = storeListResults(container, user, surveyId, listName, groupResults, data, errors);
                     if (!row.isEmpty())
                     {
-                        // TODO the key should come from row instead of passing along surveyId (i.e. change surveyId to parentListId)
+                        Pair<String, Integer> rowKey = new Pair<>(result.getIdentifier() + "Id", (Integer) row.get("Key"));
                         List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, groupResults);
-                        storeMultiValuedResults(multiValuedResults, surveyId, user, container, errors);
+                        storeMultiValuedResults(multiValuedResults, surveyId, rowKey, user, container, errors);
                     }
                 }
             }
         }
     }
 
-    private void storeResultChoices(Container container, User user, SurveyResult result, Integer surveyId, List<String> errors) throws Exception
+    private void storeResultChoices(Container container, User user, SurveyResult result, Integer surveyId, Pair<String, Integer> parentKey, List<String> errors) throws Exception
     {
         TableInfo table = getResultTable(result.getListName(), container, user);
         validateListColumn(container, table, result.getIdentifier(), errors, SurveyResult.ValueType.STRING);
@@ -265,7 +274,7 @@ public class Response
             for (Object value : (ArrayList) result.getValue())
             {
                 Map<String, Object> data = new ArrayListMap<>();
-                data.put("surveyId", surveyId);
+                data.put(parentKey.getKey(), parentKey.getValue());
                 data.put(result.getIdentifier(), value);
                 storeListData(table, data, container, user);
             }
