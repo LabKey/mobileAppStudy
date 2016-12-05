@@ -14,7 +14,7 @@ public class ResponseMetadata
     private Container _container;
     private String _listName;
     private Integer _surveyId;
-    private String _questionId;
+    private String _fieldName;
     private Date _startTime;
     private Date _endTime;
     private Boolean _skipped;
@@ -62,14 +62,14 @@ public class ResponseMetadata
         this._surveyId = surveyId;
     }
 
-    public String getQuestionId()
+    public String getFieldName()
     {
-        return _questionId;
+        return _fieldName;
     }
 
-    public void setQuestionId(String questionId)
+    public void setFieldName(String fieldName)
     {
-        this._questionId = questionId;
+        this._fieldName = fieldName;
     }
 
     public Date getStartTime()

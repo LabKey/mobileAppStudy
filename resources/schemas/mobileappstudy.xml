@@ -144,7 +144,7 @@
             <ns:column columnName="RowId"/>
             <ns:column columnName="ListName"/>
             <ns:column columnName="SurveyId"/>
-            <ns:column columnName="QuestionId"/>
+            <ns:column columnName="FieldName"/>
             <ns:column columnName="StartTime"/>
             <ns:column columnName="EndTime"/>
             <ns:column columnName="Skipped"/>

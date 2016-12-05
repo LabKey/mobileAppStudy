@@ -942,7 +942,7 @@ public class MobileAppStudyManager
             TableInfo responseMetadataTable = schema.getTableInfoResponseMetadata();
             result.setSurveyId(surveyId);
             result.setContainer(container);
-            result.setQuestionId(result.getIdentifier());
+            result.setFieldName(result.getIdentifier());
 
             Table.insert(user, responseMetadataTable, result);
         }
