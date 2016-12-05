@@ -41,7 +41,7 @@ import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
-import org.labkey.mobileappstudy.data.ResultMetadata;
+import org.labkey.mobileappstudy.data.ResponseMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 
 import java.util.Collection;
@@ -445,7 +445,15 @@ public class MobileAppStudyManager
 
         SurveyResponse response = getResponse(rowId);
         if (response != null)
-            response.shred(user);
+            try
+            {
+                response.shred(user);
+                MobileAppStudyManager.get().updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.PROCESSED);
+            }
+            catch (Exception e)
+            {
+                MobileAppStudyManager.get().updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.ERROR, e.getMessage());
+            }
     }
 
     /**
@@ -472,7 +480,7 @@ public class MobileAppStudyManager
                 .getCollection(SurveyResponse.class);
     }
 
-    public void insertResultMetadata(@Nullable User user, @NotNull ResultMetadata metadata)
+    public void insertResultMetadata(@Nullable User user, @NotNull ResponseMetadata metadata)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         DbScope scope = schema.getSchema().getScope();
@@ -587,6 +595,11 @@ public class MobileAppStudyManager
         return responses.size();
     }
 
+    public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull SurveyResponse.ResponseStatus newStatus)
+    {
+        updateProcessingStatus(user, rowId, newStatus, null);
+    }
+
     public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull SurveyResponse.ResponseStatus newStatus, @Nullable String errorMessage)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
@@ -602,11 +615,7 @@ public class MobileAppStudyManager
         if (user != null)
             response.setProcessedBy(user);
 
-        try (DbScope.Transaction transaction = scope.ensureTransaction())
-        {
-            Table.update(user, responseTable, response, response.getRowId());
-            transaction.commit();
-        }
+        Table.update(user, responseTable, response, response.getRowId());
     }
 
     public String getNonErrorResponses(Set<Integer> listIds)

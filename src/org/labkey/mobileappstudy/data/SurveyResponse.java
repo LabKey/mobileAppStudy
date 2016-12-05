@@ -182,7 +182,7 @@ public class SurveyResponse
         _appToken = appToken;
     }
 
-    public void shred(@Nullable User user)
+    public void shred(@Nullable User user) throws Exception
     {
         ObjectMapper mapper = new ObjectMapper();
         try
@@ -199,12 +199,12 @@ public class SurveyResponse
             mapper.setDateFormat(DATE_TIME_FORMAT);
             Response response = mapper.readValue(getResponse(), Response.class);
             // CONSIDER separate shred and store.
-            response.store(user, getContainer(), getSurveyId(), getParticipantId());
+            response.store(getSurveyId(), getParticipantId(), getContainer(), user);
         }
         catch (Exception e)
         {
             logProcessingError(user, e);
-            MobileAppStudyManager.get().updateProcessingStatus(user, getRowId(), ResponseStatus.ERROR, e.getMessage());
+            throw e;
         }
 
     }

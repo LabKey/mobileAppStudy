@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * Representation of the mobileappstudy.responsemetadata table.
  */
-public class ResultMetadata
+public class ResponseMetadata
 {
     private Integer _rowId;
     private Container _container;

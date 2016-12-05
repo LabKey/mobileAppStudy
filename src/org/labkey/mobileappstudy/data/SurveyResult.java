@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by susanh on 11/28/16.
  */
-public class SurveyResult extends ResultMetadata
+public class SurveyResult extends ResponseMetadata
 {
     public enum ValueType
     {
@@ -23,7 +23,7 @@ public class SurveyResult extends ResultMetadata
         INTEGER("scale", true, JdbcType.INTEGER),
         FLOAT("number", true, JdbcType.REAL),
         GROUPED_RESULT("groupedResult", false, null),
-        TEXT("text", true, JdbcType.LONGVARCHAR),
+        TEXT("text", true, JdbcType.VARCHAR),
         STRING("string", true, JdbcType.VARCHAR);
 
         private String _typeName;
