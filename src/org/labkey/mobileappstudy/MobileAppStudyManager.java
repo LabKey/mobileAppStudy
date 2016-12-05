@@ -463,7 +463,7 @@ public class MobileAppStudyManager
      */
     void shredSurveyResponse(@NotNull Integer rowId, @Nullable User user)
     {
-        logger.info(String.format("Processing %s", rowId));
+        logger.info(String.format("Processing response %s", rowId));
 
         SurveyResponse surveyResponse = getResponse(rowId);
         if (surveyResponse != null)
@@ -476,6 +476,7 @@ public class MobileAppStudyManager
             }
             catch (Exception e)
             {
+                logger.error("Error processing response " + rowId + " in container " + surveyResponse.getContainer().getName(), e);
                 manager.updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.ERROR, e.getMessage());
             }
         }
@@ -858,6 +859,8 @@ public class MobileAppStudyManager
     {
         for (SurveyResult result : results)
         {
+            if (result.getSkipped())
+                continue;
             if (result.getValueType() == SurveyResult.ValueType.CHOICE)
             {
                 storeResultChoices(result, surveyId, parentKey, errors, container, user);
