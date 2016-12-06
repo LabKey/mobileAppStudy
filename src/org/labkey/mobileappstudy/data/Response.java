@@ -1,5 +1,8 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -11,6 +14,16 @@ public class Response
     private Date _startTime;
     private Date _endTime;
     private List<SurveyResult> _results;
+
+
+    public static Response getResponseObject(String responseString) throws IOException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        mapper.setDateFormat(SurveyResponse.DATE_TIME_FORMAT);
+
+        return mapper.readValue(responseString, Response.class);
+    }
 
     public Date getStartTime()
     {

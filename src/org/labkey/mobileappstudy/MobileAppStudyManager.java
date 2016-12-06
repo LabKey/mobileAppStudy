@@ -465,22 +465,27 @@ public class MobileAppStudyManager
      */
     void shredSurveyResponse(@NotNull Integer rowId, @Nullable User user)
     {
-        logger.info(String.format("Processing response %s", rowId));
-
         SurveyResponse surveyResponse = getResponse(rowId);
+
         if (surveyResponse != null)
         {
+            logger.info(String.format("Processing response " + rowId + " in container " + surveyResponse.getContainer().getName()));
             MobileAppStudyManager manager = MobileAppStudyManager.get();
             try
             {
                 manager.store(surveyResponse, rowId, user);
                 manager.updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.PROCESSED);
+                logger.info(String.format("Processed response " + rowId + " in container " + surveyResponse.getContainer().getName()));
             }
             catch (Exception e)
             {
                 logger.error("Error processing response " + rowId + " in container " + surveyResponse.getContainer().getName(), e);
                 manager.updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.ERROR, e instanceof NullPointerException ? "NullPointerException" : e.getMessage());
             }
+        }
+        else
+        {
+            logger.error("No response found for id " + rowId);
         }
     }
 
@@ -657,9 +662,10 @@ public class MobileAppStudyManager
 
         try (DbScope.Transaction transaction = scope.ensureTransaction())
         {
-            storeSurveyResult(surveyResponse.getResponseObject(), surveyResponse.getSurveyId(), surveyResponse.getParticipantId(), responseBlobId, surveyResponse.getResponseObject().getResults(), errors, surveyResponse.getContainer(), insertUser);
+            Response response = Response.getResponseObject(surveyResponse.getResponse());
+            storeSurveyResult(response, surveyResponse.getSurveyId(), surveyResponse.getParticipantId(), responseBlobId, response.getResults(), errors, surveyResponse.getContainer(), insertUser);
             if (!errors.isEmpty())
-                throw new Exception("Problem storing data to list '" + surveyResponse.getSurveyId() + "' in container '" + surveyResponse.getContainer().getName() + "'.\n" + StringUtils.join(errors, "\n"));
+                throw new Exception("Problem storing data in list '" + surveyResponse.getSurveyId() + "' in container '" + surveyResponse.getContainer().getName() + "'.\n" + StringUtils.join(errors, "\n"));
             else
                 transaction.commit();
         }
@@ -931,12 +937,15 @@ public class MobileAppStudyManager
 
             if (errors.isEmpty())
             {
-                for (Object value : (ArrayList) result.getValue())
+                if (result.getValue() != null)
                 {
-                    Map<String, Object> data = new ArrayListMap<>();
-                    data.put(parentKey.getKey(), parentKey.getValue());
-                    data.put(result.getIdentifier(), value);
-                    storeListData(table, data, container, user);
+                    for (Object value : (ArrayList) result.getValue())
+                    {
+                        Map<String, Object> data = new ArrayListMap<>();
+                        data.put(parentKey.getKey(), parentKey.getValue());
+                        data.put(result.getIdentifier(), value);
+                        storeListData(table, data, container, user);
+                    }
                 }
 
                 storeResponseMetadata(Collections.singletonList(result), surveyId, container, user);

@@ -64,7 +64,7 @@ public class SurveyResult extends ResponseMetadata
                     }
                 }
             }
-            throw new IllegalArgumentException("No constant with text " + name + " found");
+            throw new IllegalArgumentException("No field value type with name " + name + " found");
         }
 
     }

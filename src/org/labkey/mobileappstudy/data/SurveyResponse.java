@@ -1,11 +1,9 @@
 package org.labkey.mobileappstudy.data;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -50,7 +48,6 @@ public class SurveyResponse
     private String _surveyVersion;
     private String _surveyId;
     private ResponseStatus _status;
-    private Response _responseObject;
     private Date _processed;
     private User _processedBy;
     private String _errorMessage;
@@ -177,23 +174,6 @@ public class SurveyResponse
     public void setAppToken(String appToken)
     {
         _appToken = appToken;
-    }
-
-    public Response getResponseObject() throws IOException
-    {
-        if (_responseObject == null)
-        {
-            setResponseObject();
-        }
-        return _responseObject;
-    }
-
-    private  void setResponseObject() throws IOException
-    {
-        ObjectMapper mapper = new ObjectMapper();
-
-        mapper.setDateFormat(DATE_TIME_FORMAT);
-        _responseObject = mapper.readValue(getResponse(), Response.class);
     }
 
 }
