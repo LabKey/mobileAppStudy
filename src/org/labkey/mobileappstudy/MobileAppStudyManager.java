@@ -68,6 +68,8 @@ import java.util.stream.Collectors;
 
 public class MobileAppStudyManager
 {
+    private static final String TRUNCATED_MESSAGE_SUFFIX =  "... (message truncated)";
+    private static final Integer ERROR_MESSAGE_MAX_SIZE = 1000 - TRUNCATED_MESSAGE_SUFFIX.length();
     private static final Integer TOKEN_SIZE = 8;
     private static final String TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final MobileAppStudyManager _instance = new MobileAppStudyManager();
@@ -615,7 +617,7 @@ public class MobileAppStudyManager
         SurveyResponse response = new TableSelector(responseTable).getObject(rowId, SurveyResponse.class);
 
         response.setStatus(newStatus);
-        response.setErrorMessage(errorMessage);
+        response.setErrorMessage(errorMessage.length() > ERROR_MESSAGE_MAX_SIZE ? errorMessage.substring(0, ERROR_MESSAGE_MAX_SIZE) + TRUNCATED_MESSAGE_SUFFIX : errorMessage);
         // we currently have only start and end statuses, so we can safely set the processed and processedBy
         // fields at this point.
         response.setProcessed(new Date());
@@ -769,11 +771,11 @@ public class MobileAppStudyManager
         ColumnInfo column = table.getColumn(columnName);
         if (column == null)
         {
-            errors.add("Unable to find column '" + columnName + "' in list '" + table.getName() + "' in container '" + table.getDomain().getContainer() + "'");
+            errors.add("Unable to find column '" + columnName + "' in list '" + table.getName() + "'");
         }
         else if (column.getJdbcType() != resultValueType.getJdbcType())
         {
-            errors.add("Type '" + resultValueType + "' (" + resultValueType.getJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
+            errors.add("Type '" + resultValueType.getTypeName() + "' (" + resultValueType.getJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
         }
 
         return errors.isEmpty();
