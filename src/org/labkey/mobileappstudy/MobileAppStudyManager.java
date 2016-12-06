@@ -617,7 +617,8 @@ public class MobileAppStudyManager
         SurveyResponse response = new TableSelector(responseTable).getObject(rowId, SurveyResponse.class);
 
         response.setStatus(newStatus);
-        response.setErrorMessage(errorMessage.length() > ERROR_MESSAGE_MAX_SIZE ? errorMessage.substring(0, ERROR_MESSAGE_MAX_SIZE) + TRUNCATED_MESSAGE_SUFFIX : errorMessage);
+        if (errorMessage != null)
+            response.setErrorMessage(errorMessage.length() > ERROR_MESSAGE_MAX_SIZE ? errorMessage.substring(0, ERROR_MESSAGE_MAX_SIZE) + TRUNCATED_MESSAGE_SUFFIX : errorMessage);
         // we currently have only start and end statuses, so we can safely set the processed and processedBy
         // fields at this point.
         response.setProcessed(new Date());
@@ -650,9 +651,13 @@ public class MobileAppStudyManager
 
         List<String> errors = new ArrayList<>();
 
+        // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
+        User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
+                new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
+
         try (DbScope.Transaction transaction = scope.ensureTransaction())
         {
-            storeSurveyResult(surveyResponse.getResponseObject(), surveyResponse.getSurveyId(), surveyResponse.getParticipantId(), responseBlobId, surveyResponse.getResponseObject().getResults(), errors, surveyResponse.getContainer(), user);
+            storeSurveyResult(surveyResponse.getResponseObject(), surveyResponse.getSurveyId(), surveyResponse.getParticipantId(), responseBlobId, surveyResponse.getResponseObject().getResults(), errors, surveyResponse.getContainer(), insertUser);
             if (!errors.isEmpty())
                 throw new Exception("Problem storing data to list '" + surveyResponse.getSurveyId() + "' in container '" + surveyResponse.getContainer().getName() + "'.\n" + StringUtils.join(errors, "\n"));
             else
@@ -672,8 +677,13 @@ public class MobileAppStudyManager
      * @param container the container in which the list lives
      * @param user the user who will store the data     @throws Exception if there are problems storing the data.
      */
-    private void storeSurveyResult(@NotNull Response response, @NotNull String listName, @NotNull Integer participantId, @NotNull Integer responseBlobId, @NotNull List<SurveyResult> results, @NotNull List<String> errors, @NotNull Container container, @Nullable User user) throws Exception
+    private void storeSurveyResult(@NotNull Response response, @NotNull String listName, @NotNull Integer participantId, @NotNull Integer responseBlobId, @Nullable List<SurveyResult> results, @NotNull List<String> errors, @NotNull Container container, @NotNull User user) throws Exception
     {
+        if (results == null)
+        {
+            errors.add("No results provided in response.");
+            return;
+        }
         // initialize the data map with the survey result values
         Map<String, Object> data = new ArrayListMap<>();
         data.put("startTime", response.getStartTime());
@@ -701,17 +711,14 @@ public class MobileAppStudyManager
     private List<SurveyResult> getSingleValuedResults(@NotNull TableInfo list, @NotNull List<SurveyResult> results, @NotNull List<String> errors)
     {
         List<SurveyResult> singleValuedResults = new ArrayList<>();
-        for (SurveyResult result : results)
+        results.stream().filter(result -> result.getValueType().isSingleValued()).forEach(result ->
         {
-            if (result.getValueType().isSingleValued())
+            result.setListName(list.getName());
+            if (validateListColumn(list, result.getIdentifier(), result.getValueType(), errors))
             {
-                result.setListName(list.getName());
-                if (validateListColumn(list, result.getIdentifier(), result.getValueType(), errors))
-                {
-                    singleValuedResults.add(result);
-                }
+                singleValuedResults.add(result);
             }
-        }
+        });
 
         return singleValuedResults;
     }
@@ -786,7 +793,7 @@ public class MobileAppStudyManager
      * @param table the list table in which data is to be stored
      * @param data the collection of data elements for the new row
      * @param container the container in which the list (table) lives
-     * @param user the user initiating the request
+     * @param user the user inserting data into the list
      * @return the newly created row
      * @throws Exception if the table has no update service or there is any other problem inserting the new row
      */
@@ -794,13 +801,10 @@ public class MobileAppStudyManager
     {
         // Add an entry to the survey list and get the id.
         BatchValidationException exception = new BatchValidationException();
-        // need to create a LimitedUser to use for checking permissions, wrapping the Guest user if a user isn't provided
-        User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
-                new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
 
         if (table.getUpdateService() == null)
             throw new NotFoundException("Unable to get update service for table " + table.getName());
-        List<Map<String, Object>> rows = table.getUpdateService().insertRows(insertUser, container, Collections.singletonList(data), exception, null, null);
+        List<Map<String, Object>> rows = table.getUpdateService().insertRows(user, container, Collections.singletonList(data), exception, null, null);
         if (exception.hasErrors())
             throw exception;
         else
@@ -822,7 +826,7 @@ public class MobileAppStudyManager
      * @return the newly created list row
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private Map<String, Object> storeListResults(@Nullable Integer surveyId, @NotNull String listName, @NotNull List<SurveyResult> results, @NotNull Map<String, Object> data, @NotNull List<String> errors, @NotNull Container container, @Nullable User user) throws Exception
+    private Map<String, Object> storeListResults(@Nullable Integer surveyId, @NotNull String listName, @NotNull List<SurveyResult> results, @NotNull Map<String, Object> data, @NotNull List<String> errors, @NotNull Container container, @NotNull User user) throws Exception
     {
         TableInfo surveyTable = getResultTable(listName, container, user);
         if (surveyTable.getUpdateService() == null)
