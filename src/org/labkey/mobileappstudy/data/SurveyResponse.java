@@ -1,6 +1,5 @@
 package org.labkey.mobileappstudy.data;
 
-import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 
@@ -10,7 +9,6 @@ import java.util.Date;
 
 public class SurveyResponse
 {
-    private static final Logger logger = Logger.getLogger(SurveyResponse.class);
     public static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     public enum ResponseStatus {
