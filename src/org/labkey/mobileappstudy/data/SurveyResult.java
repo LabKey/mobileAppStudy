@@ -21,7 +21,7 @@ public class SurveyResult extends ResponseMetadata
         BOOLEAN("Bool", true, JdbcType.BOOLEAN),
         CHOICE("choice", false, null),
         INTEGER("scale", true, JdbcType.INTEGER),
-        FLOAT("number", true, JdbcType.REAL),
+        DOUBLE("number", true, JdbcType.DOUBLE),
         GROUPED_RESULT("groupedResult", false, null),
         TEXT("text", true, JdbcType.VARCHAR),
         STRING("string", true, JdbcType.VARCHAR);
@@ -167,8 +167,8 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer but got " + _result.getClass());
                 break;
-            case FLOAT:
-                if (_result instanceof Float || _result instanceof Integer)
+            case DOUBLE:
+                if (_result instanceof Double || _result instanceof Float || _result instanceof Integer)
                 {
                     this._value = _result;
                 }

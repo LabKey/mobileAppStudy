@@ -104,7 +104,7 @@ public class ResponseMetadata
 
     public Boolean getSkipped()
     {
-        return _skipped;
+        return _skipped != null && _skipped;
     }
 
     public void setSkipped(Boolean skipped)
