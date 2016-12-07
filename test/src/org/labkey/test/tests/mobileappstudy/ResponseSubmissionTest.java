@@ -66,7 +66,7 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
      */
     private String getNewAppToken(String project, String studyShortName, String batchToken)
     {
-        log("Requesting app token for project [" + PROJECT_NAME01 +"] and study [" + STUDY_NAME01 + "]");
+        log("Requesting app token for project [" + project +"] and study [" + studyShortName + "]");
         EnrollParticipantCommand cmd = new EnrollParticipantCommand(project, studyShortName, batchToken, this::log);
 
         cmd.execute(200);
@@ -106,8 +106,6 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
     }
-
-
 
     @Test
     public void testRequestBodyNotPresent()

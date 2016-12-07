@@ -5,6 +5,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.labkey.test.WebTestHelper;
+import org.labkey.test.data.mobileappstudy.Survey;
 
 import java.util.function.Consumer;
 
@@ -64,6 +65,11 @@ public class SubmitResponseCommand extends MobileAppCommand
         else
             setBody(String.format(BODY_JSON_FORMAT, "", appToken, surveyResponses));
 
+    }
+
+    public SubmitResponseCommand(Consumer<String> logger, Survey survey)
+    {
+        this(logger, survey.getSurveyId(), survey.getVersion(), survey.getAppToken(), survey.getResponseJson());
     }
 
     public boolean getLogRequest()
