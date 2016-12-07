@@ -115,12 +115,14 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         //refresh the page
         goToProjectHome(PROJECT_NAME01);
 
+        checkErrors();
         //Scenarios
         //        1. request body not present
         log("Testing bad request body");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log);
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYINFO_MISSING_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
     }
 
     @Test
@@ -129,6 +131,7 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         //refresh the page
         goToProjectHome(PROJECT_NAME01);
 
+        checkErrors();
         //        2. AppToken not present
         log("Testing AppToken not present");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", "", "{}");
@@ -140,6 +143,8 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", "INVALIDPARTICIPANTID", "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.NO_PARTICIPANT_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
+
     }
 
     @Test
@@ -150,24 +155,28 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         //Capture a participant appToken
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
 
+        checkErrors();
         //        4. Invalid SurveyInfo
         //            A. SurveyInfo element missing
         log("Testing SurveyInfo element not present");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, null, null, appToken, "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYINFO_MISSING_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
 
         //            B. Survey Version
         log("Testing SurveyVersion not present");
         cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, null, appToken, "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYVERSION_MISSING_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
 
         //            C. Survey SurveyId
         log("Testing SurveyId not present");
         cmd = new SubmitResponseCommand(this::log, null, "1", appToken, "{}");
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYID_MISSING_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
 
         //TODO: We don't currently lookup survey so this never fails
         //             D. Survey not found
@@ -182,13 +191,14 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         //refresh the page
         goToProjectHome(PROJECT_NAME01);
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
-
+        checkErrors();
         //        5. Response not present
         log("Testing Response element not present");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log);
         cmd.setBody(String.format(SubmitResponseCommand.MISSING_RESPONSE_JSON_FORMAT, SURVEY_NAME, "1", appToken));
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.RESPONSE_MISSING_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
     }
 
     @Test
@@ -205,12 +215,14 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
             setupPage.studySetupWebPart.clickSubmit();
         }
 
+        checkErrors();
         //        6. Study not collecting
         log("Testing Response Submission with Study collection turned off");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}");
         cmd.execute(400);
         assertTrue("Unexpected error message", String.format(SubmitResponseCommand.COLLECTION_DISABLED_MESSAGE_FORMAT, STUDY_NAME01)
                 .equalsIgnoreCase(cmd.getExceptionMessage()));
+        checkExpectedErrors(1);
 
         //        7. Success
         //Enable study collection
@@ -239,6 +251,7 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
         cmd.execute(400);
         assertTrue("Unexpected error message", String.format(SubmitResponseCommand.COLLECTION_DISABLED_MESSAGE_FORMAT, STUDY_NAME01)
                 .equalsIgnoreCase(cmd.getExceptionMessage()));
+        checkExpectedErrors(1);
     }
 
     @Test
@@ -304,9 +317,11 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
 
         //        9. Check submission to deleted project
         //Submit API call using appToken associated to deleted study
+        checkErrors();
         log("Verifying Response Submission after study deletion");
         cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, "{}" );
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.NO_PARTICIPANT_MESSAGE, cmd.getExceptionMessage());
+        checkExpectedErrors(1);
     }
 }
