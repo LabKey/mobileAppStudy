@@ -33,6 +33,7 @@ import static junit.framework.TestCase.assertTrue;
 public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
 {
     private final Ext4Helper _ext4Helper = new Ext4Helper(getWrapper());
+    private final static String SAVE_CONFIRMATION = "Configuration Saved";
     public StudySetupWebPart(BaseWebDriverTest test)
     {
         super(test.getWrappedDriver(), StudySetupWebPart.Locators.dataRegionLocator.findElement(test.getDriver()));
@@ -136,6 +137,8 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
         {
             acceptCollectionWarning();
         }
+
+        getWrapper().waitForText(SAVE_CONFIRMATION);
     }
 
     protected ElementCache elementCache()
