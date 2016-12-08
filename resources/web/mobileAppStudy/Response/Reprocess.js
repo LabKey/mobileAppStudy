@@ -2,16 +2,17 @@ if (!LABKEY.MobileAppStudy) {
     LABKEY.MobileAppStudy = {};
 }
 
-LABKEY.MobileAppStudy.reprocess = function() {
+LABKEY.MobileAppStudy.reprocess = function(dataRegion) {
     LABKEY.Ajax.request({
         url: LABKEY.ActionURL.buildURL('mobileappstudy', 'reprocessResponse.api'),
         method: 'POST',
         success: function (request) {
             var response = JSON.parse(request.responseText);
             if (response.success) {
-                var message = 'Reprocessed ' + response.data.countReprocessed + (response.data.countReprocessed == 1 ? ' response.' : ' responses.') + '<br/><br/>';
-                if (response.data.notReprocessed)
-                    message += (response.data.notReprocessed.length == 1 ? ' Response [ ' : ' Responses [ ') +
+                var message = 'Reprocessed ' + response.data.countReprocessed + (response.data.countReprocessed == 1 ? ' response.' : ' responses.');
+                if (response.data.notReprocessed && response.data.notReprocessed.length > 0)
+                    message += '<br/><br/>' +
+                        (response.data.notReprocessed.length == 1 ? 'Response [ ' : 'Responses [ ') +
                         response.data.notReprocessed.join(', ') +
                         (response.data.notReprocessed.length == 1 ? ' ] was' : ' ] were') + ' not reprocessed, as ' +
                         (response.data.notReprocessed.length == 1 ? 'it was' : 'they were') + ' successfully processed previously.';
@@ -33,7 +34,7 @@ LABKEY.MobileAppStudy.reprocess = function() {
             LABKEY.Utils.displayAjaxErrorResponse(response, opts);
         },
         jsonData: {
-           key: LABKEY.DataRegions.query.selectionKey
+           key: dataRegion.selectionKey
         },
         scope: this
     });

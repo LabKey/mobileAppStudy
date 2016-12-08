@@ -16,8 +16,6 @@
 package org.labkey.mobileappstudy.query;
 
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.ActionButton;
-import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
@@ -26,24 +24,15 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
-import org.labkey.api.query.QuerySettings;
-import org.labkey.api.query.QueryView;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.view.DataView;
-import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
 import org.labkey.mobileappstudy.data.SurveyResponse;
-import org.springframework.validation.BindException;
 
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_STATUS_TABLE;
-import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_TABLE;
 
-/**
- * Created by susanh on 10/10/16.
- */
 public class MobileAppStudyQuerySchema extends SimpleUserSchema
 {
     public static final String NAME = "mobileappstudy";
@@ -90,26 +79,5 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
         }
         else
             return super.createTable(name);
-    }
-
-    @Override
-    public QueryView createView(ViewContext context, QuerySettings settings, BindException errors)
-    {
-        if (RESPONSE_TABLE.equalsIgnoreCase(settings.getQueryName()))
-        {
-            return new QueryView (this, settings, errors) {
-                @Override
-                protected void populateButtonBar(DataView view, ButtonBar bar)
-                {
-                    super.populateButtonBar(view, bar);
-                    ActionButton button = new ActionButton("Reprocess");
-                    button.setRequiresSelection(true);
-                    button.setScript("LABKEY.MobileAppStudy.reprocess();");
-                    bar.add(button);
-                }
-            };
-        }
-
-        return super.createView(context, settings, errors);
     }
 }

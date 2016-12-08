@@ -4,6 +4,9 @@
             <table tableName="Response" tableDbType="TABLE">
                 <buttonBarOptions includeStandardButtons="true">
                     <includeScript>mobileAppStudy/Response/Reprocess.js</includeScript>
+                    <item insertPosition="end" text="Reprocess" requiresSelection="true">
+                        <onClick>LABKEY.MobileAppStudy.reprocess(dataRegion)</onClick>
+                    </item>
                 </buttonBarOptions>
             </table>
         </tables>
