@@ -1,0 +1,11 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="Response" tableDbType="TABLE">
+                <buttonBarOptions includeStandardButtons="true">
+                    <includeScript>mobileAppStudy/Response/Reprocess.js</includeScript>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

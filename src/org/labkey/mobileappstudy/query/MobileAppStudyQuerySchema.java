@@ -104,24 +104,7 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
                     super.populateButtonBar(view, bar);
                     ActionButton button = new ActionButton("Reprocess");
                     button.setRequiresSelection(true);
-                    button.setScript("LABKEY.Ajax.request({\n" +
-                            "    url: LABKEY.ActionURL.buildURL('mobileappstudy', 'reprocessResponse.api') ,\n" +
-                            "    method: 'POST',\n" +
-                            "    success: function (request) {\n" +
-                            "        var response = JSON.parse(request.responseText);\n" +
-                            "        if (response.success)\n" +
-                            "            window.location.reload();\n" +
-                            "        else\n" +
-                            "           LABKEY.Utils.displayAjaxErrorResponse(response);" +
-                            "    },\n" +
-                            "    failure: function (response, opts) {\n" +
-                            "        LABKEY.Utils.displayAjaxErrorResponse(response, opts);\n" +
-                            "    },\n" +
-                            "    jsonData: {" +
-                            "       key: LABKEY.DataRegions.query.selectionKey\n" +
-                            "    }, \n" +
-                            "    scope: this\n" +
-                            "});");
+                    button.setScript("LABKEY.MobileAppStudy.reprocess();");
                     bar.add(button);
                 }
             };

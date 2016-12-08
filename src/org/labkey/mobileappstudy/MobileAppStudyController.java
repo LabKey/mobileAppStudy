@@ -292,9 +292,7 @@ public class MobileAppStudyController extends SpringActionController
             Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
             if (listIds.size() == 0)
                 errors.reject(ERROR_REQUIRED, "No responses to reprocess");
-            String nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
-            if (StringUtils.isNotBlank(nonErrorIds))
-                errors.reject(ERROR_MSG, "Invalid request. Cannot re-process Response Id(s) [" + nonErrorIds + "].");
+
         }
 
         @Override
@@ -302,10 +300,11 @@ public class MobileAppStudyController extends SpringActionController
         {
             Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, true);
             Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            int updated = MobileAppStudyManager.get().reprocessResponses(getUser(),
+            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
+            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(),
                     ids);
 
-            return success("countReprocessed", updated);
+            return success(PageFlowUtil.map("countReprocessed", enqueued, "notReprocessed", nonErrorIds));
         }
     }
 

@@ -55,6 +55,7 @@ import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.Response;
 import org.labkey.mobileappstudy.data.SurveyResponse;
+import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
 
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class MobileAppStudyManager
         if (_shredder == null)
             _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
         //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
-        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(SurveyResponse.ResponseStatus.PENDING);
+        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING);
         if (pendingResponses != null)
         {
             pendingResponses.forEach(response ->
@@ -474,13 +475,13 @@ public class MobileAppStudyManager
             try
             {
                 manager.store(surveyResponse, rowId, user);
-                manager.updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.PROCESSED);
+                manager.updateProcessingStatus(user, rowId, ResponseStatus.PROCESSED);
                 logger.info(String.format("Processed response " + rowId + " in container " + surveyResponse.getContainer().getName()));
             }
             catch (Exception e)
             {
                 logger.error("Error processing response " + rowId + " in container " + surveyResponse.getContainer().getName(), e);
-                manager.updateProcessingStatus(user, rowId, SurveyResponse.ResponseStatus.ERROR, e instanceof NullPointerException ? "NullPointerException" : e.getMessage());
+                manager.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e instanceof NullPointerException ? "NullPointerException" : e.getMessage());
             }
         }
         else
@@ -504,7 +505,7 @@ public class MobileAppStudyManager
                 .getObject(SurveyResponse.class);
     }
 
-    Collection<SurveyResponse> getResponsesByStatus(SurveyResponse.ResponseStatus status)
+    Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status)
     {
         FieldKey fkey = FieldKey.fromParts("Status");
         SimpleFilter filter = new SimpleFilter(fkey, status.getPkId());
@@ -598,24 +599,25 @@ public class MobileAppStudyManager
     public int reprocessResponses(User user, @NotNull Set<Integer> listIds)
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), listIds, CompareType.IN);
+        filter.addCondition(FieldKey.fromParts("Status"), ResponseStatus.ERROR.getPkId(), CompareType.EQUAL);
         Collection<SurveyResponse> responses = new TableSelector(
                 MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null).getCollection(SurveyResponse.class);
 
         responses.forEach(response ->
         {
-            updateProcessingStatus(user, response.getRowId(), SurveyResponse.ResponseStatus.PENDING);
+            updateProcessingStatus(user, response.getRowId(), ResponseStatus.PENDING);
             enqueueSurveyResponse(() -> shredSurveyResponse(response.getRowId(), user));
         });
 
         return responses.size();
     }
 
-    public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull SurveyResponse.ResponseStatus newStatus)
+    public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull ResponseStatus newStatus)
     {
         updateProcessingStatus(user, rowId, newStatus, null);
     }
 
-    public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull SurveyResponse.ResponseStatus newStatus, @Nullable String errorMessage)
+    public void updateProcessingStatus(@Nullable User user, @NotNull Integer rowId, @NotNull ResponseStatus newStatus, @Nullable String errorMessage)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         TableInfo responseTable = schema.getTableInfoResponse();
@@ -633,14 +635,14 @@ public class MobileAppStudyManager
         Table.update(user, responseTable, response, response.getRowId());
     }
 
-    public String getNonErrorResponses(Set<Integer> listIds)
+    public Set<Integer> getNonErrorResponses(Set<Integer> listIds)
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), listIds, CompareType.IN);
-        filter.addCondition(FieldKey.fromParts("status"), SurveyResponse.ResponseStatus.ERROR.getPkId(), CompareType.NEQ);
+        filter.addCondition(FieldKey.fromParts("status"), ResponseStatus.ERROR.getPkId(), CompareType.NEQ);
         Collection<SurveyResponse> responses = new TableSelector(
                 MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null).getCollection(SurveyResponse.class);
 
-        return String.join(", ", responses.stream().map((response) -> response.getRowId().toString()).collect(Collectors.toList()));
+        return responses.stream().map(SurveyResponse::getRowId).collect(Collectors.toSet());
     }
 
     /**
