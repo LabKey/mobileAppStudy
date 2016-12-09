@@ -82,7 +82,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
         if (!this.studyIdField) {
             this.studyIdField = Ext4.create("Ext.form.field.Text", {
                 width: 200,
-                name: 'shortName',
+                name: 'studyId',
                 value: this.shortName,
                 padding: '10px 10px 0px 10px',
                 allowBlank: false,
@@ -145,12 +145,12 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             if (obj.success) {
                 //reload form control values for Dirty tracking
                 btn.up('form').getForm().setValues(obj.data);
-                this.validateForm(btn);
 
                 //Set panel values
-                this.shortName = obj.data.shortName;
+                this.shortName = obj.data.studyId;
                 this.collectionEnabled = obj.data.collectionEnabled;
                 this.getSuccessMessage().show();
+                this.validateForm(btn);
             }
             else
             {
@@ -165,7 +165,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             if (obj.errors)
             {
                 //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName
-                Ext4.Msg.alert("Error", "There were problems storing the studyId. " + obj.errors[0].message);
+                Ext4.Msg.alert("Error", "There were problems storing the configuration. " + obj.errors[0].message);
             }
         }
 
