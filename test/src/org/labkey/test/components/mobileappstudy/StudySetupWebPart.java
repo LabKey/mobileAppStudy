@@ -165,7 +165,7 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
     {
         protected static final Locator.XPathLocator dataRegionLocator = Locator.xpath("//table[tbody/tr/th[@title='Study Setup']]");
         protected static final Locator.XPathLocator shortNamePrompt = dataRegionLocator.append("//div[@id='labkey-mobileappstudy-studysetup']//span/div/div/div[contains(@class, 'x4-panel-body')]/span/div");
-        protected static final Locator.XPathLocator shortNameField = Locator.input("shortName");
+        protected static final Locator.XPathLocator shortNameField = Locator.input("studyId");
         protected static final Locator.XPathLocator submitButton = dataRegionLocator.append(Ext4Helper.Locators.ext4Button("Submit"));
         protected static final Locator.XPathLocator collectionEnabledCheckbox = Locator.tag("input").withAttribute("type", "button").withAttributeContaining("id", "collectionEnabled");
     }
