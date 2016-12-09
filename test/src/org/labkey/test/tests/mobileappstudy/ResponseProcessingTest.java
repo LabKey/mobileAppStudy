@@ -2,15 +2,11 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.Git;
-import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.AbstractQuestionResponse.SupportedResultType;
 import org.labkey.test.data.mobileappstudy.ChoiceQuestionResponse;
@@ -19,19 +15,19 @@ import org.labkey.test.data.mobileappstudy.InitialSurvey;
 import org.labkey.test.data.mobileappstudy.MedForm;
 import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
+import org.labkey.test.pages.mobileappstudy.ResponseQueryPage;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.PostgresOnlyTest;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -39,7 +35,7 @@ import static org.junit.Assert.assertTrue;
  */
 
 @Category({Git.class})
-public class ResponseProcessingTest extends BaseWebDriverTest implements PostgresOnlyTest
+public class ResponseProcessingTest extends BaseMobileAppStudyTest
 {
     //Create study
     private final static String BASE_PROJECT_NAME = "Response Processing Project";
@@ -51,60 +47,13 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
     private final static String SURVEY_VERSION = "123.9";
 
     @Override
-    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-    {
-        for (String project : _containerHelper.getCreatedProjects())
-        {
-            _containerHelper.deleteProject(project, false);
-        }
-    }
-
-    @Override
-    protected BrowserType bestBrowser()
-    {
-        return BrowserType.CHROME;
-    }
-
-    @Override
     protected String getProjectName()
     {
         return BASE_PROJECT_NAME;
     }
 
     @Override
-    public List<String> getAssociatedModules()
-    {
-        return Collections.singletonList("MobileAppStudy");
-    }
-
-    /**
-     * Get apptoken associated to a participant and study via the API
-     * @param project study container folder
-     * @param studyShortName study parameter
-     * @param batchToken get
-     * @return the appToken string
-     */
-    private String getNewAppToken(String project, String studyShortName, String batchToken)
-    {
-        log("Requesting app token for project [" + project +"] and study [" + studyShortName + "]");
-        EnrollParticipantCommand cmd = new EnrollParticipantCommand(project, studyShortName, batchToken, this::log);
-
-        cmd.execute(200);
-        String appToken = cmd.getAppToken();
-        assertNotNull("AppToken was null", appToken);
-        log("AppToken received: " + appToken);
-
-        return appToken;
-    }
-
-    @BeforeClass
-    public static void doSetup() throws Exception
-    {
-        ResponseProcessingTest initTest = (ResponseProcessingTest)getCurrentTest();
-        initTest.setupProjects();
-    }
-
-    public void setupProjects()
+    void setupProjects()
     {
         //Setup a study
         _containerHelper.deleteProject(PROJECT_NAME01, false);
@@ -131,38 +80,6 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
     {
         goToProjectHome(PROJECT_NAME01);
     }
-
-//    @Test
-//    public void testQuestionResponse()
-//    {
-//        MedForm medForm = new MedForm();
-//        medForm.addMed("Advil");
-//        medForm.addMedCondition("sleep deprivation");
-//        medForm.addFollowingInstructions(true);
-//
-//        MedForm medForm1 = new MedForm();
-//        medForm1.addMed("Tylenol");
-//        medForm1.addMedCondition("Fever");
-//        medForm1.addFollowingInstructions(true);
-//
-//        String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
-//
-//        InitialSurvey initialSurvey = new InitialSurvey(appToken, SURVEY_NAME, "1.2", new Date(), new Date());
-//        initialSurvey.addDateResponse(InitialSurvey.LAST_PERIOD, new Date());
-//        initialSurvey.addDateResponse(InitialSurvey.DUE_DATE, new Date());
-//        initialSurvey.addDateResponse(InitialSurvey.DATE_PREGNANCY_LEARNED, new Date());
-//        initialSurvey.addBooleanResponse(InitialSurvey.PLANNED_PREGNANCY, true);
-//        initialSurvey.addChoiceResponse(InitialSurvey.BIRTH_CONTROL_TYPE, "Pills", "Alcohol");
-//        initialSurvey.addChoiceResponse(InitialSurvey.SUPPLEMENTS, "Vitamins", "Niacin", "Iron");
-//        initialSurvey.addScaleResponse(InitialSurvey.FOLIC_ACID, 400);
-//        initialSurvey.addBooleanResponse(InitialSurvey.FORMER_SMOKER, true);
-//        initialSurvey.addGroupedResponse(MedForm.MedType.Prescription.getDisplayName(), medForm, medForm1);
-//        initialSurvey.addGroupedResponse(MedForm.MedType.OTC.getDisplayName(), medForm, medForm1);
-//
-//        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, initialSurvey);
-//        cmd.execute(200);
-//
-//    }
 
     @Test
     public void testBoolResultType() throws ParseException
@@ -233,7 +150,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submitQuestion(qr, appToken, 200);
         submissionCount++; successfulProcessingExpected++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -259,23 +177,6 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         table.getCustomizeView().addFilter("ParticipantId/AppToken", "Equals", appToken);
         table.getCustomizeView().clickViewGrid();
         refresh();
-    }
-
-    private void assertResponseErrorCounts(String appToken, int submissionCount, int successfulProcessingExpected)
-    {
-        //Go to Data table
-        goToSchemaBrowser();
-        viewQueryData("mobileappstudy","Response");
-        //Filter by AppToken
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        table.clearAllFilters("AppToken");
-        table.setFilter("AppToken", "Equals", appToken);
-
-        List statusValues = table.getColumnDataAsText("Status");
-        assertEquals("Unexpected number of requests", submissionCount, statusValues.size());
-        assertEquals("Unexpected number of successfully processed requests", successfulProcessingExpected, Collections.frequency(statusValues, "PROCESSED"));
-        assertEquals("Unexpected number of unsuccessful requests", submissionCount - successfulProcessingExpected, Collections.frequency(statusValues, "ERROR"));
-        table.clearAllFilters("AppToken");
     }
 
     @Test
@@ -355,7 +256,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submitQuestion(qr, appToken, 200);
         submissionCount++; successfulProcessingExpected++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -467,7 +369,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         successfulProcessingExpected++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -558,7 +461,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         successfulProcessingExpected++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -669,7 +573,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         successfulProcessingExpected++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -791,7 +696,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         successfulProcessingExpected++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         goToManageLists();
         click(Locator.linkWithText(SURVEY_NAME + fieldHeader));
 
@@ -916,26 +822,21 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         successfulProcessingExpected++;
 
-        //Go to Data table
-        goToSchemaBrowser();
-        viewQueryData("mobileappstudy","Response");
-        //Filter by AppToken
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        table.clearAllFilters("AppToken");
-        table.setFilter("AppToken", "Equals", appToken);
-        assertEquals("Unexpected number of requests", submissionCount, table.getDataRowCount());
+        //Go to Response table
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.viewResponseTable();
+        responses.filterByAppToken(appToken);
+        assertEquals("Unexpected number of requests", submissionCount, responses.getResponseCount());
+        Collection<String> statuses = responses.getStatuses();
+        assertEquals("Unexpected number of successfully processed requests", successfulProcessingExpected, Collections.frequency(statuses, "PROCESSED"));
+        assertEquals("Unexpected number of unsuccessfully processed requests", submissionCount-successfulProcessingExpected, Collections.frequency(statuses, "ERROR"));
 
-        table.setFilter("Status", "Equals", "PROCESSED");
-        assertEquals("Unexpected number of successfully processed requests", successfulProcessingExpected, table.getDataRowCount());
-
-        table.clearFilter("Status");
-        table.setFilter("Status","Equals", "ERROR");
-        assertEquals("Unexpected number of unsuccessfully processed requests", submissionCount-successfulProcessingExpected, table.getDataRowCount());
-
+        //Go to the Rx Meds list
         goToManageLists();
         click(Locator.linkWithText(SURVEY_NAME + "RxMedName"));
-        table = new DataRegionTable("query", getDriver());
+        DataRegionTable table = new DataRegionTable("query", getDriver());
 
+        //Filter to only our requests
         table.openCustomizeGrid();
         table.getCustomizeView().clearFilters();
         table.getCustomizeView().addFilter("RxId/SurveyId/ParticipantId/AppToken", "Equals", appToken);
@@ -991,7 +892,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         expectedErrorCount++;
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -1084,7 +986,8 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
         submissionCount++;
         successfulProcessingExpected++; //TODO: I would not expect this to cause an error
 
-        assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -1092,6 +995,49 @@ public class ResponseProcessingTest extends BaseWebDriverTest implements Postgre
 
         assertExpectedValueCount(values, String.valueOf(value), successfulProcessingExpected - 2);
         assertExpectedValueCount(values, " ", 2); //Check missing result requests
+
+        checkExpectedErrors(expectedErrorCount);
+    }
+
+    @Test
+    public void testReprocessAction()
+    {
+        String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
+        String field = InitialSurvey.FOLIC_ACID;
+        String fieldHeader = "Folic Acid";
+        int value = 12;
+
+        int submissionCount = 0;
+        int successfulProcessingExpected = 0;
+        int expectedErrorCount = 0;
+
+        //Submit successfully processed response
+        QuestionResponse qr = new QuestionResponse(SupportedResultType.SCALE, field,
+                new Date(), new Date(), false, value);
+        submitQuestion(qr, appToken, 200);
+        submissionCount++;
+        successfulProcessingExpected++;
+
+        //Submit error response
+        qr.setOmitQuestionId(true);
+        log("Testing Question submission with missing Identifier property");
+        submitQuestion(qr, appToken, 200);
+        qr.setOmitQuestionId(false);
+        submissionCount++;
+        expectedErrorCount++;
+
+        //Go to Response table
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+
+        responses.filterByAppToken(appToken);
+        String responseId = responses.getResponseId(0);
+        responses.reprocessRows(0);
+        expectedErrorCount++;
+        responses.assertSuccessfulReprocessAlert(0, responseId);
+
+        responses.reprocessRows(1);
+        responses.assertSuccessfulReprocessAlert(1);
 
         checkExpectedErrors(expectedErrorCount);
     }

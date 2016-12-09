@@ -18,39 +18,20 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.TokenBatchPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
-import org.labkey.test.util.PostgresOnlyTest;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @Category({Git.class})
-public class EnrollmentTokensTest extends BaseWebDriverTest implements PostgresOnlyTest
+public class EnrollmentTokensTest extends BaseMobileAppStudyTest
 {
     @Override
-    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-    {
-        _containerHelper.deleteProject(getProjectName(), afterTest);
-    }
-
-    @BeforeClass
-    public static void setupProject()
-    {
-        EnrollmentTokensTest init = (EnrollmentTokensTest)getCurrentTest();
-
-        init.doSetup();
-    }
-
-    private void doSetup()
+    void setupProjects()
     {
         _containerHelper.createProject(getProjectName(), null);
         _containerHelper.enableModule("MobileAppStudy");
@@ -109,23 +90,8 @@ public class EnrollmentTokensTest extends BaseWebDriverTest implements PostgresO
     }
 
     @Override
-    protected BrowserType bestBrowser()
-    {
-        return BrowserType.CHROME;
-    }
-
-    @Override
     protected String getProjectName()
     {
-        return "MobileAppSetupTest Project";
+        return "EnrollmentTokensTest Project";
     }
-
-    @Override
-    public List<String> getAssociatedModules()
-    {
-        return Collections.singletonList("MobileAppStudy");
-    }
-
-
-
 }

@@ -1,27 +1,18 @@
 package org.labkey.test.tests.mobileappstudy;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.Git;
-import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.util.ListHelper;
-import org.labkey.test.util.PostgresOnlyTest;
-
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @Category({Git.class})
-public class ResponseSubmissionTest extends BaseWebDriverTest implements PostgresOnlyTest
+public class ResponseSubmissionTest extends BaseMobileAppStudyTest
 {
     //Create study
     private final static String STUDY_NAME01 = "Study01";  // Study names are case insensitive
@@ -39,62 +30,13 @@ public class ResponseSubmissionTest extends BaseWebDriverTest implements Postgre
             "}";
 
     @Override
-    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-    {
-        for (String project : _containerHelper.getCreatedProjects())
-        {
-            _containerHelper.deleteProject(project, false);
-        }
-    }
-
-    @Override
-    protected BrowserType bestBrowser()
-    {
-        return BrowserType.CHROME;
-    }
-
-    @Override
     protected String getProjectName()
     {
         return BASE_PROJECT_NAME;
     }
 
     @Override
-    public List<String> getAssociatedModules()
-    {
-        return Collections.singletonList("MobileAppStudy");
-    }
-
-
-    /**
-     * Get apptoken associated to a participant and study via the API
-     * @param project study container folder
-     * @param studyShortName study parameter
-     * @param batchToken get
-     * @return the appToken string
-     */
-    private String getNewAppToken(String project, String studyShortName, String batchToken)
-    {
-        log("Requesting app token for project [" + project +"] and study [" + studyShortName + "]");
-        EnrollParticipantCommand cmd = new EnrollParticipantCommand(project, studyShortName, batchToken, this::log);
-
-        cmd.execute(200);
-        String appToken = cmd.getAppToken();
-        assertNotNull("AppToken was null", appToken);
-        log("AppToken received: " + appToken);
-
-        return appToken;
-    }
-
-    @BeforeClass
-    public static void doSetup() throws Exception
-    {
-        ResponseSubmissionTest initTest = (ResponseSubmissionTest)getCurrentTest();
-        initTest.setupProjects();
-
-    }
-
-    public void setupProjects()
+    void setupProjects()
     {
         _containerHelper.deleteProject(PROJECT_NAME01, false);
         _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");

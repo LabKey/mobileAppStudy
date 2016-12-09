@@ -17,43 +17,26 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
 import org.labkey.test.util.PortalHelper;
-import org.labkey.test.util.PostgresOnlyTest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @Category({Git.class})
-public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOnlyTest
+public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
 {
     protected final PortalHelper _portalHelper = new PortalHelper(this);
-
-    @Override
-    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-    {
-        for (String project : _containerHelper.getCreatedProjects())
-        {
-            _containerHelper.deleteProject(project, false);
-        }
-    }
-
-    @Override
-    protected BrowserType bestBrowser()
-    {
-        return BrowserType.CHROME;
-    }
 
     @Override
     protected String getProjectName()
@@ -62,9 +45,9 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
     }
 
     @Override
-    public List<String> getAssociatedModules()
+    void setupProjects()
     {
-        return Collections.singletonList("MobileAppStudy");
+        //Do nothing, not needed for this test
     }
 
     @Test
@@ -134,7 +117,7 @@ public class ConfigAndEnrollTest extends BaseWebDriverTest implements PostgresOn
 
         // So I did it the hard way.
         waitForElement(Locator.css("div.x4-message-box"));
-        assertEquals(REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), getText(Locator.css("div.x4-message-box div.x4-form-display-field")));
+        assertEquals("Error message text does not match", REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), getText(Locator.css("div.x4-message-box div.x4-form-display-field")));
         clickButton("OK", 0);
 
         log("Reuse the first study name");
