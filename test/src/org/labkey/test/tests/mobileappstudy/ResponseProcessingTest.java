@@ -85,7 +85,6 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     public void testBoolResultType() throws ParseException
     {
         int submissionCount = 0; //used for validation
-        int successfulProcessingExpected = 0;
         int errorCount = 0;
 
         SupportedResultType type = SupportedResultType.BOOL;
@@ -95,18 +94,16 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         String fieldHeader = "Planned Pregnancy";
 
         //Test skipped
-        int skippedIndex = successfulProcessingExpected;
+        String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         QuestionResponse qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, true);
         log("Testing Question skipped = true for type [" + type + "]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++; successfulProcessingExpected++;
+        submitQuestion(qr, skipToken, 200);
 
         //Test boolean value
-        int normalIndex = successfulProcessingExpected;
+        String valToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, true);
         log("Testing Question Type [" + type + "] vs value type [boolean]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++; successfulProcessingExpected++;
+        submitQuestion(qr, valToken, 200);
 
         //Test integer value
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, 200);
@@ -144,32 +141,24 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test null
-        int nullIndex = successfulProcessingExpected;
+        String nullToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, null);
         log("Testing Question Type [" + type + "] vs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++; successfulProcessingExpected++;
+        submitQuestion(qr, nullToken, 200);
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
-        viewSurveyRequests(appToken);
-
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        assertEquals("Unexpected number of entries in the Survey List [" + SURVEY_NAME +"]", successfulProcessingExpected, table.getDataRowCount());
-
-        List<String> values = table.getColumnDataAsText(fieldHeader);
-        assertTrue("Invalid skipped value", StringUtils.isBlank(values.get(skippedIndex)));
-        assertTrue("Invalid skipped value", StringUtils.isBlank(values.get(nullIndex)));
-        assertEquals("Wrong submitted value", "true", values.get(normalIndex));
+        responses.assertResponseErrorCounts(appToken, submissionCount);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
+        assertBlankValue(skipToken, fieldHeader, "Invalid skipped value");
+        assertBlankValue(nullToken, fieldHeader, "Invalid null value");
+        assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", String.valueOf(true));
 
         checkExpectedErrors(errorCount);
     }
 
     private void viewSurveyRequests(String appToken)
     {
-        goToManageLists();
-        click(Locator.linkWithText(SURVEY_NAME));
-
         DataRegionTable table = new DataRegionTable("query", getDriver());
 
         table.openCustomizeGrid();
@@ -183,7 +172,6 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     public void testDateResultType()
     {
         int submissionCount = 0; //used for validation
-        int successfulProcessingExpected = 0;
         int errorCount = 0;
 
         SupportedResultType type = SupportedResultType.DATE;
@@ -195,11 +183,10 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         Date value = new Date();
 
         //Test skipped
-        int skippedIndex = successfulProcessingExpected;
+        String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         QuestionResponse qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, value);
         log("Testing Question skipped = true for type [" + type + "]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++; successfulProcessingExpected++;
+        submitQuestion(qr, skipToken, 200);
 
         //Test boolean value
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, true);
@@ -226,11 +213,10 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test Date
-        int normalIndex = successfulProcessingExpected;
+        String valToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, value);
         log("Testing Question Type [" + type + "] vs value type [Date]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++; successfulProcessingExpected++;
+        submitQuestion(qr, valToken, 200);
 
         //Test String
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, "\"Test Waffles\"");
@@ -249,27 +235,21 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test null
-        int nullIndex = successfulProcessingExpected;
+        String nullToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, null);
         qr.setFormatString("%1$s"); // need to override the Date format string
         log("Testing Question Type [" + type + "] vs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++; successfulProcessingExpected++;
+        submitQuestion(qr, nullToken, 200);
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
-        viewSurveyRequests(appToken);
-
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        assertEquals("Unexpected number of entries in the Survey List [" + SURVEY_NAME +"]", successfulProcessingExpected, table.getDataRowCount());
-
-        List<String> values = table.getColumnDataAsText(fieldHeader);
-        assertTrue("Invalid skipped value", StringUtils.isBlank(values.get(skippedIndex)));
-        assertTrue("Invalid null value", StringUtils.isBlank(values.get(nullIndex)));
-        assertEquals("Wrong submitted value", new SimpleDateFormat("yyyy-MM-dd 00:00").format(value), values.get(normalIndex));
+        responses.assertResponseErrorCounts(appToken, submissionCount);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
+        assertBlankValue(skipToken, fieldHeader, "Invalid skipped value");
+        assertBlankValue(nullToken, fieldHeader, "Invalid null value");
+        assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", new SimpleDateFormat("yyyy-MM-dd 00:00").format(value));
 
         checkExpectedErrors(errorCount);
-
     }
 
     @Test
@@ -287,12 +267,10 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         Integer value = 400;
 
         //Test skipped
-        int skippedIndex = successfulProcessingExpected;
+        String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         QuestionResponse qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, value);
         log("Testing Question skipped = true for type [" + type + "]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, skipToken, 200);
 
         //Test boolean value
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, true);
@@ -302,28 +280,22 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test integer value
-        int normalIndex = successfulProcessingExpected;
+        String valToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, value);
         log("Testing Question Type [" + type + "] vs value type [int]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, valToken, 200);
 
         //Test integer min value
-        int minIndex = successfulProcessingExpected;
+        String minToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Integer.MIN_VALUE);
         log("Testing Question Type [" + type + "] vs value int.min");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, minToken, 200);
 
         //Test integer max value
-        int maxIndex = successfulProcessingExpected;
+        String maxToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Integer.MAX_VALUE);
         log("Testing Question Type [" + type + "] vs value int.max");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, maxToken, 200);
 
         //Test long value
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Long.MAX_VALUE);
@@ -362,28 +334,39 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test null
-        int nullIndex = successfulProcessingExpected;
+        String nullToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, null);
         log("Testing Question Type [" + type + "] vs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, nullToken, 200);
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
-        viewSurveyRequests(appToken);
+        responses.assertResponseErrorCounts(appToken, submissionCount);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
 
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        assertEquals("Unexpected number of entries in the Survey List [" + SURVEY_NAME +"]", successfulProcessingExpected, table.getDataRowCount());
-
-        List<String> values = table.getColumnDataAsText(fieldHeader);
-        assertTrue("Invalid skipped value", StringUtils.isBlank(values.get(skippedIndex)));
-        assertTrue("Invalid null value", StringUtils.isBlank(values.get(nullIndex)));
-        assertEquals("Wrong submitted value", value.toString(), values.get(normalIndex));
-        assertEquals("Wrong Min value", String.valueOf(Integer.MIN_VALUE), values.get(minIndex));
-        assertEquals("Wrong max value", String.valueOf(Integer.MAX_VALUE), values.get(maxIndex));
+        assertBlankValue(skipToken, fieldHeader, "Invalid skipped value");
+        assertBlankValue(nullToken, fieldHeader, "Invalid null value");
+        assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", String.valueOf(value));
+        assertSubmittedValue(minToken, fieldHeader, "Min value not present", String.valueOf(Integer.MIN_VALUE));
+        assertSubmittedValue(maxToken, fieldHeader, "Max value not present", String.valueOf(Integer.MAX_VALUE));
 
         checkExpectedErrors(errorCount);
+    }
+
+    private void assertSubmittedValue(String appToken, String fieldHeader, String assertMsg, String expectedValue )
+    {
+        viewSurveyRequests(appToken);
+        DataRegionTable table = new DataRegionTable("query", getDriver());
+        String value = table.getDataAsText(0, fieldHeader);
+        assertEquals(assertMsg, expectedValue, value);
+    }
+
+    private void assertBlankValue(String appToken, String fieldHeader, String assertMsg )
+    {
+        viewSurveyRequests(appToken);
+        DataRegionTable table = new DataRegionTable("query", getDriver());
+        String value = table.getDataAsText(0, fieldHeader);
+        assertTrue(assertMsg, StringUtils.isBlank(value));
     }
 
     @Test
@@ -401,12 +384,10 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         Double value = 3.14;
 
         //Test skipped
-        int skippedIndex = successfulProcessingExpected;
+        String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         QuestionResponse qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, value);
         log("Testing Question skipped = true for type [" + type + "]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, skipToken, 200);
 
         //Test boolean value
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, true);
@@ -416,20 +397,17 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test integer value
-        int intIndex = successfulProcessingExpected;
-        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, 4);
+        int intVal = 4;
+        String intToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
+        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, intVal);
         log("Testing Question Type [" + type + "] vs value type [int]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, intToken, 200);
 
         //Test double
-        int normalIndex = successfulProcessingExpected;
+        String valToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, value);
         log("Testing Question Type [" + type + "] vs value type [double]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, valToken, 200);
 
         //Test Date
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, new Date());
@@ -454,25 +432,19 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test null
-        int nullIndex = successfulProcessingExpected;
+        String nullToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, null);
         log("Testing Question Type [" + type + "] vs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, nullToken, 200);
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
-        viewSurveyRequests(appToken);
-
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        assertEquals("Unexpected number of entries in the Survey List [" + SURVEY_NAME +"]", successfulProcessingExpected, table.getDataRowCount());
-
-        List<String> values = table.getColumnDataAsText(fieldHeader);
-        assertTrue("Invalid skipped value", StringUtils.isBlank(values.get(skippedIndex)));
-        assertTrue("Invalid null value", StringUtils.isBlank(values.get(nullIndex)));
-        assertEquals("Wrong submitted value", value.toString(), values.get(normalIndex));
-        assertEquals("Wrong submitted value", String.valueOf(Double.valueOf(4)), values.get(intIndex));
+        responses.assertResponseErrorCounts(appToken, submissionCount);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
+        assertBlankValue(skipToken, fieldHeader, "Invalid skipped value");
+        assertBlankValue(nullToken, fieldHeader, "Invalid null value");
+        assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", String.valueOf(value));
+        assertSubmittedValue(intToken, fieldHeader, "Double value not present", String.valueOf(Double.valueOf(intVal)));
 
         checkExpectedErrors(errorCount);
     }
@@ -481,7 +453,6 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     public void testTextResultType()
     {
         int submissionCount = 0; //used for validation
-        int successfulProcessingExpected = 0;
         int errorCount = 0;
 
         SupportedResultType type = SupportedResultType.TEXT;
@@ -492,12 +463,10 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         String value = "I \u9825 waffles";
 
         //Test skipped
-        int skippedIndex = successfulProcessingExpected;
+        String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         QuestionResponse qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, value);
         log("Testing Question skipped = true for type [" + type + "]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, skipToken, 200);
 
         //Test boolean value
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, true);
@@ -524,21 +493,17 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test Date
-        int dateIndex = successfulProcessingExpected;
+        String dateToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         Date dateVal = new Date();
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, dateVal);
         log("Testing Question Type [" + type + "] vs value type [Date]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, dateToken, 200);
 
         //Test String
-        int normalIndex = successfulProcessingExpected;
+        String valToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, value);
         log("Testing Question Type [" + type + "] vs value type [String]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, valToken, 200);
 
         //Test collection
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Arrays.asList("\"Test\"", "2"));
@@ -549,46 +514,34 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test null
-        int nullIndex = successfulProcessingExpected;
+        String nullToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, null);
         qr.setFormatString("%1$s");
         log("Testing Question Type [" + type + "] vs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, nullToken, 200);
 
         //Test empty string
-        int emptyIndex = successfulProcessingExpected;
+        String emptyToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, "");
         log("Testing Question Type [" + type + "] Îvs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, emptyToken, 200);
 
         //Test white space
-        int whitespaceIndex = successfulProcessingExpected;
+        String wsToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, "\\t \\n");
         log("Testing Question Type [" + type + "] vs value type [null]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        successfulProcessingExpected++;
+        submitQuestion(qr, wsToken, 200);
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
-        viewSurveyRequests(appToken);
-
-        DataRegionTable table = new DataRegionTable("query", getDriver());
-        assertEquals("Unexpected number of entries in the Survey List [" + SURVEY_NAME +"]", successfulProcessingExpected, table.getDataRowCount());
-
-        List<String> values = table.getColumnDataAsText(fieldHeader);
-        assertTrue("Invalid skipped value", StringUtils.isBlank(values.get(skippedIndex)));
-        assertTrue("Invalid null value", StringUtils.isBlank(values.get(nullIndex)));
-        assertEquals("Wrong submitted value", value.toString(), values.get(normalIndex));
-        assertTrue("Invalid empty string value", StringUtils.isBlank(values.get(emptyIndex)));
-        assertTrue("Invalid whitespace string value", StringUtils.isBlank(values.get(whitespaceIndex)));
-
-        //TODO: should we be catching this?
-        assertEquals("Date value not treated as string", String.valueOf(dateVal), values.get(dateIndex));
+        responses.assertResponseErrorCounts(appToken, submissionCount);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
+        assertBlankValue(skipToken, fieldHeader, "Invalid skipped value");
+        assertBlankValue(nullToken, fieldHeader, "Invalid null value");
+        assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", String.valueOf(value));
+        assertBlankValue(emptyToken, fieldHeader, "Invalid empty string value");
+        assertBlankValue(wsToken, fieldHeader, "Invalid whitespace string value");
+        assertSubmittedValue(dateToken, fieldHeader, "Date value not treated as string", String.valueOf(dateVal));
 
         checkExpectedErrors(errorCount);
     }
@@ -894,6 +847,8 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
         responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());
@@ -988,6 +943,8 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
         responses.assertResponseErrorCounts(appToken, submissionCount, successfulProcessingExpected);
+        goToManageLists();
+        click(Locator.linkWithText(SURVEY_NAME));
         viewSurveyRequests(appToken);
 
         DataRegionTable table = new DataRegionTable("query", getDriver());

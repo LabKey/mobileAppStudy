@@ -102,6 +102,21 @@ public class ResponseQueryPage extends LabKeyPage
         table.clearAllFilters(ColumnNames.AppToken.toString());
     }
 
+    public void assertResponseErrorCounts(String appToken, int submissionCount)
+    {
+        //Go to Data table
+        viewResponseTable();
+
+        //Filter by AppToken
+        filterByAppToken(appToken);
+
+        DataRegionTable table = new DataRegionTable("query", getDriver());
+        List statusValues = table.getColumnDataAsText(ColumnNames.Status.toString());
+        assertEquals("Unexpected number of requests", submissionCount, statusValues.size());
+        assertEquals("Unexpected number of unsuccessful requests", submissionCount, Collections.frequency(statusValues, "ERROR"));
+        table.clearAllFilters(ColumnNames.AppToken.toString());
+    }
+
     public String getResponseId(int rowIndex)
     {
         DataRegionTable table = new DataRegionTable("query", getDriver());
