@@ -99,6 +99,10 @@ public abstract class MobileAppCommand
 
             if (expectedStatusCode < 400 && StringUtils.isNotBlank(getExceptionMessage()))
                 log("Unexpected error message: " + getExceptionMessage());
+
+            if (expectedStatusCode != statusCode)
+                log(getBody());
+
             assertEquals("Unexpected response status", expectedStatusCode, statusCode);
         }
         catch (IOException e)
@@ -111,4 +115,6 @@ public abstract class MobileAppCommand
                 EntityUtils.consumeQuietly(response.getEntity());
         }
     }
+
+    public abstract String getBody();
 }

@@ -16,7 +16,11 @@
 package org.labkey.mobileappstudy.query;
 
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.*;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.EnumTableInfo;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
@@ -29,9 +33,6 @@ import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_BA
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_STATUS_TABLE;
 
-/**
- * Created by susanh on 10/10/16.
- */
 public class MobileAppStudyQuerySchema extends SimpleUserSchema
 {
     public static final String NAME = "mobileappstudy";

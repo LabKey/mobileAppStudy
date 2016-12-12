@@ -1,0 +1,1 @@
+ALTER TABLE mobileappstudy.ResponseMetadata RENAME QuestionId To FieldName;

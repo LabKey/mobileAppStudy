@@ -35,7 +35,7 @@ public class MobileAppStudyContainerListener implements ContainerListener
     @Override
     public void containerDeleted(Container c, User user)
     {
-        MobileAppStudyManager.purgeContainer(c);
+        MobileAppStudyManager.get().purgeContainer(c);
     }
 
     @Override

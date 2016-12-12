@@ -3,18 +3,20 @@ package org.labkey.mobileappstudy.data;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SurveyResponse
 {
+    public static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     public enum ResponseStatus {
 
         /** list order doesn't matter, but don't change id's unless you also update mobileappstudy.response.status **/
         PENDING(0, "Pending"),
-        PROCESSING(1, "Processing"),
-        PROCESSED(2, "Processed"),
-        ERROR(3, "Error");
+        PROCESSED(1, "Processed"),
+        ERROR(2, "Error");
 
         private final int pkId;
         private final String displayText;
@@ -171,4 +173,5 @@ public class SurveyResponse
     {
         _appToken = appToken;
     }
+
 }

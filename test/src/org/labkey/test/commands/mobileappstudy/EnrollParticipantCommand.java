@@ -87,4 +87,10 @@ public class EnrollParticipantCommand extends MobileAppCommand
     {
         _appToken = response.getJSONObject("data").getString(APP_TOKEN_JSON_FIELD);
     }
+
+    @Override
+    public String getBody()
+    {
+        return "";
+    }
 }

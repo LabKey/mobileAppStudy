@@ -26,7 +26,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 xtype: 'toolbar',
                 dock: 'bottom',
                 ui: 'footer',
-                items: [this.getSubmitButton()]
+                items: [this.getSubmitButton(), this.getSuccessMessage()]
             }];
 
             this.callParent();
@@ -45,7 +45,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                     xtype: 'toolbar',
                     dock: 'bottom',
                     ui: 'footer',
-                    items: [this.getSubmitButton()]
+                    items: [this.getSubmitButton(), this.getSuccessMessage()]
                 }];
             }
 
@@ -82,7 +82,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
         if (!this.studyIdField) {
             this.studyIdField = Ext4.create("Ext.form.field.Text", {
                 width: 200,
-                name: 'shortName',
+                name: 'studyId',
                 value: this.shortName,
                 padding: '10px 10px 0px 10px',
                 allowBlank: false,
@@ -94,7 +94,8 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 validateOnChange: true,
                 allowOnlyWhitespace: false,
                 listeners: {
-                    change: this.validateForm
+                    change: this.validateForm,
+                    scope: this
                 }
             });
         }
@@ -104,6 +105,18 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
     getFormFields: function() {
         return [this.getStudyIdField()];
     },
+
+    getSuccessMessage: function(){
+        if (!this.successMessage) {
+            this.successMessage = Ext4.create("Ext.form.Label", {
+                text: 'Configuration Saved',
+                cls: 'labkey-message',
+                hidden: true
+            });
+        }
+        return this.successMessage
+    },
+
     enableCollectionWarning: function(btn) {
         btn.setDisabled(true);
         var collectionCheckbox = this.getEnableCollectionControl();
@@ -132,13 +145,12 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             if (obj.success) {
                 //reload form control values for Dirty tracking
                 btn.up('form').getForm().setValues(obj.data);
-                this.validateForm(btn);
 
                 //Set panel values
-                this.shortName = obj.data.shortName;
+                this.shortName = obj.data.studyId;
                 this.collectionEnabled = obj.data.collectionEnabled;
-
-                //TODO: Display a successful save message?
+                this.getSuccessMessage().show();
+                this.validateForm(btn);
             }
             else
             {
@@ -179,13 +191,16 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 value: this.collectionEnabled,
                 disabled: !this.canChangeCollection,
                 listeners: {
-                    change: this.validateForm
+                    change: this.validateForm,
+                    scope: this
                 }
             });
         }
         return this.collectionCheckbox;
     },
     validateForm: function(field){
+        this.getSuccessMessage().hide();
+
         var form = field.up('form');
         var saveBtn = form.getSubmitButton();
         if (saveBtn.hidden)

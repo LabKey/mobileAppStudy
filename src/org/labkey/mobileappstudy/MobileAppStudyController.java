@@ -20,19 +20,31 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.action.*;
+import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.Marshal;
+import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.SimpleViewAction;
+import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
-import org.labkey.mobileappstudy.data.*;
+import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
+import org.labkey.mobileappstudy.data.MobileAppStudy;
+import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.SurveyInfo;
+import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -135,14 +147,14 @@ public class MobileAppStudyController extends SpringActionController
 
             return success(PageFlowUtil.map(
                 "rowId", study.getRowId(),
-                "shortName", study.getShortName(),
+                "studyId", study.getShortName(),
                 "collectionEnabled", study.getCollectionEnabled()
             ));
         }
     }
 
     /*
-    Ignores container POST-ed to. Pulls container context from the appToken used in request
+    Ignores container POST-ed from. Pulls container context from the appToken used in request
      */
     @RequiresNoPermission
     public class ProcessResponseAction extends ApiAction<MobileAppSurveyResponseForm>
@@ -173,7 +185,10 @@ public class MobileAppStudyController extends SpringActionController
             if (StringUtils.isBlank(form.getParticipantId()))
                 errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
             if (errors.hasErrors())
+            {
+                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
                 return;
+            }
 
 
             //Check if there is an associated participant for the appToken
@@ -186,10 +201,15 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_MSG, "AppToken not associated with study");
             else
             {
+                assert info != null; //Null is checked above, but this gets rid of the lint
                 if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
                     errors.reject(ERROR_MSG, "Survey not found.");
                 else if (!study.getCollectionEnabled())
                     errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
+            }
+            if (errors.hasErrors())
+            {
+                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
             }
         }
 
@@ -209,7 +229,7 @@ public class MobileAppStudyController extends SpringActionController
 
             //Add a parsing job
             final Integer rowId = resp.getRowId();
-            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId));
+            manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId, getUser()));
 
             return success();
         }
@@ -221,25 +241,30 @@ public class MobileAppStudyController extends SpringActionController
         public void validateForm(EnrollmentForm form, Errors errors)
         {
             if (form == null)
+            {
                 errors.reject(ERROR_MSG, "Invalid input format.");
-            else if (StringUtils.isEmpty(form.getShortName()))
-                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
-                errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
-            else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
-                errors.rejectValue("shortName", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
-            else if (!StringUtils.isEmpty(form.getToken()))
-            {
-                if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
-                    errors.reject(ERROR_MSG, "Token already in use");
-                else if (!MobileAppStudyManager.get().isChecksumValid(form.getToken()))
-                    errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
-                else if (!MobileAppStudyManager.get().isValidStudyToken(form.getToken(), form.getShortName()))
-                    errors.rejectValue("token", ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
             }
-            // we allow for the possibility that someone can enroll without using an enrollment token
-            else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
+            else
             {
-                errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                if (StringUtils.isEmpty(form.getShortName()))
+                    //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
+                    errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
+                else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
+                    errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
+                else if (!StringUtils.isEmpty(form.getToken()))
+                {
+                    if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
+                        errors.reject(ERROR_MSG, "Token already in use");
+                    else if (!MobileAppStudyManager.get().isChecksumValid(form.getToken()))
+                        errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
+                    else if (!MobileAppStudyManager.get().isValidStudyToken(form.getToken(), form.getShortName()))
+                        errors.rejectValue("token", ERROR_MSG, "Unknown token: '" + form.getToken() + "'");
+                }
+                // we allow for the possibility that someone can enroll without using an enrollment token
+                else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
+                {
+                    errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                }
             }
         }
 
@@ -250,6 +275,53 @@ public class MobileAppStudyController extends SpringActionController
             return success(PageFlowUtil.map("appToken", participant.getAppToken()));
         }
     }
+
+    @RequiresPermission(AdminPermission.class)
+    public class ReprocessResponseAction extends ApiAction<ReprocessResponseForm>
+    {
+        @Override
+        public void validateForm(ReprocessResponseForm form, Errors errors)
+        {
+            if (form == null)
+            {
+                errors.reject(ERROR_MSG, "Invalid input format.");
+                return;
+            }
+
+            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, false);
+            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
+            if (listIds.size() == 0)
+                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
+
+        }
+
+        @Override
+        public Object execute(ReprocessResponseForm form, BindException errors) throws Exception
+        {
+            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, true);
+            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
+            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
+            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(),
+                    ids);
+
+            return success(PageFlowUtil.map("countReprocessed", enqueued, "notReprocessed", nonErrorIds));
+        }
+    }
+
+    public static class ReprocessResponseForm
+    {
+        private String _key;
+
+        public String getKey()
+        {
+            return _key;
+        }
+        public void setKey(String key)
+        {
+            _key = key;
+        }
+    }
+
 
     public static class StudyConfigForm
     {
@@ -278,6 +350,11 @@ public class MobileAppStudyController extends SpringActionController
         public void setStudyId(String studyId)
         {
             setShortName(studyId);
+        }
+
+        public String getStudyId()
+        {
+            return _shortName;
         }
     }
 
@@ -308,6 +385,11 @@ public class MobileAppStudyController extends SpringActionController
         public void setStudyId(String studyId)
         {
             setShortName(studyId);
+        }
+
+        public String getStudyId()
+        {
+            return _shortName;
         }
     }
 
