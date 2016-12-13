@@ -32,7 +32,6 @@ import static org.labkey.test.components.html.Input.Input;
 
 public class TokenBatchPopup extends Window<TokenBatchPopup.ElementCache>
 {
-//    Elements _elements;
     public TokenBatchPopup(WebDriver wd)
     {
         super("Generate Tokens", wd);
@@ -94,22 +93,10 @@ public class TokenBatchPopup extends Window<TokenBatchPopup.ElementCache>
         elementCache().cancelButton.click();
     }
 
-//    public Elements elements()
-//    {
-//        if (_elements == null)
-//            _elements = new Elements();
-//        return _elements;
-//    }
-
-//    @Override
-//    protected ElementCache newElementCache()
-//    {
-//        return new ElementCache();
-//    }
-
-    protected TokenBatchPopup.ElementCache elementCache()
+    @Override
+    protected ElementCache newElementCache()
     {
-        return new TokenBatchPopup.ElementCache();
+        return new ElementCache();
     }
 
     protected class ElementCache extends Window.Elements
@@ -122,13 +109,11 @@ public class TokenBatchPopup extends Window<TokenBatchPopup.ElementCache>
         {
             return RadioButton.RadioButton().withLabel(size).findWhenNeeded(this);
         }
-
     }
 
-    public static class Locators extends org.labkey.test.Locators
+    public static class Locators
     {
         public static final Locator.XPathLocator enabledSubmitButton = Ext4Helper.Locators.ext4Button("Submit").enabled();
         public static final Locator.XPathLocator enabledCancelButton = Ext4Helper.Locators.ext4Button("Cancel").enabled();
     }
-
 }

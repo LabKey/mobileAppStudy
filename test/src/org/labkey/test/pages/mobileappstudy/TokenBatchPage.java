@@ -27,10 +27,8 @@ import org.openqa.selenium.WebElement;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TokenBatchPage extends LabKeyPage
+public class TokenBatchPage extends LabKeyPage<TokenBatchPage.ElementCache>
 {
-    Elements _elements;
-
     public TokenBatchPage(BaseWebDriverTest test)
     {
         super(test);
@@ -44,18 +42,18 @@ public class TokenBatchPage extends LabKeyPage
 
     public boolean isNewBatchPresent()
     {
-        return elements().newBatchButton.isDisplayed();
+        return elementCache().newBatchButton.isDisplayed();
     }
 
     public boolean isNewBatchEnabled()
     {
-        return elements().newBatchButton.isEnabled();
+        return elementCache().newBatchButton.isEnabled();
     }
 
     public void openNewBatchPopup()
     {
         log("Opening new batch request popup.");
-        elements().newBatchButton.click();
+        elementCache().newBatchButton.click();
     }
 
     public Map<String, String> getBatchData(int batchId)
@@ -70,21 +68,14 @@ public class TokenBatchPage extends LabKeyPage
         return data;
     }
 
-    public Elements elements()
+    @Override
+    protected ElementCache newElementCache()
     {
-        if (_elements == null)
-            _elements = new Elements();
-        return _elements;
+        return new ElementCache();
     }
 
-    private class Elements extends LabKeyPage.ElementCache
+    protected class ElementCache extends LabKeyPage.ElementCache
     {
-        WebElement newBatchButton = new LazyWebElement(Locators.newBatchButton, this);
-    }
-
-    public static class Locators extends org.labkey.test.Locators
-    {
-
-        public static final Locator.XPathLocator newBatchButton = Locator.lkButton().withText("New Batch");
+        WebElement newBatchButton = new LazyWebElement(Locator.lkButton().withText("New Batch"), this);
     }
 }

@@ -29,7 +29,6 @@ import java.util.Map;
 
 public class TokenBatchesWebPart extends WebPart<TokenBatchesWebPart.ElementCache>
 {
-
     public TokenBatchesWebPart(BaseWebDriverTest test)
     {
         super(test.getWrappedDriver(), Locators.dataRegionLocator.findElement(test.getDriver()));
@@ -81,24 +80,6 @@ public class TokenBatchesWebPart extends WebPart<TokenBatchesWebPart.ElementCach
         getWrapper().waitForElement(Locators.dataRegionLocator);
     }
 
-//    @Override
-//    public WebElement getComponentElement()
-//    {
-//        return Locators.dataRegionLocator.findElement(_test.getDriver());
-//    }
-
-//    //@Override
-//    public String getTitle()
-//    {
-//        return getComponentElement().findElement(By.tagName("th")).getText();
-//    }
-
-//    @Override
-//    protected EC newElementCache()
-//    {
-//        return (EC)new TokenBatchesWebPart.ElementCache();
-//    }
-
     protected ElementCache elementCache()
     {
         return new ElementCache();
@@ -109,10 +90,9 @@ public class TokenBatchesWebPart extends WebPart<TokenBatchesWebPart.ElementCach
         WebElement newBatchButton = new LazyWebElement(Locators.newBatchButton, getDriver());
     }
 
-    public static class Locators extends org.labkey.test.Locators
+    public static class Locators
     {
         public static final Locator.XPathLocator newBatchButton = Locator.lkButton().withText("New Batch");
         protected static final Locator dataRegionLocator = Locator.xpath("//table[tbody/tr/th[@title='Enrollment Token Batches']]");
     }
-
 }

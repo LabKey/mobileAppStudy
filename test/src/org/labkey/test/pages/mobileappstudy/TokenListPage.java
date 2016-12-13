@@ -27,10 +27,8 @@ import org.openqa.selenium.WebElement;
 
 import java.util.Map;
 
-public class TokenListPage extends LabKeyPage
+public class TokenListPage extends LabKeyPage<TokenListPage.ElementCache>
 {
-    Elements _elements;
-
     public TokenListPage(WebDriverWrapper test)
     {
         super(test);
@@ -50,7 +48,7 @@ public class TokenListPage extends LabKeyPage
 
     public void goToBatches()
     {
-        doAndWaitForPageToLoad(() -> elements().tokenBatchLink.click());
+        doAndWaitForPageToLoad(() -> elementCache().tokenBatchLink.click());
     }
 
     public String getBatchId()
@@ -67,21 +65,8 @@ public class TokenListPage extends LabKeyPage
         return dataRegion.getDataAsText(index, "Token");
     }
 
-    public Elements elements()
+    protected class ElementCache extends LabKeyPage.ElementCache
     {
-        if (_elements == null)
-            _elements = new Elements();
-        return _elements;
-    }
-
-    private class Elements extends LabKeyPage.ElementCache
-    {
-        WebElement tokenBatchLink = new LazyWebElement(Locators.tokenBatchLink, this);
-    }
-
-
-    public static class Locators extends org.labkey.test.Locators
-    {
-        public static final Locator.XPathLocator tokenBatchLink = Locator.linkWithText("Token Batches");
+        WebElement tokenBatchLink = new LazyWebElement(Locator.linkWithText("Token Batches"), this);
     }
 }

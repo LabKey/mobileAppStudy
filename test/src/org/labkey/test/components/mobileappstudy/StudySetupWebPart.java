@@ -161,7 +161,7 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
         WebElement collectionCheckbox = new LazyWebElement(Locators.collectionEnabledCheckbox, getDriver());
     }
 
-    public static class Locators extends org.labkey.test.Locators
+    public static class Locators
     {
         protected static final Locator.XPathLocator dataRegionLocator = Locator.xpath("//table[tbody/tr/th[@title='Study Setup']]");
         protected static final Locator.XPathLocator shortNamePrompt = dataRegionLocator.append("//div[@id='labkey-mobileappstudy-studysetup']//span/div/div/div[contains(@class, 'x4-panel-body')]/span/div");
@@ -193,12 +193,6 @@ public class StudySetupWebPart extends WebPart<StudySetupWebPart.ElementCache>
             //TODO: Issue 28463: Ext.Msg reuses the WebElement for the dialog so don't wait for close, as may already be reopened
             // waitForClose();     //
             getWrapper().longWait();
-        }
-
-        public class Locators extends org.labkey.test.Locators
-        {
-            public final Locator.XPathLocator okButton = Ext4Helper.Locators.ext4Button("OK");
-            public final Locator.XPathLocator cancelButton = Ext4Helper.Locators.ext4Button("Cancel");
         }
     }
 }
