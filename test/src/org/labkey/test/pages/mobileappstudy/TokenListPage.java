@@ -65,6 +65,12 @@ public class TokenListPage extends LabKeyPage<TokenListPage.ElementCache>
         return dataRegion.getDataAsText(index, "Token");
     }
 
+    @Override
+    protected ElementCache newElementCache()
+    {
+        return new ElementCache();
+    }
+
     protected class ElementCache extends LabKeyPage.ElementCache
     {
         WebElement tokenBatchLink = new LazyWebElement(Locator.linkWithText("Token Batches"), this);
