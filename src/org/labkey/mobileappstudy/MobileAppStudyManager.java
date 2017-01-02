@@ -25,6 +25,7 @@ import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -380,6 +381,41 @@ public class MobileAppStudyManager
         TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("ShortName"), filter, null);
         return selector.exists();
     }
+
+    private List<Container> getContainers(@NotNull String shortName)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName.toUpperCase());
+        TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("Container"), filter, null);
+        List<String> containerIds =  selector.getArrayList(String.class);
+        List<Container> containers = new ArrayList<>();
+        for (String id : containerIds)
+        {
+            containers.add(ContainerManager.getForId(id));
+        }
+        return containers;
+    }
+
+    /**
+     * Determine if the study short name that identifies the study is associated with
+     * a container that is a sibling of the one provided (preventing the use of the study short name as
+     * a disambiguating data point)
+     * @param shortName identifier for the study
+     * @param container current container (the opposite of 'elsewhere')
+     * @return tre if there is another container whose parent is the same as the given one with the short name associated with it; false otherwise
+     */
+    public boolean studyExistsAsSibling(@NotNull String shortName, @NotNull Container container)
+    {
+        Container parent = container.getParent();
+        for (Container otherContainer : getContainers(shortName))
+        {
+            if (!otherContainer.equals(container) && otherContainer.getParent() == parent)
+                return true;
+        }
+        return false;
+    }
+
 
     /**
      * Determines if the given study short name that identifies the study is associated with
