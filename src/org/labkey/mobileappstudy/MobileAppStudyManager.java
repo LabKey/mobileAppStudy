@@ -67,7 +67,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -833,7 +832,7 @@ public class MobileAppStudyManager
     /**
      * Stores a set of SurveyResult objects in a given list. For each given SurveyResult that is single-valued, store it
      * in the column with the corresponding name.
-
+     *
      * @param surveyId identifier of the survey
      * @param listName name of the list in which the responses should be stored
      * @param results the superset of results to be stored.  This may contain multi-valued results as well, but these
@@ -995,8 +994,6 @@ public class MobileAppStudyManager
 
     /**
      * Withdraw a participant from the study based on their apptoken
-     * NOTE: can be called when ParticipantStatus is already Withdrawn
-     *
      * @param participantId to withdraw
      * @param delete True if existing data should also be deleted
      */
@@ -1038,6 +1035,12 @@ public class MobileAppStudyManager
         }
     }
 
+    /**
+     * Delete participant data from schema tables and Survey lists
+     * Assumes: all lists in participant container with a participantId field should be deleted from
+     * @param participant
+     * @throws Exception
+     */
     private void deleteParticipantData(Participant participant) throws Exception
     {
         logger.info(String.format("Deleting participant [%1$s]'s data.", participant.getRowId()));
@@ -1045,6 +1048,10 @@ public class MobileAppStudyManager
         deleteParticipantDataFromTables(participant);
     }
 
+    /**
+     * Initiate deletion of participant data from schema tables
+     * @param participant
+     */
     private void deleteParticipantDataFromTables(Participant participant)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
@@ -1054,7 +1061,11 @@ public class MobileAppStudyManager
         deleteParticipantDataFromTable(schema::getTableInfoEnrollmentToken, participant.getRowId());
     }
 
-    //Delete data related to participant
+    /**
+     * Delete data related to participant from a hard table
+     * @param tableDelegate Supplier method to get TableInfo from
+     * @param participantId to target
+     */
     private void deleteParticipantDataFromTable(Supplier<TableInfo> tableDelegate, Integer participantId)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -1062,41 +1073,60 @@ public class MobileAppStudyManager
         Table.delete(tableDelegate.get(), filter);
     }
 
+    /**
+     * Delete participant data from all lists
+     * @param participant to target for deletion
+     * @throws Exception
+     */
     private void deleteParticipantDataFromSurveyLists(Participant participant) throws Exception
     {
-        // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
+        // Create a LimitedUser to use for checking permissions, wrapping the Guest user
         User user = new LimitedUser(UserManager.getGuestUser(),
                 new int[0], Collections.singleton(RoleManager.getRole(EditorRole.class)), false);
 
-        for (String listName : new HashSet<>(getParticipantSurveys(participant)))
-            deleteParticipantFromList(listName, participant.getContainer(), participant.getRowId(), user);
+        //Get all lists in the container
+        Collection<ListDefinition> lists = ListService.get().getLists(participant.getContainer()).values();
+
+        for (ListDefinition list :lists)
+            deleteParticipantFromList(list, participant.getContainer(), participant.getRowId(), user);
     }
 
-    private Collection<String> getParticipantSurveys(Participant participant)
+    /**
+     * Delete participant data from a list
+     * @param list ListDefinition to delete data from
+     * @param container hosting list and participant
+     * @param participantId to target
+     * @param user LabKey user executing the deletion action
+     * @throws Exception
+     */
+    private void deleteParticipantFromList(ListDefinition list, Container container, Integer participantId, User user) throws Exception
     {
-        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-        TableInfo responseMetadata = schema.getTableInfoResponseMetadata();
+        //Get the table
+        TableInfo table = list.getTable(user, container);
+        if (table == null)
+            throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
 
-        SimpleFilter filter = new SimpleFilter();
-        filter.addCondition(FieldKey.fromParts("ParticipantId"), participant.getRowId());
-
-        FieldKey listFK = FieldKey.fromParts("ListName");
-        return new TableSelector(responseMetadata.getColumn(listFK), filter, null).getCollection(String.class);
-    }
-
-    private void deleteParticipantFromList(String listName, Container container, Integer participantId, User user) throws Exception
-    {
-        TableInfo table = getResultTable(listName, container, user);
+        List<ColumnInfo> piCols = table.getColumns("ParticipantId");
+        if (piCols == null || piCols.size() == 0)
+            return;     //No participantId column in list.
 
         QueryUpdateService qus = table.getUpdateService();
         if (qus == null)
             throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
 
+        //Get rowIds associated to this participant
         List<Map<String, Object>> rows = getListRowKeys(table, participantId);
         if (rows != null && rows.size() > 0)
             qus.deleteRows(user, container, rows, null,null);
     }
 
+    /**
+     * Get the rowIds associated to a participant
+     * @param targetTable table to query
+     * @param participantId to filter for
+     * @return
+     * @throws Exception
+     */
     private List<Map<String, Object>> getListRowKeys(TableInfo targetTable, int participantId) throws Exception
     {
         List<Map<String, Object>> deleteKeys = new ArrayList<>();
