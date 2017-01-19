@@ -192,8 +192,11 @@ public class MobileAppStudyController extends SpringActionController
 
 
             //Check if there is an associated participant for the appToken
-            if (!MobileAppStudyManager.get().participantExists(form.getAppToken()))
+            Participant participant = MobileAppStudyManager.get().getParticipantFromAppToken(form.getAppToken());
+            if (participant == null)
                 errors.reject(ERROR_MSG, "Unable to identify participant.");
+            else if (Participant.ParticipantStatus.Withdrawn == participant.getStatus())
+                errors.reject(ERROR_MSG, "Participant has withdrawn from study");
 
             //Check if there is an associated study for the appToken
             MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
@@ -207,6 +210,7 @@ public class MobileAppStudyController extends SpringActionController
                 else if (!study.getCollectionEnabled())
                     errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
             }
+
             if (errors.hasErrors())
             {
                 logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
@@ -231,6 +235,37 @@ public class MobileAppStudyController extends SpringActionController
             final Integer rowId = resp.getRowId();
             manager.enqueueSurveyResponse(() -> MobileAppStudyManager.get().shredSurveyResponse(rowId, getUser()));
 
+            return success();
+        }
+    }
+
+    /*
+    Ignores container POST-ed from. Pulls container context from the appToken used in request
+    */
+    @RequiresNoPermission
+    public class WithdrawFromStudy extends ApiAction<WithdrawFromStudyForm>
+    {
+        public void validateForm(WithdrawFromStudyForm form, Errors errors)
+        {
+            //Check if form is valid
+            if (form == null)
+            {
+                errors.reject(ERROR_MSG, "Please check the log for errors.");
+                return;
+            }
+
+            if (StringUtils.isBlank(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+            else if(!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "Invalid ParticipantId.");
+
+            return;
+        }
+
+        @Override
+        public Object execute(WithdrawFromStudyForm form, BindException errors) throws Exception
+        {
+            MobileAppStudyManager.get().withdrawFromStudy(form.getParticipantId(), form.isDelete());
             return success();
         }
     }
@@ -390,6 +425,30 @@ public class MobileAppStudyController extends SpringActionController
         public String getStudyId()
         {
             return _shortName;
+        }
+    }
+
+    public static class WithdrawFromStudyForm
+    {
+        private String _participantId;
+        private boolean _delete;
+
+        public boolean isDelete()
+        {
+            return _delete;
+        }
+        public void setDelete(boolean delete)
+        {
+            _delete = delete;
+        }
+
+        public String getParticipantId()
+        {
+            return _participantId;
+        }
+        public void setParticipantId(String participantId)
+        {
+            _participantId = participantId;
         }
     }
 

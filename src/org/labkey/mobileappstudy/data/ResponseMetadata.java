@@ -19,6 +19,7 @@ public class ResponseMetadata
     private Date _endTime;
     private Boolean _skipped;
     private Date _created;
+    private Integer _participantId;
 
     public Integer getRowId()
     {
@@ -122,4 +123,13 @@ public class ResponseMetadata
         this._created = created;
     }
 
+    public Integer getParticipantId()
+    {
+        return _participantId;
+    }
+
+    public void setParticipantId(Integer participantId)
+    {
+        _participantId = participantId;
+    }
 }
