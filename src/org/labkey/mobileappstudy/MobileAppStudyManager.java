@@ -809,14 +809,11 @@ public class MobileAppStudyManager
      * @param data the collection of data elements for the new row
      * @param container the container in which the list (table) lives
      * @param user the user inserting data into the list
-     * @param participantId of respondent
      * @return the newly created row
      * @throws Exception if the table has no update service or there is any other problem inserting the new row
      */
-    private Map<String, Object> storeListData(@NotNull TableInfo table, @NotNull Map<String, Object> data, @NotNull Container container, @Nullable User user, @NotNull Integer participantId) throws Exception
+    private Map<String, Object> storeListData(@NotNull TableInfo table, @NotNull Map<String, Object> data, @NotNull Container container, @Nullable User user) throws Exception
     {
-        data.put("participantId", participantId);
-
         // Add an entry to the survey list and get the id.
         BatchValidationException exception = new BatchValidationException();
 
@@ -861,7 +858,9 @@ public class MobileAppStudyManager
 
         for (SurveyResult result: singleValuedResults)
             data.put(result.getIdentifier(), result.getValue());
-        Map<String, Object> row = storeListData(surveyTable, data, container, user, participantId);
+
+        data.put("participantId", participantId);
+        Map<String, Object> row = storeListData(surveyTable, data, container, user);
         if (surveyId == null)
             surveyId = (Integer) row.get("Key");
 
@@ -960,7 +959,7 @@ public class MobileAppStudyManager
                         data.put(parentKey.getKey(), parentKey.getValue());
                         data.put(result.getIdentifier(), value);
                         data.put("participantId", participantId);
-                        storeListData(table, data, container, user, participantId);
+                        storeListData(table, data, container, user);
                     }
                 }
 
