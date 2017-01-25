@@ -2,7 +2,7 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.BeforeClass;
 import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.TestTimeoutException;
+import org.labkey.test.WebTestHelper;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.util.PostgresOnlyTest;
 
@@ -22,14 +22,14 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         return BrowserType.CHROME;
     }
 
-    @Override
-    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-    {
-        for (String project : _containerHelper.getCreatedProjects())
-        {
-            _containerHelper.deleteProject(project, false);
-        }
-    }
+//    @Override
+//    protected void doCleanup(boolean afterTest) throws TestTimeoutException
+//    {
+//        for (String project : _containerHelper.getCreatedProjects())
+//        {
+//            _containerHelper.deleteProject(project, false);
+//        }
+//    }
 
     @Override
     public List<String> getAssociatedModules()
@@ -55,6 +55,21 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         log("AppToken received: " + appToken);
 
         return appToken;
+    }
+
+    protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
+    {
+        final String API_STRING = WebTestHelper.getBaseURL() + "/mobileappstudy/$PROJECT_NAME$/enroll.api?shortName=$STUDY_NAME$&token=";
+        String apiUrl;
+
+        for(String token : tokensToAssign)
+        {
+            apiUrl = API_STRING.replace("$PROJECT_NAME$", projectName).replace("$STUDY_NAME$", studyName) + token;
+            log("Assigning token: " + token + " using url: " + apiUrl);
+            beginAt(apiUrl);
+            waitForText("\"success\" : true");
+            log("Token assigned.");
+        }
     }
 
     @BeforeClass

@@ -431,21 +431,6 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         goToHome();
     }
 
-    private void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
-    {
-        final String API_STRING = WebTestHelper.getBaseURL() + "/mobileappstudy/$PROJECT_NAME$/enroll.api?shortName=$STUDY_NAME$&token=";
-        String apiUrl;
-
-        for(String token : tokensToAssign)
-        {
-            apiUrl = API_STRING.replace("$PROJECT_NAME$", projectName).replace("$STUDY_NAME$", studyName) + token;
-            log("Assigning token: " + token + " using url: " + apiUrl);
-            beginAt(apiUrl);
-            waitForText("\"success\" : true");
-            log("Token assigned.");
-        }
-    }
-
     private String assignTokenAndFail(String tokenToAssign, String projectName, String studyName)
     {
         final String API_STRING = WebTestHelper.getBaseURL() + "/mobileappstudy/$PROJECT_NAME$/enroll.api?shortName=$STUDY_NAME$&token=";

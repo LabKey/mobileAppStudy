@@ -48,7 +48,7 @@ public abstract class MobileAppCommand
     protected boolean isExecuted = false;
     protected JSONObject _jsonResponse;
 
-    public abstract void execute(int expectedStatusCode);
+    public abstract HttpResponse execute(int expectedStatusCode);
     public abstract String getTargetURL();
 
     protected void parseResponse(JSONObject response)
@@ -82,7 +82,7 @@ public abstract class MobileAppCommand
         this.logger = logger;
     }
 
-    protected void execute(HttpUriRequest request, int expectedStatusCode)
+    protected HttpResponse execute(HttpUriRequest request, int expectedStatusCode)
     {
         HttpResponse response = null;
         log("Submitting request using url: " + request.getURI());
@@ -104,6 +104,7 @@ public abstract class MobileAppCommand
                 log(getBody());
 
             assertEquals("Unexpected response status", expectedStatusCode, statusCode);
+            return response;
         }
         catch (IOException e)
         {
