@@ -1,6 +1,7 @@
 package org.labkey.test.commands.mobileappstudy;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.json.JSONObject;
 import org.labkey.test.WebTestHelper;
@@ -58,10 +59,10 @@ public class EnrollParticipantCommand extends MobileAppCommand
     }
 
     @Override
-    public void execute(int expectedStatusCode)
+    public HttpResponse execute(int expectedStatusCode)
     {
         HttpPost post = new HttpPost(getTargetURL());
-        execute(post, expectedStatusCode);
+        return execute(post, expectedStatusCode);
     }
 
     @Override

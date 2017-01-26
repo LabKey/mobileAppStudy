@@ -88,6 +88,13 @@
                     <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="Status" >
+                <ns:fk>
+                    <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
+                    <ns:fkTable>ParticipantStatus</ns:fkTable>
+                    <ns:fkColumnName>rowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="Created"/>
             <ns:column columnName="Container"/>
         </ns:columns>
@@ -150,6 +157,13 @@
             <ns:column columnName="Skipped"/>
             <ns:column columnName="Container"/>
             <ns:column columnName="Created"/>
+            <ns:column columnName="ParticipantId">
+                <ns:fk>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkTable>Participant</ns:fkTable>
+                    <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
+                </ns:fk>
+            </ns:column>
         </ns:columns>
     </ns:table>
 </ns:tables>

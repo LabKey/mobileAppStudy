@@ -24,11 +24,34 @@ import java.util.Date;
  */
 public class Participant
 {
+    public enum ParticipantStatus {
+        Enrolled(0, "Enrolled"),    //Actively accepting responses
+        Withdrawn(1, "Withdrawn");  //Electively removed from study, no longer accepting responses & existing data may have been deleted
+
+        private final int pkId;
+        private final String displayText;
+        ParticipantStatus(int pkId, String displayText)
+        {
+            this.pkId = pkId;
+            this.displayText = displayText;
+        }
+
+        public String getDisplayText()
+        {
+            return displayText;
+        }
+        public final int getPkId()
+        {
+            return pkId;
+        }
+    }
+
     private Integer _rowId;
     private String _appToken;
     private Integer _studyId;
     private Container _container;
     private Date _created;
+    private ParticipantStatus _status;
 
     public String getAppToken()
     {
@@ -78,5 +101,14 @@ public class Participant
     public void setRowId(Integer rowId)
     {
         _rowId = rowId;
+    }
+
+    public ParticipantStatus getStatus()
+    {
+        return _status;
+    }
+    public void setStatus(ParticipantStatus status)
+    {
+        _status = status;
     }
 }

@@ -29,6 +29,7 @@ public class MobileAppStudySchema
     public static final String ENROLLMENT_TOKEN_TABLE = "EnrollmentToken";
     public static final String STUDY_TABLE = "Study";
     public static final String PARTICIPANT_TABLE = "Participant";
+    public static final String PARTICIPANT_STATUS_TABLE = "ParticipantStatus";
     public static final String RESPONSE_TABLE = "Response";
     public static final String RESPONSE_METADATA_TABLE = "ResponseMetadata";
     public static final String RESPONSE_STATUS_TABLE = "ResponseStatus";

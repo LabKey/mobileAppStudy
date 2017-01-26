@@ -7,7 +7,6 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
-import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.AbstractQuestionResponse.SupportedResultType;
 import org.labkey.test.data.mobileappstudy.ChoiceQuestionResponse;
 import org.labkey.test.data.mobileappstudy.GroupedQuestionResponse;
@@ -460,7 +459,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         String fieldName = InitialSurvey.ILLNESS_WEEK;
         String fieldHeader = "Illness Week";
-        String value = "I \u9825 waffles";
+        String value = "I \u9829 waffles";
 
         //Test skipped
         String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
@@ -978,7 +977,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         //Submit error response
         qr.setOmitQuestionId(true);
         log("Testing Question submission with missing Identifier property");
-        submitQuestion(qr, appToken, 200);
+        submitQuestion(qr, appToken, SURVEY_NAME, SURVEY_VERSION, 200);
         qr.setOmitQuestionId(false);
         submissionCount++;
         expectedErrorCount++;
@@ -999,35 +998,9 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         checkExpectedErrors(expectedErrorCount);
     }
 
-    /**
-     * Wrap question response and submit to server via the API
-     *
-     * @param qr to send to server
-     * @param appToken to use in request
-     * @return error message of request if there is one.
-     */
     private String submitQuestion(QuestionResponse qr, String appToken, int expectedStatusCode)
     {
-        Survey survey = new InitialSurvey(appToken, SURVEY_NAME, SURVEY_VERSION, new Date(), new Date());
-        survey.addResponse(qr);
-
-        return submitSurvey(survey, expectedStatusCode);
+        return super.submitQuestion(qr, appToken, SURVEY_NAME, SURVEY_VERSION, 200);
     }
-
-    /**
-     * Submit the survey to server via API
-     *
-     * @param survey to submit
-     * @param expectedStatusCode status code to expect from server
-     * @return error message from response (if it exists)
-     */
-    private String submitSurvey(Survey survey, int expectedStatusCode)
-    {
-        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, survey);
-        cmd.execute(expectedStatusCode);
-
-        return cmd.getExceptionMessage();
-    }
-
 }
 

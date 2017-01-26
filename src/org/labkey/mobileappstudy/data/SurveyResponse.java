@@ -36,8 +36,6 @@ public class SurveyResponse
         {
             return pkId;
         }
-
-
     }
 
     private Integer _rowId;

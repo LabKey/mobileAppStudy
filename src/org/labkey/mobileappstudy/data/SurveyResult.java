@@ -76,7 +76,6 @@ public class SurveyResult extends ResponseMetadata
     private Object _value;
     private String _listName;
 
-
     public ValueType getValueType()
     {
         return ValueType.fromTypeName(getType());
