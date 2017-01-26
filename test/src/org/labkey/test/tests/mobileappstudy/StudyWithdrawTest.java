@@ -66,7 +66,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     @Override
     void setupProjects()
     {
-        _containerHelper.deleteProject(getProjectName());
+        _containerHelper.deleteProject(getProjectName(),false);
         _containerHelper.createProject(getProjectName(), "Mobile App Study");
         _containerHelper.enableModule("MobileAppStudy");
         goToProjectHome();
@@ -165,7 +165,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     private SelectRowsResponse getMobileAppData(String table, String schema)
     {
         Connection cn = createDefaultConnection(true);
-        SelectRowsCommand selectCmd = new SelectRowsCommand(MOBILEAPP_SCHEMA, table);
+        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
         selectCmd.setColumns(Arrays.asList("*"));
 
         SelectRowsResponse selectResp = null;
@@ -331,9 +331,10 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         {
             if(isParticipantIdPresent(table, participantId,MOBILEAPP_SCHEMA))
             { tablesWithData.add(table);}
+        }
+        for(String table : LISTS)
             if(isParticipantIdPresent(table, participantId,LIST_SCHEMA))
             { tablesWithData.add(table);}
-        }
         return tablesWithData;
     }
 }
