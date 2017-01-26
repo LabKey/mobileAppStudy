@@ -2,6 +2,7 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.BeforeClass;
 import org.labkey.test.BaseWebDriverTest;
+import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.util.PostgresOnlyTest;
@@ -82,5 +83,14 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     abstract void setupProjects();
     {
         //Do nothing as default, Tests can override if needed
+    }
+
+    @Override
+    protected void doCleanup(boolean afterTest) throws TestTimeoutException
+    {
+        for (String project : _containerHelper.getCreatedProjects())
+        {
+            _containerHelper.deleteProject(project, false);
+        }
     }
 }
