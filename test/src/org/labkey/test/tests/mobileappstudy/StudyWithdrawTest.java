@@ -201,9 +201,9 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
 
             type = AbstractQuestionResponse.SupportedResultType.TEXT;
             fieldName = InitialSurvey.ILLNESS_WEEK;
-            String val = "I \u9825 waffles";
+            String val = "I hate waffles";
 
-            qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, val);
+            qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, val);
             submitQuestion(qr, appToken, 200);
 
             String field = InitialSurvey.SUPPLEMENTS;
@@ -259,7 +259,9 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     {
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, survey);
         cmd.execute(expectedStatusCode);
-
+        String msg = cmd.getExceptionMessage();
+        log("submitting response " + survey.getResponseJson());
+        if(null != msg){log(msg);}
         return cmd.getExceptionMessage();
     }
 
