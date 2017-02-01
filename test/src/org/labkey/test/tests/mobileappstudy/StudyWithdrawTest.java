@@ -242,7 +242,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
 
             type = AbstractQuestionResponse.SupportedResultType.TEXT;
             fieldName = InitialSurvey.ILLNESS_WEEK;
-            String val = "I \u9829 waffles";
+            String val = "I hate waffles";
 
             qr = new QuestionResponse(type, fieldName, new Date(), new Date(), true, val);
             submitQuestion(qr, appToken, 200);
@@ -274,6 +274,13 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         }
     }
 
+    /**
+     * Wrap question response and submit to server via the API
+     *
+     * @param qr to send to server
+     * @param appToken to use in request
+     * @return error message of request if there is one.
+     */
     private String submitQuestion(QuestionResponse qr, String appToken, int expectedStatusCode)
     {
         Survey survey = new InitialSurvey(appToken, SURVEY_NAME, SURVEY_VERSION, new Date(), new Date());
