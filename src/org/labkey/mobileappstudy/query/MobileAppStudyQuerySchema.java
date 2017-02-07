@@ -59,7 +59,7 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
 
     @Nullable
     @Override
-    protected TableInfo createTable(String name)
+    public TableInfo createTable(String name)
     {
         if (ENROLLMENT_TOKEN_BATCH_TABLE.equalsIgnoreCase(name))
         {
