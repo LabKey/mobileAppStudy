@@ -559,7 +559,7 @@ public class MobileAppStudyManager
      * @return Participant if found, null if not
      */
     @Nullable
-    Participant getParticipantFromAppToken(String appToken)
+    public Participant getParticipantFromAppToken(String appToken)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         FieldKey pKey = FieldKey.fromParts("apptoken");

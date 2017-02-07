@@ -24,6 +24,7 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.mobileappstudy.query.MobileAppStudyQuerySchema;
+import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.StudyConfigWebPart;
 
@@ -76,6 +77,7 @@ public class MobileAppStudyModule extends DefaultModule
         // add a container listener so we'll know when our container is deleted:
         ContainerManager.addContainerListener(new MobileAppStudyContainerListener());
         MobileAppStudyQuerySchema.register(this);
+        ReadResponsesQuerySchema.register(this);
     }
 
     @Override
