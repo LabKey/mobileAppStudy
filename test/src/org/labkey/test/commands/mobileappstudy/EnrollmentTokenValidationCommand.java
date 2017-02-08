@@ -16,8 +16,8 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
     protected static final String ACTION_NAME = "validateenrollmenttoken";
     public static final String INVLAID_STUDYID_FORMAT = "Study with StudyId '%1$s' does not exist";
     public static final String INVALID_TOKEN_FORMAT = "Invalid token: '%1$s'";
-    public static final String BLANK_STUDYID = "StudyId is required for enrollment";
-    public static final String TOKEN_REQUIRED = "Token is required for enrollment";
+    public static final String BLANK_STUDYID = "StudyId is required";
+    public static final String TOKEN_REQUIRED = "Token is required";
 
     private String _batchToken;
     private String _studyName;
