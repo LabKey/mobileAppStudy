@@ -283,7 +283,7 @@ public class MobileAppStudyController extends SpringActionController
             {
                 if (StringUtils.isEmpty(form.getShortName()))
                     //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
-                    errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "StudyId is required");
                 else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
                     errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
                 else if (StringUtils.isNotEmpty(form.getToken()))
@@ -298,7 +298,7 @@ public class MobileAppStudyController extends SpringActionController
                 // we allow for the possibility that someone can enroll without using an enrollment token
                 else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
                 {
-                    errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "Token is required");
                 }
             }
         }
