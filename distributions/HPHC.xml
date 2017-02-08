@@ -18,6 +18,7 @@
         <copy todir="${dist.modules.dir}">
             <filelist dir="${staging.modules.dir}">
                 <file name="list.module" />
+                <file name="search.module" />
                 <file name="mobileAppStudy.module" />
             </filelist>
         </copy>
