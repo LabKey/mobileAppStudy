@@ -255,7 +255,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
      * @param expectedStatusCode status code to expect from server
      * @return error message from response (if it exists)
      */
-    private String submitSurvey(Survey survey, int expectedStatusCode)
+    protected String submitSurvey(Survey survey, int expectedStatusCode)
     {
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, survey);
         cmd.execute(expectedStatusCode);
