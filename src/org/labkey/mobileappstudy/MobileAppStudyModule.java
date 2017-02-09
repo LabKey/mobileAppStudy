@@ -21,6 +21,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.mobileappstudy.query.MobileAppStudyQuerySchema;
@@ -35,6 +36,7 @@ import java.util.Set;
 public class MobileAppStudyModule extends DefaultModule
 {
     public static final String NAME = "MobileAppStudy";
+    public static final String DROP_DIR_PROP_NAME = "DropDirPropName";
 
     @Override
     public String getName()
@@ -76,6 +78,10 @@ public class MobileAppStudyModule extends DefaultModule
         // add a container listener so we'll know when our container is deleted:
         ContainerManager.addContainerListener(new MobileAppStudyContainerListener());
         MobileAppStudyQuerySchema.register(this);
+
+        ModuleProperty designDropDirectory = new ModuleProperty(this, DROP_DIR_PROP_NAME);
+        designDropDirectory.setCanSetPerContainer(true);
+        this.addModuleProperty(designDropDirectory);
     }
 
     @Override

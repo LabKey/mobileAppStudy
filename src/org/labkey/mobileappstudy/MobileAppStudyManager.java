@@ -61,6 +61,9 @@ import org.labkey.mobileappstudy.data.Response;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
+import org.labkey.mobileappstudy.providers.FileSurveyDesignProvider;
+import org.labkey.mobileappstudy.providers.InvalidDesignException;
+import org.labkey.mobileappstudy.providers.SurveyDesignProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -85,11 +88,13 @@ public class MobileAppStudyManager
     private static final int THREAD_COUNT = 10; //TODO: Verify this is an appropriate number
     private static JobRunner _shredder;
     private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
+    private Supplier<SurveyDesignProvider> surveySchemaProvider;
 
     private MobileAppStudyManager()
     {
         if (_shredder == null)
             _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
+
         //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
         Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING);
         if (pendingResponses != null)
@@ -100,6 +105,8 @@ public class MobileAppStudyManager
                 enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null));
             });
         }
+
+        setSurveyDesignProvider(() -> new FileSurveyDesignProvider(logger));
     }
 
     public static MobileAppStudyManager get()
@@ -477,18 +484,31 @@ public class MobileAppStudyManager
 
         if (surveyResponse != null)
         {
-            logger.info(String.format("Processing response " + rowId + " in container " + surveyResponse.getContainer().getName()));
-            MobileAppStudyManager manager = MobileAppStudyManager.get();
             try
             {
-                manager.store(surveyResponse, rowId, user);
-                manager.updateProcessingStatus(user, rowId, ResponseStatus.PROCESSED);
-                logger.info(String.format("Processed response " + rowId + " in container " + surveyResponse.getContainer().getName()));
+                //TODO: Should put a lock here
+                if (!isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
+                    new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
+            }
+            catch(InvalidDesignException e)
+            {
+                logger.error(String.format("Failed to update survey design SurveyId: %1$s, version: %2$s", surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion()), e);
+                this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e.getMessage());
+                return;
+            }
+
+            logger.info(String.format("Processing response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
+
+            try
+            {
+                this.store(surveyResponse, rowId, user);
+                this.updateProcessingStatus(user, rowId, ResponseStatus.PROCESSED);
+                logger.info(String.format("Processed response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
             }
             catch (Exception e)
             {
                 logger.error("Error processing response " + rowId + " in container " + surveyResponse.getContainer().getName(), e);
-                manager.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e instanceof NullPointerException ? "NullPointerException" : e.getMessage());
+                this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e instanceof NullPointerException ? "NullPointerException" : e.getMessage());
             }
         }
         else
@@ -1145,5 +1165,50 @@ public class MobileAppStudyManager
         }
 
         return deleteKeys;
+    }
+
+    public boolean isKnownVersion(String appToken, String surveyId, String versionId, int responseId)
+    {
+        /* --Equivalent postgres SQL
+        SELECT EXISTS(
+            SELECT 1
+            FROM participant p, mobileappstudy.participant p2, mobileappstudy.response r
+            WHERE p2.apptoken = ?
+              AND p2.studyid = p.studyid
+              AND p.rowid = r.participantid
+              AND r.rowid = ?
+              AND r.surveyid = ?
+              AND r.surveyversion = ?
+              AND r.status = 1
+        )
+        */
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+
+        SQLFragment sql = new SQLFragment();
+        sql.append("  SELECT 1\n")
+            .append("  FROM ")
+                .append(schema.getTableInfoParticipant(), "p").append(",")
+                .append(schema.getTableInfoParticipant(), "p2").append(",")
+                .append(schema.getTableInfoResponse(), "r").append("\n")
+            .append("  WHERE p.rowid = r.participantid\n")                  //Join response & participant
+            .append("    AND p.studyid = p2.studyid\n")                     //Limit study
+            .append("    AND p2.apptoken = ?\n").add(appToken)
+            .append("    AND r.rowid != ?\n").add(responseId)               //Ignore current response
+            .append("    AND r.surveyid = ?\n").add(surveyId)               //
+            .append("    AND r.surveyversion = ?\n").add(versionId)
+                //TODO: is this correct? pending implies it hasn't been applied and error means it may not have worked...
+            .append("    AND r.status = ?\n").add(ResponseStatus.PROCESSED.getPkId());
+
+        return new SqlSelector(schema.getSchema(), sql).exists();
+    }
+
+    public SurveyDesignProvider getSurveyDesignProvider()
+    {
+        return surveySchemaProvider.get();
+    }
+
+    public void setSurveyDesignProvider(Supplier<SurveyDesignProvider> provider)
+    {
+        surveySchemaProvider = provider;
     }
 }
