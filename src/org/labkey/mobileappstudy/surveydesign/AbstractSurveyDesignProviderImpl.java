@@ -1,4 +1,4 @@
-package org.labkey.mobileappstudy.providers;
+package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;

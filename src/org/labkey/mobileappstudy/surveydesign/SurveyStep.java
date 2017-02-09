@@ -1,4 +1,4 @@
-package org.labkey.mobileappstudy.providers;
+package org.labkey.mobileappstudy.surveydesign;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;

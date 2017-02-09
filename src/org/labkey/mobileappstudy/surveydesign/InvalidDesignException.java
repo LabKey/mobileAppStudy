@@ -1,4 +1,4 @@
-package org.labkey.mobileappstudy.providers;
+package org.labkey.mobileappstudy.surveydesign;
 
 /**
  * Created by iansigmon on 2/2/17.

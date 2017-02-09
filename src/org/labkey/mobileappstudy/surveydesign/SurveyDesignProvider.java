@@ -1,4 +1,4 @@
-package org.labkey.mobileappstudy.providers;
+package org.labkey.mobileappstudy.surveydesign;
 
 import org.labkey.api.data.Container;
 
