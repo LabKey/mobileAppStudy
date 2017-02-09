@@ -61,9 +61,9 @@ import org.labkey.mobileappstudy.data.Response;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
-import org.labkey.mobileappstudy.providers.FileSurveyDesignProvider;
-import org.labkey.mobileappstudy.providers.InvalidDesignException;
-import org.labkey.mobileappstudy.providers.SurveyDesignProvider;
+import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
+import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
+import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;

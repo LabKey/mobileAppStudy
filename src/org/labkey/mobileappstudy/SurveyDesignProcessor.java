@@ -17,10 +17,10 @@ import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.security.roles.SubmitterRole;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.SurveyResponse;
-import org.labkey.mobileappstudy.providers.InvalidDesignException;
-import org.labkey.mobileappstudy.providers.SurveyDesign;
-import org.labkey.mobileappstudy.providers.SurveyStep;
-import org.labkey.mobileappstudy.providers.SurveyStep.StepResultType;
+import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
+import org.labkey.mobileappstudy.surveydesign.SurveyDesign;
+import org.labkey.mobileappstudy.surveydesign.SurveyStep;
+import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 
 import java.util.Arrays;
 import java.util.Collections;
