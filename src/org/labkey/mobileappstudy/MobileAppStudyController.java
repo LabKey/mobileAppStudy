@@ -271,7 +271,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
-    public class EnrollAction extends ApiAction<EnrollmentForm>
+    private abstract class BaseEnrollmentAction extends ApiAction<EnrollmentForm>
     {
         public void validateForm(EnrollmentForm form, Errors errors)
         {
@@ -283,10 +283,10 @@ public class MobileAppStudyController extends SpringActionController
             {
                 if (StringUtils.isEmpty(form.getShortName()))
                     //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
-                    errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "StudyId is required");
                 else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
                     errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
-                else if (!StringUtils.isEmpty(form.getToken()))
+                else if (StringUtils.isNotEmpty(form.getToken()))
                 {
                     if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
                         errors.reject(ERROR_MSG, "Token already in use");
@@ -298,10 +298,46 @@ public class MobileAppStudyController extends SpringActionController
                 // we allow for the possibility that someone can enroll without using an enrollment token
                 else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
                 {
-                    errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "Token is required");
                 }
             }
         }
+    }
+
+    @RequiresNoPermission
+    /**
+     * Execute the validation steps for an enrollment token without enrolling
+     */
+    public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+        }
+
+        @Override
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
+        {
+            //If action passes validation then it was successful
+            return success();
+        }
+    }
+
+    @RequiresNoPermission
+    public class EnrollAction extends BaseEnrollmentAction
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            //If errors were already found return
+            if (errors.hasErrors())
+                return;
+
+        }
+
 
         @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception

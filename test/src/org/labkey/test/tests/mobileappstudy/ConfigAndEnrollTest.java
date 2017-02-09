@@ -20,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
+import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
@@ -379,7 +380,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Do not provide a study name (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error msg \"StudyId is required for enrollment\".", failurePage.contains("StudyId is required for enrollment"));
+        assertTrue("Json result did not contain error msg \"" + EnrollmentTokenValidationCommand.BLANK_STUDYID +"\".", failurePage.contains(EnrollmentTokenValidationCommand.BLANK_STUDYID));
 
         log("Provide a study name that doesn't exists (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "THIS_STUDY_IS_NOT_HERE");
@@ -425,7 +426,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Provide a valid token but no study name.");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(2), PROJECT_NAME01, "");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error: \"StudyId is required for enrollment\".", failurePage.contains("StudyId is required for enrollment"));
+        assertTrue("Json result did not contain error: \"" + EnrollmentTokenValidationCommand.BLANK_STUDYID + "\".", failurePage.contains(EnrollmentTokenValidationCommand.BLANK_STUDYID));
 
         log("Looks good. Go home.");
         goToHome();
