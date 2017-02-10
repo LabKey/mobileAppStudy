@@ -1,5 +1,6 @@
 package org.labkey.mobileappstudy;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
@@ -10,6 +11,7 @@ import org.labkey.api.exp.list.ListDefinition;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
+import org.labkey.api.exp.property.Lookup;
 import org.labkey.api.security.LimitedUser;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
@@ -59,7 +61,7 @@ public class SurveyDesignProcessor
             User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
                     new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
 
-            ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), false);
+            ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), null);
             applySurveyUpdate(study.getContainer(), insertUser, listDef, design.getSteps(), design.getSurveyName());
         }
         else
@@ -75,17 +77,17 @@ public class SurveyDesignProcessor
      * @return ListDef representing list
      * @throws InvalidDesignException if list is not able to be created, this is a wrapper of any other exception
      */
-    private ListDefinition ensureList(Container container, User user, String listName, boolean isSublist) throws InvalidDesignException
+    private ListDefinition ensureList(Container container, User user, String listName, String parentListName) throws InvalidDesignException
     {
         ListDefinition listDef = ListService.get().getList(container, listName);
         listDef = listDef != null ?
                 listDef :
-                newSurveyListDefinition(container, user, listName, isSublist);
+                newSurveyListDefinition(container, user, listName, parentListName);
 
         return listDef;
     }
 
-    private ListDefinition newSurveyListDefinition(Container container, User user, String listName, boolean isSublist) throws InvalidDesignException
+    private ListDefinition newSurveyListDefinition(Container container, User user, String listName, String parentListName) throws InvalidDesignException
     {
         try
         {
@@ -94,9 +96,11 @@ public class SurveyDesignProcessor
             list.getDomain().addProperty(new PropertyStorageSpec("Key", JdbcType.INTEGER));
             list.getDomain().addProperty(new PropertyStorageSpec("ParticipantId", JdbcType.INTEGER));
 
-            if (isSublist)
-                list.getDomain().addProperty(new PropertyStorageSpec("SurveyId", JdbcType.INTEGER));
-
+            if (StringUtils.isNotBlank(parentListName))
+            {
+                DomainProperty prop = list.getDomain().addProperty(new PropertyStorageSpec("SurveyId", JdbcType.INTEGER));
+                prop.setLookup(new Lookup(container, "lists", parentListName));
+            }
             list.save(user);
 
             logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
@@ -157,7 +161,7 @@ public class SurveyDesignProcessor
             throw new InvalidDesignException(String.format(LogMessageFormats.NO_GROUP_STEPS, step.getKey()));
 
         String subListName = parentListName + step.getKey();
-        ListDefinition listDef = ensureList(container, user, subListName, true);
+        ListDefinition listDef = ensureList(container, user, subListName, parentListName);
         applySurveyUpdate(container, user, listDef, step.getSteps(), subListName);
     }
 
@@ -167,10 +171,8 @@ public class SurveyDesignProcessor
         if (prop != null)
         {
             //existing property
-            if (prop.getPropertyType() != step.getResultType().getPropertyType(step.getFormat()))
+            if (prop.getPropertyType() != step.getPropertyType())
                 throw new InvalidDesignException(String.format(LogMessageFormats.RESULTTYPE_MISMATCH, step.getKey()));
-
-            //TODO: Check properties of recursive types
 
             //Update a string field's size. Increase only.
             if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
@@ -182,13 +184,9 @@ public class SurveyDesignProcessor
         }
         else
         {
-            //TODO: what about repeatables?
-            //TODO: log?
             //New property
-            prop = getNewDomainProperty(listDomain, step);
+            getNewDomainProperty(listDomain, step);
         }
-
-
     }
 
     private void updateChoiceList(Container container, User user, String parentSurveyName, SurveyStep step) throws InvalidDesignException, ChangePropertyDescriptorException
@@ -199,7 +197,7 @@ public class SurveyDesignProcessor
         ListDefinition listDef = ListService.get().getList(container, listName);
         listDef = listDef != null ?
                 listDef :
-                newSurveyListDefinition(container, user, listName, true);
+                newSurveyListDefinition(container, user, listName, parentSurveyName);
 
         Domain domain = listDef.getDomain();
 
@@ -221,14 +219,14 @@ public class SurveyDesignProcessor
 
     private void ensureStandardProperties(Domain domain, SurveyStep step, User user) throws InvalidDesignException
     {
-        if (domain == null) //TODO: put in a real message
-            throw new InvalidDesignException("Uh we got problems");
+        if (domain == null)
+            throw new InvalidDesignException("Invalid list domain");
 
         for (String propName : REQUIRED_SUBLIST_PROPERTIES)
         {
             DomainProperty prop = domain.getPropertyByName(propName);
 
-            if (prop == null)   //TODO: add instead of throw
+            if (prop == null)
                 throw new InvalidDesignException("Sub-list missing required fields");
         }
     }
@@ -241,7 +239,7 @@ public class SurveyDesignProcessor
         prop.setDescription(step.getTitle());
 
         //Group and Choice will use Integer RowId to appropriate list
-        prop.setRangeURI(step.getResultType().getPropertyType(step.getFormat()).getTypeUri());
+        prop.setRangeURI(step.getPropertyType().getTypeUri());
 
         if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
             prop.setScale(step.getMaxLength());

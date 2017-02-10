@@ -16,6 +16,9 @@ import java.util.function.Function;
 public class SurveyStep
 {
 
+    /**
+     * Enum describing the various Step Types
+     */
     public enum SurveyStepType
     {
         Form("form"),
@@ -48,6 +51,9 @@ public class SurveyStep
         }
     }
 
+    /**
+     * Enum describing the various possible result types for any given step
+     */
     public enum StepResultType
     {
         Scale("scale", (format) -> PropertyType.DOUBLE),
@@ -59,13 +65,13 @@ public class SurveyStep
         GroupedResult("groupedResult", (format) -> null),
         Boolean ("boolean", (format) -> PropertyType.BOOLEAN),
         Numeric ("numeric", StepResultType::getNumericResultType),
-        TimeOfDay("timeOfDay", StepResultType::getDateResultType),              //TODO: verify PropertyType is appropriate
+        TimeOfDay("timeOfDay", StepResultType::getDateResultType),
         Date("date", StepResultType::getDateResultType),
         Text("text", (format) -> PropertyType.STRING),
         Email ("email", (format) -> PropertyType.STRING),
-        TimeInterval ("timeInterval", (format) -> PropertyType.BIGINT),    //TODO: verify PropertyType is appropriate
+        TimeInterval ("timeInterval", (format) -> PropertyType.DOUBLE),
         Height("height", (format) -> PropertyType.DOUBLE),
-        Location("location", (format) -> PropertyType.STRING),              //TODO: verify PropertyType is appropriate
+        Location("location", (format) -> PropertyType.STRING),
 
         UNKNOWN("Unknown", (format) -> null);
 
@@ -75,7 +81,7 @@ public class SurveyStep
         private String resultTypeString;
 
         //Corresponding backing property type
-        private Function<ResultFormat, PropertyType> resultTypeDelegate;
+        private Function<SurveyStep, PropertyType> resultTypeDelegate;
 
         static {
             Map<String, StepResultType> map = new HashMap<>();
@@ -86,7 +92,7 @@ public class SurveyStep
         }
 
 
-        StepResultType(String key, Function<ResultFormat, PropertyType> interpretFormat)
+        StepResultType(String key, Function<SurveyStep, PropertyType> interpretFormat)
         {
             resultTypeString = key;
             resultTypeDelegate = interpretFormat;
@@ -98,15 +104,15 @@ public class SurveyStep
         }
 
         @Nullable
-        public PropertyType getPropertyType(ResultFormat format)
+        public PropertyType getPropertyType(SurveyStep step)
         {
-            return resultTypeDelegate.apply(format);
+            return resultTypeDelegate.apply(step);
         }
 
         @Nullable
-        public static PropertyType getNumericResultType(ResultFormat format)
+        public static PropertyType getNumericResultType(SurveyStep step)
         {
-            switch(format.getStyle())
+            switch(step.getStyle())
             {
                 case 0:
                     return PropertyType.INTEGER;
@@ -118,9 +124,9 @@ public class SurveyStep
         }
 
         @Nullable
-        public static PropertyType getDateResultType(ResultFormat format)
+        public static PropertyType getDateResultType(SurveyStep step)
         {
-            switch(format.getStyle())
+            switch(step.getStyle())
             {
                 case 0:
                     return PropertyType.DATE;
@@ -169,17 +175,23 @@ public class SurveyStep
          }
     }
 
+    private final static String MAXLENGTH_KEY = "maxLength";
+    private final static String STYLE_KEY = "style";
+
     private String type;
     private String resultType;
     private String key;
     private String phi;
     private String title;
-    private boolean skippable = true;
-    private boolean repeatable = false;
     private List<SurveyStep> steps = null;
 
-    //TODO: Convert this to JSON Object
-    private ResultFormat format;
+    private Map<String, Object> format;
+
+    //Currently ignored since we need to make the field
+    private boolean skippable = true;
+
+    //Currently ignored. Only applicable to forms and choice, and those are distinguished by result type
+    private boolean repeatable = false;
 
     public SurveyStepType getStepType()
     {
@@ -211,7 +223,7 @@ public class SurveyStep
         this.type = type;
     }
 
-    public ResultFormat getFormat()
+    public Map<String, Object> getFormat()
     {
         return format;
     }
@@ -234,11 +246,16 @@ public class SurveyStep
     @Nullable
     public Integer getMaxLength()
     {
-        if (getFormat() == null || getFormat().getMaxLength() == null)
+        if (getFormat() == null || getFormat().get(MAXLENGTH_KEY) == null)
+            return null;
+
+        String val = String.valueOf(getFormat().get(MAXLENGTH_KEY));
+        if (StringUtils.isBlank(val))
             return null;
 
         //Json MaxLength = 0 indicates Max text size
-        return getFormat().getMaxLength() == 0 ? Integer.MAX_VALUE : getFormat().getMaxLength();
+        Integer intVal = Integer.valueOf(val);
+        return intVal == 0 ? Integer.MAX_VALUE : intVal;
     }
 
     @Nullable
@@ -247,22 +264,20 @@ public class SurveyStep
         return steps;
     }
 
-    private class ResultFormat
+    public Integer getStyle()
     {
-        public ResultFormat()
-        {
-        }
+        if (getFormat() == null)
+            return null;
 
-        private Integer style = null;
-        private Integer maxLength = null;
+        String val = String.valueOf(getFormat().get(STYLE_KEY));
+        if (StringUtils.isBlank(val))
+            return null;
 
-        public Integer getStyle()
-        {
-            return style;
-        }
-        public Integer getMaxLength()
-        {
-            return maxLength;
-        }
+        return Integer.valueOf(val);
+    }
+
+    public PropertyType getPropertyType()
+    {
+        return getResultType().getPropertyType(this);
     }
 }

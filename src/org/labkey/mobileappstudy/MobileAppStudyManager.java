@@ -484,17 +484,19 @@ public class MobileAppStudyManager
 
         if (surveyResponse != null)
         {
-            try
+            synchronized (this)
             {
-                //TODO: Should put a lock here
-                if (!isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
-                    new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
-            }
-            catch(InvalidDesignException e)
-            {
-                logger.error(String.format("Failed to update survey design SurveyId: %1$s, version: %2$s", surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion()), e);
-                this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e.getMessage());
-                return;
+                try
+                {
+                    if (!isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
+                        new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
+                }
+                catch (InvalidDesignException e)
+                {
+                    logger.error(String.format("Failed to update survey design SurveyId: %1$s, version: %2$s", surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion()), e);
+                    this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e.getMessage());
+                    return;
+                }
             }
 
             logger.info(String.format("Processing response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
@@ -1196,7 +1198,7 @@ public class MobileAppStudyManager
             .append("    AND r.rowid != ?\n").add(responseId)               //Ignore current response
             .append("    AND r.surveyid = ?\n").add(surveyId)               //
             .append("    AND r.surveyversion = ?\n").add(versionId)
-                //TODO: is this correct? pending implies it hasn't been applied and error means it may not have worked...
+                //pending implies it hasn't been applied and error means it may not have worked...
             .append("    AND r.status = ?\n").add(ResponseStatus.PROCESSED.getPkId());
 
         return new SqlSelector(schema.getSchema(), sql).exists();

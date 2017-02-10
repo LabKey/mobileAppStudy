@@ -1,0 +1,203 @@
+{
+    "steps": [
+        {
+            "key": "Integer",
+            "format": {
+                "style": 0
+            },
+            "resultType": "numeric",
+            "type": "question"
+        },
+        {
+            "key": "Floater",
+            "format": {
+                "style": 1
+            },
+            "resultType": "numeric",
+            "type": "question"
+        },
+        {
+            "key": "ChoiceTextField",
+            "resultType": "textChoice",
+            "type": "question"
+        },
+        {
+            "key": "TextField",
+            "format": {
+                "maxLength": 0
+            },
+            "resultType": "text",
+            "type": "question"
+        },
+        {
+            "key": "ShortText",
+            "format": {
+                "maxLength": 250
+            },
+            "resultType": "text",
+            "type": "question"
+        },
+        {
+            "key": "GroupedList",
+            "resultType": "groupedResult",
+            "steps": [
+                {
+                    "key": "Integer",
+                    "format": {
+                        "style": 0
+                    },
+                    "resultType": "numeric",
+                    "type": "question"
+                },
+                {
+                    "key": "Floater",
+                    "format": {
+                        "style": 1
+                    },
+                    "resultType": "numeric",
+                    "type": "question"
+                },
+                {
+                    "key": "ChoiceTextField",
+                    "resultType": "textChoice",
+                    "type": "question"
+                },
+                {
+                    "key": "TextField",
+                    "format": {
+                        "maxLength": 0
+                    },
+                    "resultType": "text",
+                    "type": "question"
+                },
+                {
+                    "key": "ShortText",
+                    "format": {
+                        "maxLength": 250
+                    },
+                    "resultType": "text",
+                    "type": "question"
+                },
+                {
+                    "key": "Email",
+                    "format": {
+                        "maxLength": 250
+                    },
+                    "resultType": "email",
+                    "type": "question"
+                },
+                {
+                    "key": "Scale",
+                    "format": {
+                        "style": 0
+                    },
+                    "resultType": "scale",
+                    "type": "question"
+                },
+                {
+                    "key": "ConinuousScale",
+                    "format": {
+                        "style": 0
+                    },
+                    "resultType": "continuousScale",
+                    "type": "question"
+                },
+                {
+                    "key": "textScale",
+                    "format": {
+                        "style": 0
+                    },
+                    "resultType": "textScale",
+                    "type": "question"
+                },
+                {
+                    "key": "valuePicker",
+                    "format": {
+                        "style": 0
+                    },
+                    "resultType": "valuePicker",
+                    "type": "question"
+                },
+                {
+                    "key": "imageChoice",
+                    "format": {
+                    },
+                    "resultType": "imageChoice",
+                    "type": "question"
+                },
+                {
+                    "key": "boolean",
+                    "format": {
+                    },
+                    "resultType": "boolean",
+                    "type": "question"
+                },
+                {
+                    "key": "timeOfDay",
+                    "format": {
+                      "style": 1
+                    },
+                    "resultType": "timeOfDay",
+                    "type": "question"
+                },
+                {
+                    "key": "date",
+                    "format": {
+                      "style": 0
+                    },
+                    "resultType": "date",
+                    "type": "question"
+                },
+                {
+                    "key": "timeInterval",
+                    "format": {
+                    },
+                    "resultType": "timeInterval",
+                    "type": "question"
+                },
+                {
+                    "key": "height",
+                    "format": {
+                    },
+                    "resultType": "height",
+                    "type": "question"
+                },
+                {
+                    "key": "location",
+                    "format": {
+                    },
+                    "resultType": "location",
+                    "type": "question"
+                },
+                {
+                    "key": "GroupedList",
+                    "resultType": "groupedResult",
+                    "steps": [
+                        {
+                            "format": {
+                                "style": 0
+                            },
+                            "key": "Scalar",
+                            "resultType": "numeric",
+                            "type": "question"
+                        },
+                        {
+                            "format": {
+                                "style": 1
+                            },
+                            "key": "Floater",
+                            "resultType": "numeric",
+                            "type": "question"
+                        }
+                    ],
+                    "type": "form"
+                }
+            ],
+            "type": "form"
+        }
+    ],
+    "surveyInfo": {
+        "surveyId": "TestSurvey",
+        "version": "1"
+    }
+}
