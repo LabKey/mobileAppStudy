@@ -59,19 +59,33 @@ public class SurveyDesignProcessor
             User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
                     new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
 
-            //Get existing list or create new one
-            ListDefinition listDef = ListService.get().getList(study.getContainer(), design.getSurveyName());
-            listDef = listDef != null ?
-                    listDef :
-                    newSurveyListDefinition(insertUser, study.getContainer(), design.getSurveyName(), false);
-
-            applySurveyUpdate(listDef, design, insertUser, study.getContainer());
+            ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), false);
+            applySurveyUpdate(study.getContainer(), insertUser, listDef, design.getSteps(), design.getSurveyName());
         }
         else
             throw new InvalidDesignException(LogMessageFormats.DESIGN_NULL);
     }
 
-    private ListDefinition newSurveyListDefinition(User user, Container container, String listName, boolean isSublist) throws InvalidDesignException
+    /**
+     * Get existing list or create new one
+     *
+     * @param listName name of list
+     * @param container where list resides
+     * @param user accessing/creating list
+     * @return ListDef representing list
+     * @throws InvalidDesignException if list is not able to be created, this is a wrapper of any other exception
+     */
+    private ListDefinition ensureList(Container container, User user, String listName, boolean isSublist) throws InvalidDesignException
+    {
+        ListDefinition listDef = ListService.get().getList(container, listName);
+        listDef = listDef != null ?
+                listDef :
+                newSurveyListDefinition(container, user, listName, isSublist);
+
+        return listDef;
+    }
+
+    private ListDefinition newSurveyListDefinition(Container container, User user, String listName, boolean isSublist) throws InvalidDesignException
     {
         try
         {
@@ -86,7 +100,9 @@ public class SurveyDesignProcessor
             list.save(user);
 
             logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
-            return list;
+
+            //Return a refreshed version of listDefinition
+            return ListService.get().getList(container, listName);
         }
         catch (Exception e)
         {
@@ -94,23 +110,23 @@ public class SurveyDesignProcessor
         }
     }
 
-    private void applySurveyUpdate(ListDefinition list, SurveyDesign design, User user, Container container) throws InvalidDesignException
+    private void applySurveyUpdate(Container container, User user, ListDefinition list, List<SurveyStep> steps, String parentListName) throws InvalidDesignException
     {
         Domain listDomain = list.getDomain();
 
         try
         {
-            for (SurveyStep step: design.getSteps())
+            for (SurveyStep step: steps)
             {
                 StepResultType resultType = step.getResultType();
                 //need to check for choice/group
                 switch(resultType)
                 {
                     case TextChoice:
-                        updateChoiceList(container, user, design, step);
+                        updateChoiceList(container, user, parentListName, step);
                         break;
                     case GroupedResult:
-                        //TODO
+                        updateGroupList(container, user, parentListName, step);
                         break;
                     case UNKNOWN:
                         throw new InvalidDesignException(String.format(LogMessageFormats.INVALID_RESULTTYPE, step.getKey()));
@@ -135,6 +151,16 @@ public class SurveyDesignProcessor
         }
     }
 
+    private void updateGroupList(Container container, User user, String parentListName, SurveyStep step) throws InvalidDesignException
+    {
+        if (step == null || step.getSteps() == null)
+            throw new InvalidDesignException(String.format(LogMessageFormats.NO_GROUP_STEPS, step.getKey()));
+
+        String subListName = parentListName + step.getKey();
+        ListDefinition listDef = ensureList(container, user, subListName, true);
+        applySurveyUpdate(container, user, listDef, step.getSteps(), subListName);
+    }
+
     private void ensureStepProperty(Domain listDomain, SurveyStep step) throws InvalidDesignException
     {
         DomainProperty prop = listDomain.getPropertyByName(step.getKey());
@@ -145,6 +171,14 @@ public class SurveyDesignProcessor
                 throw new InvalidDesignException(String.format(LogMessageFormats.RESULTTYPE_MISMATCH, step.getKey()));
 
             //TODO: Check properties of recursive types
+
+            //Update a string field's size. Increase only.
+            if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
+            {
+                //TODO: log?
+                if (step.getMaxLength() > prop.getScale())
+                    prop.setScale(step.getMaxLength());
+            }
         }
         else
         {
@@ -154,27 +188,18 @@ public class SurveyDesignProcessor
             prop = getNewDomainProperty(listDomain, step);
         }
 
-        //Update a string field's size. Increase only.
-        if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
-        {
-            //TODO: log?
-            //MaxLength = 0 indicates Max text size
-            if (step.getMaxLength() == 0)
-                prop.setScale(Integer.MAX_VALUE);
-            else if (step.getMaxLength() > prop.getScale())
-                prop.setScale(step.getMaxLength());
-        }
+
     }
 
-    private void updateChoiceList(Container container, User user, SurveyDesign design, SurveyStep step) throws InvalidDesignException, ChangePropertyDescriptorException
+    private void updateChoiceList(Container container, User user, String parentSurveyName, SurveyStep step) throws InvalidDesignException, ChangePropertyDescriptorException
     {
-        String listName = design.getSurveyName() + step.getKey();
+        String listName = parentSurveyName + step.getKey();
 
         //Get existing list or create new one
         ListDefinition listDef = ListService.get().getList(container, listName);
         listDef = listDef != null ?
                 listDef :
-                newSurveyListDefinition(user, container, listName, true);
+                newSurveyListDefinition(container, user, listName, true);
 
         Domain domain = listDef.getDomain();
 
@@ -218,6 +243,9 @@ public class SurveyDesignProcessor
         //Group and Choice will use Integer RowId to appropriate list
         prop.setRangeURI(step.getResultType().getPropertyType(step.getFormat()).getTypeUri());
 
+        if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
+            prop.setScale(step.getMaxLength());
+
         //TODO: not sure if these are needed...
 //                prop.setMeasure(false);
 //                prop.setDimension(false);
@@ -234,8 +262,9 @@ public class SurveyDesignProcessor
         public static final String DESIGN_NULL = "Design was null";
         public static final String START_UPDATE_SURVEY = "Getting new survey version: Study: %1$s, Survey: %2$s, Version: %3$s";
         public static final String END_SURVEY_UPDATE = "Survey update completed";
-        public static final String UNABLE_CREATE_LIST = "Unable to create new list. Study: %1$s, Survey: %2$s, Version: %3$s, List: %4$s";
+        public static final String UNABLE_CREATE_LIST = "Unable to create new list. List: %1$s";
         public static final String LIST_CREATED = "Survey list [%1$s] successfully created.";
         public static final String SUBLIST_PROPERTY_ERROR = "Unable to add sub-list property: %1$s";
+        public static final String NO_GROUP_STEPS = "Form contains no steps: Step: %1$s";
     }
 }

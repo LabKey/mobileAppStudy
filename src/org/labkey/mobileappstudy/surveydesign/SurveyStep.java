@@ -6,6 +6,7 @@ import org.labkey.api.exp.PropertyType;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -14,6 +15,7 @@ import java.util.function.Function;
  */
 public class SurveyStep
 {
+
     public enum SurveyStepType
     {
         Form("form"),
@@ -48,19 +50,19 @@ public class SurveyStep
 
     public enum StepResultType
     {
-        Scale("scale", (format) -> PropertyType.INTEGER),
+        Scale("scale", (format) -> PropertyType.DOUBLE),
         ContinuousScale("continuousScale", (format) -> PropertyType.DOUBLE),
         TextScale("textScale", (format) -> PropertyType.STRING),
         ValuePicker ("valuePicker", (format) -> PropertyType.STRING),
-        ImageChoice ("imageChoice", (format) -> PropertyType.STRING),       //will hold string path to image?
-        TextChoice ("textChoice", (format) -> PropertyType.INTEGER),        //will hold reference to other list
-        GroupedResult("groupedResult", (format) -> PropertyType.INTEGER),   //will hold reference to other list
+        ImageChoice ("imageChoice", (format) -> PropertyType.STRING),
+        TextChoice ("textChoice", (format) -> PropertyType.STRING),
+        GroupedResult("groupedResult", (format) -> null),
         Boolean ("boolean", (format) -> PropertyType.BOOLEAN),
         Numeric ("numeric", StepResultType::getNumericResultType),
         TimeOfDay("timeOfDay", StepResultType::getDateResultType),              //TODO: verify PropertyType is appropriate
         Date("date", StepResultType::getDateResultType),
         Text("text", (format) -> PropertyType.STRING),
-        Email ("email ", (format) -> PropertyType.STRING),
+        Email ("email", (format) -> PropertyType.STRING),
         TimeInterval ("timeInterval", (format) -> PropertyType.BIGINT),    //TODO: verify PropertyType is appropriate
         Height("height", (format) -> PropertyType.DOUBLE),
         Location("location", (format) -> PropertyType.STRING),              //TODO: verify PropertyType is appropriate
@@ -174,6 +176,7 @@ public class SurveyStep
     private String title;
     private boolean skippable = true;
     private boolean repeatable = false;
+    private List<SurveyStep> steps = null;
 
     //TODO: Convert this to JSON Object
     private ResultFormat format;
@@ -231,10 +234,17 @@ public class SurveyStep
     @Nullable
     public Integer getMaxLength()
     {
-        if (getFormat() == null)
+        if (getFormat() == null || getFormat().getMaxLength() == null)
             return null;
 
-        return getFormat().getMaxLength();
+        //Json MaxLength = 0 indicates Max text size
+        return getFormat().getMaxLength() == 0 ? Integer.MAX_VALUE : getFormat().getMaxLength();
+    }
+
+    @Nullable
+    public List<SurveyStep> getSteps()
+    {
+        return steps;
     }
 
     private class ResultFormat
@@ -254,85 +264,5 @@ public class SurveyStep
         {
             return maxLength;
         }
-//TODO: Determine which are actually needed
-//        private String validationRegex;
-//        private String invalidMessage;
-//        private Boolean multipleLine;
-//        private String placeholder;
-//        private String unit;
-//        private Integer minValue;
-//        private Integer maxValue;
-//
-//
-//        public Integer getMaxValue()
-//        {
-//            return maxValue;
-//        }
-//
-//        public void setMaxValue(Integer maxValue)
-//        {
-//            this.maxValue = maxValue;
-//        }
-//
-//        public Integer getMinValue()
-//        {
-//            return minValue;
-//        }
-//
-//        public void setMinValue(Integer minValue)
-//        {
-//            this.minValue = minValue;
-//        }
-//
-//        public String getUnit()
-//        {
-//            return unit;
-//        }
-//
-//        public void setUnit(String unit)
-//        {
-//            this.unit = unit;
-//        }
-//
-//        public String getPlaceholder()
-//        {
-//            return placeholder;
-//        }
-//
-//        public void setPlaceholder(String placeholder)
-//        {
-//            this.placeholder = placeholder;
-//        }
-//
-//        public Boolean getMultipleLine()
-//        {
-//            return multipleLine;
-//        }
-//
-//        public void setMultipleLine(Boolean multipleLine)
-//        {
-//            this.multipleLine = multipleLine;
-//        }
-//
-//        public String getInvalidMessage()
-//        {
-//            return invalidMessage;
-//        }
-//
-//        public void setInvalidMessage(String invalidMessage)
-//        {
-//            this.invalidMessage = invalidMessage;
-//        }
-//
-//        public String getValidationRegex()
-//        {
-//            return validationRegex;
-//        }
-//
-//        public void setValidationRegex(String validationRegex)
-//        {
-//            this.validationRegex = validationRegex;
-//        }
-//
     }
 }
