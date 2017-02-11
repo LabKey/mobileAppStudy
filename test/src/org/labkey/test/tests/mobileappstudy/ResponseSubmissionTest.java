@@ -22,7 +22,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
     private final static String PROJECT_NAME01 = BASE_PROJECT_NAME + " " + STUDY_NAME01;
     private final static String PROJECT_NAME02 = BASE_PROJECT_NAME + " " + STUDY_NAME02;
     private final static String PROJECT_NAME03 = BASE_PROJECT_NAME + " " + STUDY_NAME03;
-    private final static String SURVEY_NAME = "Fake Survey_1";
+    private final static String SURVEY_NAME = "FakeSurvey_1";
     private final static String BASE_RESULTS = "{\n" +
             "\t\t\"start\": \"2016-09-06 15:48:13 +0000\",\n" +
             "\t\t\"end\": \"2016-09-06 15:48:45 +0000\",\n" +
@@ -47,6 +47,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
         _listHelper.createList(PROJECT_NAME01, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
+        setSurveyMetadataDropDir();
 
         //Setup a secondary study
         _containerHelper.deleteProject(PROJECT_NAME02, false);
@@ -58,6 +59,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
         _listHelper.createList(PROJECT_NAME02, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
+        setSurveyMetadataDropDir();
     }
 
     @Test
@@ -132,12 +134,6 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         cmd = new SubmitResponseCommand(this::log, null, "1", appToken, BASE_RESULTS);
         cmd.execute(400);
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYID_MISSING_MESSAGE, cmd.getExceptionMessage());
-        expectedErrorCount++;
-
-        //             D. Survey not found
-        cmd = new SubmitResponseCommand(this::log, "INvAlID SUrVEY NaM3", "1", appToken, BASE_RESULTS );
-        cmd.execute(400);
-        assertEquals("Unexpected error message", cmd.SURVEY_NOT_FOUND_MESSAGE, cmd.getExceptionMessage());
         expectedErrorCount++;
 
         checkExpectedErrors(expectedErrorCount);
@@ -261,6 +257,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         setupPage.studySetupWebPart.clickSubmit();
         longWait();
         _listHelper.createList(PROJECT_NAME03, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
+        setSurveyMetadataDropDir();
         goToProjectHome(PROJECT_NAME03);
 
         //Capture a participant appToken

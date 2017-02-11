@@ -20,29 +20,29 @@ public class SubmitResponseCommand extends MobileAppCommand
                                 NO_PARTICIPANT_MESSAGE = "Unable to identify participant.",
                                 NO_STUDY_MESSAGE = "AppToken not associated with study",
                                 SURVEY_NOT_FOUND_MESSAGE = "Survey not found.",
-                                COLLECTION_DISABLED_MESSAGE_FORMAT = "Response collection is not currently enabled for study [ %1s ].";
+                                COLLECTION_DISABLED_MESSAGE_FORMAT = "Response collection is not currently enabled for study [ %1$s ].";
 
     public static final String ACTION_NAME = "ProcessResponse";
 
     private final static String BODY_JSON_FORMAT = "{ \n" +
             "  \"type\": \"SurveyResponse\", \n" +
-            "%1s" +
-            "   \"participantId\": \"%2s\", \n" +
-            "   \"response\": %3s\n" +
+            "%1$s" +
+            "   \"participantId\": \"%2$s\", \n" +
+            "   \"response\": %3$s\n" +
             "}";
 
     public final static String MISSING_RESPONSE_JSON_FORMAT = "{ \n" +
             "  \"type\": \"SurveyResponse\", \n" +
             "  \"surveyInfo\": { \n" +
-            "      \"surveyId\": \"%1s\", \n" +
-            "      \"version\": \"%2s\" \n" +
+            "      \"surveyId\": \"%1$s\", \n" +
+            "      \"version\": \"%2$s\" \n" +
             "   }, \n" +
-            "   \"participantId\": \"%3s\"\n" +
+            "   \"participantId\": \"%3$s\"\n" +
             "}";
 
     private final static String SURVEY_INFO_FORMAT = "  \"surveyInfo\": { \n" +
-            "      \"surveyId\": \"%1s\", \n" +
-            "      \"version\": \"%2s\" \n" +
+            "      \"surveyId\": \"%1$s\", \n" +
+            "      \"version\": \"%2$s\" \n" +
             "   }, \n";
 
     private String body;

@@ -2,6 +2,8 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.BeforeClass;
 import org.labkey.test.BaseWebDriverTest;
+import org.labkey.test.ModulePropertyValue;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
@@ -11,6 +13,7 @@ import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
 import org.labkey.test.util.PostgresOnlyTest;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -118,5 +121,11 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         cmd.execute(expectedStatusCode);
 
         return cmd.getExceptionMessage();
+    }
+
+    protected void setSurveyMetadataDropDir()
+    {
+        ModulePropertyValue val = new ModulePropertyValue("MobileAppStudy", "/", "DropDirPropName", TestFileUtils.getLabKeyRoot() + "/server/optionalModules/mobileAppStudy/test/sampledata/SurveyMetadata/");
+        setModuleProperties(Arrays.asList(val));
     }
 }
