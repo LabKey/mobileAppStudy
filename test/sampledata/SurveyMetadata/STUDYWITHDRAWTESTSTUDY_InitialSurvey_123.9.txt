@@ -1,0 +1,7 @@
+{
+    "surveyInfo": {
+        "surveyId": "FakeSurvey_1",
+        "version": "123.9"
+    },
+    "steps": []
+}
