@@ -355,7 +355,9 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     private void assertSubmittedValue(String appToken, String fieldHeader, String assertMsg, String expectedValue )
     {
         viewSurveyRequests(appToken);
+
         DataRegionTable table = new DataRegionTable("query", getDriver());
+        table.afterPageLoad();
         String value = table.getDataAsText(0, fieldHeader);
         assertEquals(assertMsg, expectedValue, value);
     }

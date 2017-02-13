@@ -21,7 +21,6 @@ import org.labkey.test.data.mobileappstudy.MedForm;
 import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
-import org.labkey.test.util.ListHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -84,7 +83,6 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         NRD_KEY = appTokenToParticipantId(NO_RESPONSES_DELETE);
         WT_KEY = appTokenToParticipantId(WITHDRAWS_TWICE);
         SI_KEY = appTokenToParticipantId(STAYS_IN);
-        _listHelper.createList(getProjectName(), SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
         setupLists();
         submitResponses(Arrays.asList(HAS_RESPONSES_DELETE,HAS_RESPONSES_NO_DELETE,WITHDRAWS_TWICE,STAYS_IN));
 
@@ -95,6 +93,8 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         //Import static survey lists to populate
         goToProjectHome();
         _listHelper.importListArchive(TestFileUtils.getSampleData("TestLists.lists.zip"));
+        goToProjectHome();
+        setSurveyMetadataDropDir();
     }
 
     @Nullable
