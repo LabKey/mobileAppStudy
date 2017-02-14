@@ -27,6 +27,7 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.Results;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -38,10 +39,12 @@ import org.labkey.api.exp.list.ListDefinition;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
+import org.labkey.api.security.roles.EditorRole;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.security.roles.SubmitterRole;
 import org.labkey.api.util.ChecksumUtil;
@@ -54,6 +57,7 @@ import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
+import org.labkey.mobileappstudy.data.Participant.ParticipantStatus;
 import org.labkey.mobileappstudy.data.Response;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
@@ -63,9 +67,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class MobileAppStudyManager
@@ -201,6 +207,7 @@ public class MobileAppStudyManager
             participant.setStudyId(study.getRowId());
             participant.setAppToken(GUID.makeHash());
             participant.setContainer(study.getContainer());
+            participant.setStatus(ParticipantStatus.Enrolled);
             participant = Table.insert(null, schema.getTableInfoParticipant(), participant);
             if (tokenValue != null)
             {
@@ -685,7 +692,8 @@ public class MobileAppStudyManager
      * Stores the survey results of this object into their respective lists
      * @param surveyResponse the response to be stored
      * @param responseBlobId rowId of the response table
-     *@param user the user initiating the store request  @throws Exception if there was a problem storing the results in one or more of its lists, in which case none of the lists will be updated
+     * @param user the user initiating the store request
+     * @throws Exception if there was a problem storing the results in one or more of its lists, in which case none of the lists will be updated
      */
     public void store(@NotNull SurveyResponse surveyResponse, Integer responseBlobId, @Nullable User user) throws Exception
     {
@@ -732,16 +740,15 @@ public class MobileAppStudyManager
         Map<String, Object> data = new ArrayListMap<>();
         data.put("startTime", response.getStartTime());
         data.put("endTime", response.getEndTime());
-        data.put("participantId", participantId);
         data.put("responseId", responseBlobId);
 
-        Map<String, Object> row = storeListResults(null, listName, results, data, errors, container, user);
+        Map<String, Object> row = storeListResults(null, listName, results, data, errors, container, user, participantId);
         if (!row.isEmpty())
         {
             Integer surveyId = (Integer) row.get("Key");
             Pair<String, Integer> rowKey = new Pair<>("SurveyId", surveyId);
             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, results);
-            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, errors, container, user);
+            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, errors, container, user, participantId);
         }
     }
 
@@ -858,7 +865,7 @@ public class MobileAppStudyManager
     /**
      * Stores a set of SurveyResult objects in a given list. For each given SurveyResult that is single-valued, store it
      * in the column with the corresponding name.
-
+     *
      * @param surveyId identifier of the survey
      * @param listName name of the list in which the responses should be stored
      * @param results the superset of results to be stored.  This may contain multi-valued results as well, but these
@@ -867,10 +874,11 @@ public class MobileAppStudyManager
      * @param errors the set of errors accumulated thus far, which will be appended with errors encountered for storing these results
      * @param container the container in which the list lives
      * @param user the user to do the insert
+     * @param participantId of respondent
      * @return the newly created list row
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private Map<String, Object> storeListResults(@Nullable Integer surveyId, @NotNull String listName, @NotNull List<SurveyResult> results, @NotNull Map<String, Object> data, @NotNull List<String> errors, @NotNull Container container, @NotNull User user) throws Exception
+    private Map<String, Object> storeListResults(@Nullable Integer surveyId, @NotNull String listName, @NotNull List<SurveyResult> results, @NotNull Map<String, Object> data, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
     {
         TableInfo surveyTable = getResultTable(listName, container, user);
         if (surveyTable.getUpdateService() == null)
@@ -886,12 +894,14 @@ public class MobileAppStudyManager
 
         for (SurveyResult result: singleValuedResults)
             data.put(result.getIdentifier(), result.getValue());
+
+        data.put("participantId", participantId);
         Map<String, Object> row = storeListData(surveyTable, data, container, user);
         if (surveyId == null)
             surveyId = (Integer) row.get("Key");
 
         // Add a resultMetadata row for each of the individual rows using the given surveyId
-        storeResponseMetadata(singleValuedResults, surveyId, container, user);
+        storeResponseMetadata(singleValuedResults, surveyId, container, user, participantId);
 
         return row;
     }
@@ -904,20 +914,21 @@ public class MobileAppStudyManager
      * @param errors the collection of validation errors encountered thus far
      * @param container container for the lists
      * @param user user to do the inserts
+     * @param participantId of respondent
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private void storeMultiValuedResults(@NotNull List<SurveyResult> results, @NotNull Integer surveyId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user) throws Exception
+    private void storeMultiValuedResults(@NotNull List<SurveyResult> results, @NotNull Integer surveyId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
     {
         for (SurveyResult result : results)
         {
             if (result.getValueType() == SurveyResult.ValueType.CHOICE)
             {
-                storeResultChoices(result, surveyId, parentKey, errors, container, user);
+                storeResultChoices(result, surveyId, parentKey, errors, container, user, participantId);
             }
             else // result is of type GROUPED_RESULT
             {
                 if (result.getSkipped())
-                    storeResponseMetadata(Collections.singletonList(result), surveyId, container, user);
+                    storeResponseMetadata(Collections.singletonList(result), surveyId, container, user, participantId);
                 else
                 {
                     // two scenarios, groupedResult is an array of SurveyResult objects or is an array of an array of SurveyResult objects
@@ -941,12 +952,12 @@ public class MobileAppStudyManager
                         String listName = result.getListName();
                         Map<String, Object> data = new ArrayListMap<>();
                         data.put(parentKey.getKey(), parentKey.getValue());
-                        Map<String, Object> row = storeListResults(surveyId, listName, groupResults, data, errors, container, user);
+                        Map<String, Object> row = storeListResults(surveyId, listName, groupResults, data, errors, container, user, participantId);
                         if (!row.isEmpty())
                         {
                             Pair<String, Integer> rowKey = new Pair<>(result.getIdentifier() + "Id", (Integer) row.get("Key"));
                             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, groupResults);
-                            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, errors, container, user);
+                            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, errors, container, user, participantId);
                         }
                     }
                 }
@@ -962,12 +973,13 @@ public class MobileAppStudyManager
      * @param errors the set of validation errors encountered thus far
      * @param container the container for the lists
      * @param user user to do the inserts
+     * @param participantId of respondent
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private void storeResultChoices(@NotNull SurveyResult result, @NotNull Integer surveyId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user) throws Exception
+    private void storeResultChoices(@NotNull SurveyResult result, @NotNull Integer surveyId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
     {
         if (result.getSkipped()) // store only metadata if the response was skipped
-            storeResponseMetadata(Collections.singletonList(result), surveyId, container, user);
+            storeResponseMetadata(Collections.singletonList(result), surveyId, container, user, participantId);
         else
         {
             TableInfo table = getResultTable(result.getListName(), container, user);
@@ -982,11 +994,12 @@ public class MobileAppStudyManager
                         Map<String, Object> data = new ArrayListMap<>();
                         data.put(parentKey.getKey(), parentKey.getValue());
                         data.put(result.getIdentifier(), value);
+                        data.put("participantId", participantId);
                         storeListData(table, data, container, user);
                     }
                 }
 
-                storeResponseMetadata(Collections.singletonList(result), surveyId, container, user);
+                storeResponseMetadata(Collections.singletonList(result), surveyId, container, user, participantId);
             }
         }
     }
@@ -997,19 +1010,176 @@ public class MobileAppStudyManager
      * @param surveyId the identifier of the survey whose responses are being stored
      * @param container the container in which the lists live
      * @param user the user to be used for inserting the data
+     * @param participantId of respondent
      */
-    private void storeResponseMetadata(@NotNull List<SurveyResult> results, @NotNull Integer surveyId, @NotNull Container container, @NotNull User user)
+    private void storeResponseMetadata(@NotNull List<SurveyResult> results, @NotNull Integer surveyId, @NotNull Container container, @NotNull User user, @NotNull Integer participantId)
     {
         for (SurveyResult result : results)
         {
-
             MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
             TableInfo responseMetadataTable = schema.getTableInfoResponseMetadata();
             result.setSurveyId(surveyId);
             result.setContainer(container);
+            result.setParticipantId(participantId);
             result.setFieldName(result.getIdentifier());
 
             Table.insert(user, responseMetadataTable, result);
         }
+    }
+
+    /**
+     * Withdraw a participant from the study based on their apptoken
+     * @param participantId to withdraw
+     * @param delete True if existing data should also be deleted
+     */
+    public void withdrawFromStudy(String participantId, boolean delete) throws Exception
+    {
+        //Get participant
+        Participant participant = this.getParticipantFromAppToken(participantId);
+
+        //sanity check, Should already be checked during initial validation
+        if (participant == null)
+            throw new IllegalStateException("Participant not found");
+
+        DbScope scope = MobileAppStudySchema.getInstance().getSchema().getScope();
+
+        logger.info(String.format("Attempting to%1$s withdraw participant [%2$s] from study",delete ? " delete response data and" : "", participant.getRowId()));
+        try (DbScope.Transaction transaction = scope.ensureTransaction())
+        {
+
+            //Set participant status
+            if (participant.getStatus() != ParticipantStatus.Withdrawn)
+            {
+                participant.setStatus(ParticipantStatus.Withdrawn);
+                participant.setAppToken(null);
+
+                MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+                participant = Table.update(null, schema.getTableInfoParticipant(), participant, participant.getRowId());
+            }
+
+            //Delete data if necessary
+            if (delete)
+                deleteParticipantData(participant);
+
+            transaction.commit();
+        }
+        catch (Exception e)
+        {
+            logger.error(String.format("Unable to withdraw participant [%1$s] from study", participant.getRowId()), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Delete participant data from schema tables and Survey lists
+     * Assumes: all lists in participant container with a participantId field should be deleted from
+     * @param participant
+     * @throws Exception
+     */
+    private void deleteParticipantData(Participant participant) throws Exception
+    {
+        logger.info(String.format("Deleting participant [%1$s]'s data.", participant.getRowId()));
+        deleteParticipantDataFromSurveyLists(participant);
+        deleteParticipantDataFromTables(participant);
+    }
+
+    /**
+     * Initiate deletion of participant data from schema tables
+     * @param participant
+     */
+    private void deleteParticipantDataFromTables(Participant participant)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+
+        deleteParticipantDataFromTable(schema::getTableInfoResponseMetadata, participant.getRowId());
+        deleteParticipantDataFromTable(schema::getTableInfoResponse, participant.getRowId());
+        deleteParticipantDataFromTable(schema::getTableInfoEnrollmentToken, participant.getRowId());
+    }
+
+    /**
+     * Delete data related to participant from a hard table
+     * @param tableDelegate Supplier method to get TableInfo from
+     * @param participantId to target
+     */
+    private void deleteParticipantDataFromTable(Supplier<TableInfo> tableDelegate, Integer participantId)
+    {
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("ParticipantId"), participantId);
+        Table.delete(tableDelegate.get(), filter);
+    }
+
+    /**
+     * Delete participant data from all lists
+     * @param participant to target for deletion
+     * @throws Exception
+     */
+    private void deleteParticipantDataFromSurveyLists(Participant participant) throws Exception
+    {
+        // Create a LimitedUser to use for checking permissions, wrapping the Guest user
+        User user = new LimitedUser(UserManager.getGuestUser(),
+                new int[0], Collections.singleton(RoleManager.getRole(EditorRole.class)), false);
+
+        //Get all lists in the container
+        Collection<ListDefinition> lists = ListService.get().getLists(participant.getContainer()).values();
+
+        for (ListDefinition list :lists)
+            deleteParticipantFromList(list, participant.getContainer(), participant.getRowId(), user);
+    }
+
+    /**
+     * Delete participant data from a list
+     * @param list ListDefinition to delete data from
+     * @param container hosting list and participant
+     * @param participantId to target
+     * @param user LabKey user executing the deletion action
+     * @throws Exception
+     */
+    private void deleteParticipantFromList(ListDefinition list, Container container, Integer participantId, User user) throws Exception
+    {
+        //Get the table
+        TableInfo table = list.getTable(user, container);
+        if (table == null)
+            throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
+
+        List<ColumnInfo> piCols = table.getColumns("ParticipantId");
+        if (piCols == null || piCols.size() == 0)
+            return;     //No participantId column in list.
+
+        QueryUpdateService qus = table.getUpdateService();
+        if (qus == null)
+            throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
+
+        //Get rowIds associated to this participant
+        List<Map<String, Object>> rows = getListRowKeys(table, participantId);
+        if (rows != null && rows.size() > 0)
+            qus.deleteRows(user, container, rows, null,null);
+    }
+
+    /**
+     * Get the rowIds associated to a participant
+     * @param targetTable table to query
+     * @param participantId to filter for
+     * @return
+     * @throws Exception
+     */
+    private List<Map<String, Object>> getListRowKeys(TableInfo targetTable, int participantId) throws Exception
+    {
+        List<Map<String, Object>> deleteKeys = new ArrayList<>();
+
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("ParticipantId"), participantId);
+        try (Results targetDeletes = new TableSelector(targetTable, targetTable.getPkColumns(), filter, null).getResults(false))
+        {
+            while (targetDeletes.next())
+            {
+                Map<String, Object> key = new HashMap<>();
+                for (Map.Entry<FieldKey, Object> entry : targetDeletes.getFieldKeyRowMap().entrySet())
+                {
+                    key.put(entry.getKey().toString(), entry.getValue());
+                }
+                deleteKeys.add(key);
+            }
+        }
+
+        return deleteKeys;
     }
 }

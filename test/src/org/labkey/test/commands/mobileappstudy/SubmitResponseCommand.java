@@ -1,6 +1,7 @@
 package org.labkey.test.commands.mobileappstudy;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -83,7 +84,7 @@ public class SubmitResponseCommand extends MobileAppCommand
     }
 
     @Override
-    public void execute(int expectedStatusCode)
+    public HttpResponse execute(int expectedStatusCode)
     {
         HttpPost post = new HttpPost(getTargetURL());
         if (StringUtils.isNotBlank(getBody()))
@@ -93,7 +94,7 @@ public class SubmitResponseCommand extends MobileAppCommand
             log("Request body:\n\n" + getBody() + "\n\n");
 
         log("Posting response to LabKey");
-        execute(post, expectedStatusCode);
+        return execute(post, expectedStatusCode);
     }
 
     @Override

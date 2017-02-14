@@ -3,7 +3,6 @@ package org.labkey.test.commands.mobileappstudy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.json.JSONObject;
 import org.labkey.test.WebTestHelper;
 
 import java.util.HashMap;
@@ -11,15 +10,17 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 
-public class EnrollParticipantCommand extends MobileAppCommand
+public class EnrollmentTokenValidationCommand extends MobileAppCommand
 {
-    private static final String APP_TOKEN_JSON_FIELD = "appToken";
     protected static final String CONTROLLER_NAME = "mobileappstudy";
-    protected static final String ACTION_NAME = "enroll";
+    protected static final String ACTION_NAME = "validateenrollmenttoken";
+    public static final String INVLAID_STUDYID_FORMAT = "Study with StudyId '%1$s' does not exist";
+    public static final String INVALID_TOKEN_FORMAT = "Invalid token: '%1$s'";
+    public static final String BLANK_STUDYID = "StudyId is required";
+    public static final String TOKEN_REQUIRED = "Token is required";
 
     private String _batchToken;
     private String _studyName;
-    private String _appToken;
     private String _projectName;
 
     public String getProjectName()
@@ -31,7 +32,7 @@ public class EnrollParticipantCommand extends MobileAppCommand
         _projectName = projectName;
     }
 
-    public EnrollParticipantCommand(String project, String studyName, String batchToken, Consumer<String> logger)
+    public EnrollmentTokenValidationCommand(String project, String studyName, String batchToken, Consumer<String> logger)
     {
         _studyName = studyName;
         _batchToken = batchToken;
@@ -73,20 +74,6 @@ public class EnrollParticipantCommand extends MobileAppCommand
         if (StringUtils.isNotBlank(getBatchToken()))
             params.put("token", getBatchToken());
         return WebTestHelper.buildURL(CONTROLLER_NAME, getProjectName(), ACTION_NAME, params);
-    }
-
-    public String getAppToken()
-    {
-        if (!isExecuted)
-            throw new IllegalStateException("Enroll command has not been executed yet");
-
-        return _appToken;
-    }
-
-    @Override
-    protected void parseSuccessfulResponse(JSONObject response)
-    {
-        _appToken = response.getJSONObject("data").getString(APP_TOKEN_JSON_FIELD);
     }
 
     @Override

@@ -27,10 +27,12 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
+import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE;
+import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_STATUS_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_STATUS_TABLE;
 
 public class MobileAppStudyQuerySchema extends SimpleUserSchema
@@ -57,7 +59,7 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
 
     @Nullable
     @Override
-    protected TableInfo createTable(String name)
+    public TableInfo createTable(String name)
     {
         if (ENROLLMENT_TOKEN_BATCH_TABLE.equalsIgnoreCase(name))
         {
@@ -75,6 +77,16 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
                 SurveyResponse.ResponseStatus::getPkId,
                 true,
                 "Possible states a SurveyResponse might be in"
+            );
+        }
+        else if(PARTICIPANT_STATUS_TABLE.equalsIgnoreCase(name))
+        {
+            return new EnumTableInfo<>(
+                    Participant.ParticipantStatus.class,
+                    this,
+                    Participant.ParticipantStatus::getPkId,
+                    true,
+                    "Possible states a Participant might be in"
             );
         }
         else

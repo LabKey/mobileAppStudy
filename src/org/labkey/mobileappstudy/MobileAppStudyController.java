@@ -192,8 +192,11 @@ public class MobileAppStudyController extends SpringActionController
 
 
             //Check if there is an associated participant for the appToken
-            if (!MobileAppStudyManager.get().participantExists(form.getAppToken()))
+            Participant participant = MobileAppStudyManager.get().getParticipantFromAppToken(form.getAppToken());
+            if (participant == null)
                 errors.reject(ERROR_MSG, "Unable to identify participant.");
+            else if (Participant.ParticipantStatus.Withdrawn == participant.getStatus())
+                errors.reject(ERROR_MSG, "Participant has withdrawn from study");
 
             //Check if there is an associated study for the appToken
             MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
@@ -207,6 +210,7 @@ public class MobileAppStudyController extends SpringActionController
                 else if (!study.getCollectionEnabled())
                     errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
             }
+
             if (errors.hasErrors())
             {
                 logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
@@ -235,8 +239,39 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
+    /*
+    Ignores container POST-ed from. Pulls container context from the appToken used in request
+    */
     @RequiresNoPermission
-    public class EnrollAction extends ApiAction<EnrollmentForm>
+    public class WithdrawFromStudy extends ApiAction<WithdrawFromStudyForm>
+    {
+        public void validateForm(WithdrawFromStudyForm form, Errors errors)
+        {
+            //Check if form is valid
+            if (form == null)
+            {
+                errors.reject(ERROR_MSG, "Please check the log for errors.");
+                return;
+            }
+
+            if (StringUtils.isBlank(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+            else if(!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "Invalid ParticipantId.");
+
+            return;
+        }
+
+        @Override
+        public Object execute(WithdrawFromStudyForm form, BindException errors) throws Exception
+        {
+            MobileAppStudyManager.get().withdrawFromStudy(form.getParticipantId(), form.isDelete());
+            return success();
+        }
+    }
+
+    @RequiresNoPermission
+    private abstract class BaseEnrollmentAction extends ApiAction<EnrollmentForm>
     {
         public void validateForm(EnrollmentForm form, Errors errors)
         {
@@ -248,10 +283,10 @@ public class MobileAppStudyController extends SpringActionController
             {
                 if (StringUtils.isEmpty(form.getShortName()))
                     //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
-                    errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "StudyId is required");
                 else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
                     errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
-                else if (!StringUtils.isEmpty(form.getToken()))
+                else if (StringUtils.isNotEmpty(form.getToken()))
                 {
                     if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
                         errors.reject(ERROR_MSG, "Token already in use");
@@ -263,10 +298,46 @@ public class MobileAppStudyController extends SpringActionController
                 // we allow for the possibility that someone can enroll without using an enrollment token
                 else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
                 {
-                    errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "Token is required");
                 }
             }
         }
+    }
+
+    @RequiresNoPermission
+    /**
+     * Execute the validation steps for an enrollment token without enrolling
+     */
+    public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+        }
+
+        @Override
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
+        {
+            //If action passes validation then it was successful
+            return success();
+        }
+    }
+
+    @RequiresNoPermission
+    public class EnrollAction extends BaseEnrollmentAction
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            //If errors were already found return
+            if (errors.hasErrors())
+                return;
+
+        }
+
 
         @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
@@ -390,6 +461,30 @@ public class MobileAppStudyController extends SpringActionController
         public String getStudyId()
         {
             return _shortName;
+        }
+    }
+
+    public static class WithdrawFromStudyForm
+    {
+        private String _participantId;
+        private boolean _delete;
+
+        public boolean isDelete()
+        {
+            return _delete;
+        }
+        public void setDelete(boolean delete)
+        {
+            _delete = delete;
+        }
+
+        public String getParticipantId()
+        {
+            return _participantId;
+        }
+        public void setParticipantId(String participantId)
+        {
+            _participantId = participantId;
         }
     }
 
