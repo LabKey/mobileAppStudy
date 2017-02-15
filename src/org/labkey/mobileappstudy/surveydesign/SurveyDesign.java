@@ -1,6 +1,6 @@
 package org.labkey.mobileappstudy.surveydesign;
 
-import org.labkey.mobileappstudy.data.SurveyInfo;
+import org.labkey.mobileappstudy.data.SurveyMetadata;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class SurveyDesign
 {
-    private SurveyInfo _surveyInfo;
+    private SurveyMetadata _metadata;
     private List<SurveyStep> steps;
 
     public List<SurveyStep> getSteps()
@@ -21,18 +21,18 @@ public class SurveyDesign
         this.steps = steps;
     }
 
-    public SurveyInfo getSurveyInfo()
+    public SurveyMetadata getMetadata()
     {
-        return _surveyInfo;
+        return _metadata;
     }
-    public void setSurveyInfo(SurveyInfo surveyInfo)
+    public void setMetadata(SurveyMetadata surveyMetadata)
     {
-        _surveyInfo = surveyInfo;
+        _metadata = surveyMetadata;
     }
 
     public String getSurveyName()
     {
-        return _surveyInfo.getSurveyId();
+        return _metadata.getActivityId();
     }
 
 }

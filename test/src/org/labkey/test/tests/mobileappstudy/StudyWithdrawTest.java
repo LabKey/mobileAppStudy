@@ -224,8 +224,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
             QuestionResponse groupedQuestionResponse1 = new GroupedQuestionResponse("rx",
                     new Date(), new Date(), false, new GroupedQuestionResponse("Group", new Date(), new Date(), false,
                     new QuestionResponse(AbstractQuestionResponse.SupportedResultType.BOOL, "Bool", new Date(), new Date(), false, true),
-                    new QuestionResponse(AbstractQuestionResponse.SupportedResultType.NUMBER, "Decimal", new Date(), new Date(), false, 3.14),
-                    new QuestionResponse(AbstractQuestionResponse.SupportedResultType.SCALE, "Integer", new Date(), new Date(), false, 400),
+                    new QuestionResponse(AbstractQuestionResponse.SupportedResultType.NUMERIC, "Decimal", new Date(), new Date(), false, 3.14),
                     new QuestionResponse(AbstractQuestionResponse.SupportedResultType.TEXT, "Text", new Date(), new Date(), false, "I'm part of a grouped group"),
                     new QuestionResponse(AbstractQuestionResponse.SupportedResultType.DATE, "Date", new Date(), new Date(), false, new Date())
             ));

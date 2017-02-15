@@ -35,7 +35,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
-import org.labkey.mobileappstudy.data.SurveyInfo;
+import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
@@ -170,17 +170,17 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             //Check if form's required fields are present
-            SurveyInfo info = form.getSurveyInfo();
+            SurveyMetadata info = form.getMetadata();
             if (info == null)
-                errors.reject(ERROR_REQUIRED, "SurveyInfo not found.");
+                errors.reject(ERROR_REQUIRED, "Metadata not found.");
             else
             {
-                if (isBlank(info.getSurveyId()))
-                    errors.reject(ERROR_REQUIRED, "SurveyId not included in request");
+                if (isBlank(info.getActivityId()))
+                    errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
                 if (isBlank(info.getVersion()))
                     errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request.");
             }
-            if (form.getResponse() == null)
+            if (form.getData() == null)
                 errors.reject(ERROR_REQUIRED, "Response not included in request.");
             if (StringUtils.isBlank(form.getParticipantId()))
                 errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
@@ -205,7 +205,7 @@ public class MobileAppStudyController extends SpringActionController
             else
             {
 //                assert info != null; //Null is checked above, but this gets rid of the lint
-//                if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), study.getContainer(), getUser()))
+//                if (!MobileAppStudyManager.get().surveyExists(info.getActivityId(), study.getContainer(), getUser()))
 //                    errors.reject(ERROR_MSG, "Survey not found.");
 //                else
 
@@ -227,9 +227,9 @@ public class MobileAppStudyController extends SpringActionController
             //Null checks are done in the validate method
             SurveyResponse resp = new SurveyResponse(
                     form.getParticipantId(),
-                    form.getResponse().toString(),
-                    form.getSurveyInfo().getSurveyId(),
-                    form.getSurveyInfo().getVersion()
+                    form.getData().toString(),
+                    form.getMetadata().getActivityId(),
+                    form.getMetadata().getVersion()
             );
             resp = manager.insertResponse(resp);
 
@@ -510,25 +510,25 @@ public class MobileAppStudyController extends SpringActionController
         private String _type;
         private String _participantId;
 
-        private JsonNode _response;
-        private SurveyInfo _surveyInfo;
+        private JsonNode _data;
+        private SurveyMetadata _metadata;
 
-        public SurveyInfo getSurveyInfo()
+        public SurveyMetadata getMetadata()
         {
-            return _surveyInfo;
+            return _metadata;
         }
-        public void setSurveyInfo(@NotNull SurveyInfo surveyInfo)
+        public void setMetadata(@NotNull SurveyMetadata metadata)
         {
-            _surveyInfo = surveyInfo;
+            _metadata = metadata;
         }
 
-        public JsonNode getResponse()
+        public JsonNode getData()
         {
-            return _response;
+            return _data;
         }
-        public void setResponse (@NotNull JsonNode response)
+        public void setData(@NotNull JsonNode data)
         {
-            _response = response;
+            _data = data;
         }
 
         //ParticipantId from JSON request is really the apptoken internally

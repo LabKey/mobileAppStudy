@@ -44,7 +44,7 @@ public abstract class Form
 
     public QuestionResponse addNumberResponse(String questionId, double value)
     {
-        QuestionResponse qr = new QuestionResponse(AbstractQuestionResponse.SupportedResultType.NUMBER, questionId, new Date(), new Date(), false, value);
+        QuestionResponse qr = new QuestionResponse(AbstractQuestionResponse.SupportedResultType.NUMERIC, questionId, new Date(), new Date(), false, value);
         responses.add(qr);
         return qr;
     }

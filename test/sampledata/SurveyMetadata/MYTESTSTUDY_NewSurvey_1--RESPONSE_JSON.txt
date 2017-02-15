@@ -1,0 +1,352 @@
+{
+  "type": "SurveyResponse",
+  "metadata": {
+    "activityId": "NewSurvey",
+    "version": "1"
+  },
+  "participantId": "0271577a8abf2dba1450bb15500e77dc",
+  "data": {
+    "startTime": "2016-09-06T15:48:13.123+0000",
+    "endTime": "2016-09-06T15:48:45.000+0000",
+    "results": [
+      {
+        "type": "scale",
+        "key": "ScaleField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 12.4
+      },
+      {
+        "type": "continuousScale",
+        "key": "ContinusousScaleField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 400.3
+      },
+      {
+        "type": "numeric",
+        "key": "IntegerField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 1
+      },
+      {
+        "type": "numeric",
+        "key": "DoubleField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 2.01
+      },
+      {
+        "type": "date",
+        "key": "DateTimeField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "2017-02-13T15:15:00.000+0000"
+      },
+      {
+        "type": "date",
+        "key": "DateField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "2017-02-13"
+      },
+      {
+        "type": "boolean",
+        "key": "BooleanField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": true
+      },
+      {
+        "type": "textChoice",
+        "key": "TextChoiceField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": [
+          "SomeValue1",
+          "OtherValue"
+        ]
+      },
+      {
+        "type": "textScale",
+        "key": "TextScaleField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "Text Scale value"
+      },
+      {
+        "type": "valuePicker",
+        "key": "ValuePickerField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "Value picker value"
+      },
+      {
+        "type": "imageChoice",
+        "key": "ImageChoiceField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "Image Choice Value"
+      },
+      {
+        "type": "timeOfDay",
+        "key": "TimeOfDayField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "15:15:00"
+      },
+      {
+        "type": "text",
+        "key": "MaxTextField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+      },
+      {
+        "type": "text",
+        "key": "ShortTextField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "abcdefghijklmnopqrstuvwxyz"
+      },
+      {
+        "type": "email",
+        "key": "EmailField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "test_user@fake.email.com"
+      },
+      {
+        "type": "timeInterval",
+        "key": "TimeIntervalField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 123.4
+      },
+      {
+        "type": "height",
+        "key": "HeightField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 1.86
+      },
+      {
+        "type": "Location",
+        "key": "LocationField",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": "(47.6062° N, 122.3321° W)"
+      },
+      {
+        "type": "grouped",
+        "key": "GroupedList",
+        "startTime": "2016-09-06T15:54:21.123+0000",
+        "endTime": "2016-09-06T15:54:22.123+0000",
+        "skipped": false,
+        "value": 
+        [
+          {
+            "type": "scale",
+            "key": "ScaleField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 13
+          },
+          {
+            "type": "continuousScale",
+            "key": "ContinuousScaleField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 400
+          },
+          {
+            "type": "numeric",
+            "key": "IntegerField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 1
+          },
+          {
+            "type": "numeric",
+            "key": "DoubleField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 2.9
+          },
+          {
+            "type": "date",
+            "key": "DateTimeField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "2017-02-13T15:15:00.123+0000"
+          },
+          {
+            "type": "date",
+            "key": "DateField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "2017-02-13"
+          },
+          {
+            "type": "boolean",
+            "key": "BooleanField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": true
+          },
+          {
+            "type": "textChoice",
+            "key": "TextChoiceField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": [
+              "SomeValue1",
+              "OtherValue"
+            ]
+          },
+          {
+            "type": "textScale",
+            "key": "TextScaleField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "Text Scale value"
+          },
+          {
+            "type": "valuePicker",
+            "key": "ValuePickerField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "Value picker value"
+          },
+          {
+            "type": "imageChoice",
+            "key": "ImageChoiceField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "Image Choice Value"
+          },
+          {
+            "type": "timeOfDay",
+            "key": "TimeOfDayField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "15:15:00"
+          },
+          {
+            "type": "text",
+            "key": "MaxTextField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+          },
+          {
+            "type": "text",
+            "key": "ShortTextField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "abcdefghijklmnopqrstuvwxyz"
+          },
+          {
+            "type": "email",
+            "key": "EmailField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "test_user@fake.email.com"
+          },
+          {
+            "type": "timeInterval",
+            "key": "TimeIntervalField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 123.4
+          },
+          {
+            "type": "height",
+            "key": "HeightField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 1.86
+          },
+          {
+            "type": "Location",
+            "key": "LocationField",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": "(47.6062° N, 122.3321° W)"
+          },
+          {
+            "type": "grouped",
+            "key": "SubGroupedList",
+            "startTime": "2016-09-06T15:54:21.123+0000",
+            "endTime": "2016-09-06T15:54:22.123+0000",
+            "skipped": false,
+            "value": 
+            [
+              {
+                "type": "scale",
+                "key": "ScaleField",
+                "startTime": "2016-09-06T15:54:21.123+0000",
+                "endTime": "2016-09-06T15:54:22.123+0000",
+                "skipped": false,
+                "value": 13
+              },
+              {
+                "type": "continuousScale",
+                "key": "ContinuousScaleField",
+                "startTime": "2016-09-06T15:54:21.123+0000",
+                "endTime": "2016-09-06T15:54:22.123+0000",
+                "skipped": false,
+                "value": 400
+              },
+              {
+                "type": "numeric",
+                "key": "IntegerField",
+                "startTime": "2016-09-06T15:54:21.123+0000",
+                "endTime": "2016-09-06T15:54:22.123+0000",
+                "skipped": false,
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

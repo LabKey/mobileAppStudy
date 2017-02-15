@@ -255,15 +255,14 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     public void testScaleResultType()
     {
         int submissionCount = 0; //used for validation
-        int successfulProcessingExpected = 0;
         int errorCount = 0;
 
         SupportedResultType type = SupportedResultType.SCALE;
 
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
-        String fieldName = InitialSurvey.NUM_PACKS_WEEK;
-        String fieldHeader = "Num Packs Week";
-        Integer value = 400;
+        String fieldName = InitialSurvey.NUM_ALCOHOL_WEEK;
+        String fieldHeader = "Num Alcohol Week";
+        double value = 400;
 
         //Test skipped
         String skipToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
@@ -286,13 +285,13 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
 
         //Test integer min value
         String minToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
-        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Integer.MIN_VALUE);
+        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Double.MIN_VALUE);
         log("Testing Question Type [" + type + "] vs value int.min");
         submitQuestion(qr, minToken, 200);
 
         //Test integer max value
         String maxToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
-        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Integer.MAX_VALUE);
+        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Double.MAX_VALUE);
         log("Testing Question Type [" + type + "] vs value int.max");
         submitQuestion(qr, maxToken, 200);
 
@@ -304,11 +303,11 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         errorCount++;
 
         //Test double
-        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Double.valueOf(1.3));
+        String doubleToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
+        double doubleValue = 1.3;
+        qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, Double.valueOf(doubleValue));
         log("Testing Question Type [" + type + "] vs value type [double]");
-        submitQuestion(qr, appToken, 200);
-        submissionCount++;
-        errorCount++;
+        submitQuestion(qr, doubleToken, 200);
 
         //Test Date
         qr = new QuestionResponse(type, fieldName, new Date(), new Date(), false, new Date());
@@ -346,8 +345,9 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         assertBlankValue(skipToken, fieldHeader, "Invalid skipped value");
         assertBlankValue(nullToken, fieldHeader, "Invalid null value");
         assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", String.valueOf(value));
-        assertSubmittedValue(minToken, fieldHeader, "Min value not present", String.valueOf(Integer.MIN_VALUE));
-        assertSubmittedValue(maxToken, fieldHeader, "Max value not present", String.valueOf(Integer.MAX_VALUE));
+        assertSubmittedValue(minToken, fieldHeader, "Min value not present", String.valueOf(Double.MIN_VALUE));
+        assertSubmittedValue(maxToken, fieldHeader, "Max value not present", String.valueOf(Double.MAX_VALUE));
+        assertSubmittedValue(doubleToken, fieldHeader, "Submitted value not present", String.valueOf(doubleValue));
 
         checkExpectedErrors(errorCount);
     }
@@ -377,7 +377,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         int successfulProcessingExpected = 0;
         int errorCount = 0;
 
-        SupportedResultType type = SupportedResultType.NUMBER;
+        SupportedResultType type = SupportedResultType.NUMERIC;
 
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         String fieldName = InitialSurvey.NUM_ALCOHOL_WEEK;
@@ -701,8 +701,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         QuestionResponse groupedQuestionResponse1 = new GroupedQuestionResponse("rx",
             new Date(), new Date(), false, new GroupedQuestionResponse("Group", new Date(), new Date(), false,
                 new QuestionResponse(SupportedResultType.BOOL, "Bool", new Date(), new Date(), false, true),
-                new QuestionResponse(SupportedResultType.NUMBER, "Decimal", new Date(), new Date(), false, 3.14),
-                new QuestionResponse(SupportedResultType.SCALE, "Integer", new Date(), new Date(), false, 400),
+                new QuestionResponse(SupportedResultType.NUMERIC, "Decimal", new Date(), new Date(), false, 3.14),
                 new QuestionResponse(SupportedResultType.TEXT, "Text", new Date(), new Date(), false, "I'm part of a grouped group"),
                 new QuestionResponse(SupportedResultType.DATE, "Date", new Date(), new Date(), false, new Date())
             ));
@@ -793,7 +792,8 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         //Filter to only our requests
         table.openCustomizeGrid();
         table.getCustomizeView().clearFilters();
-        table.getCustomizeView().addFilter("RxId/SurveyId/ParticipantId/AppToken", "Equals", appToken);
+        //Leaving this reference to SurveyId instead of altering the lists archive. //TODO: Change SurveyId to ActivityId
+        table.getCustomizeView().addFilter("RxId/ParticipantId/AppToken", "Equals", appToken);
         table.getCustomizeView().clickViewGrid();
         refresh();
 
@@ -872,16 +872,16 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     public void testMissingResultProperties()
     {
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
-        String field = InitialSurvey.FOLIC_ACID;
-        String fieldHeader = "Folic Acid";
-        int value = 12;
+        String field = InitialSurvey.NUM_ALCOHOL_WEEK;
+        String fieldHeader = "Num Alcohol Week";
+        double value = 0.5;
 
         int submissionCount = 0;
         int successfulProcessingExpected = 0;
         int expectedErrorCount = 0;
 
         //Test normal accepted
-        QuestionResponse qr = new QuestionResponse(SupportedResultType.SCALE, field,
+        QuestionResponse qr = new QuestionResponse(SupportedResultType.NUMERIC, field,
                 new Date(), new Date(), false, value);
         submitQuestion(qr, appToken, 200);
         submissionCount++;
@@ -961,16 +961,16 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     public void testReprocessAction()
     {
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
-        String field = InitialSurvey.FOLIC_ACID;
-        String fieldHeader = "Folic Acid";
-        int value = 12;
+        String field = InitialSurvey.NUM_ALCOHOL_WEEK;
+        String fieldHeader = "Num Alcohol Week";
+        double value = 0.5;
 
         int submissionCount = 0;
         int successfulProcessingExpected = 0;
         int expectedErrorCount = 0;
 
         //Submit successfully processed response
-        QuestionResponse qr = new QuestionResponse(SupportedResultType.SCALE, field,
+        QuestionResponse qr = new QuestionResponse(SupportedResultType.NUMERIC, field,
                 new Date(), new Date(), false, value);
         submitQuestion(qr, appToken, 200);
         submissionCount++;

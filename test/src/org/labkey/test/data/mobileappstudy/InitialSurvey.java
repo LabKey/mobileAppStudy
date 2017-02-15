@@ -7,9 +7,9 @@ import java.util.Date;
  */
 public class InitialSurvey extends Survey
 {
-    public InitialSurvey(String appToken, String surveyId, String version, Date start, Date end)
+    public InitialSurvey(String appToken, String activityId, String version, Date start, Date end)
     {
-        super(appToken, surveyId, version, start, end);
+        super(appToken, activityId, version, start, end);
     }
 
     //Question IDs

@@ -56,24 +56,25 @@ public class SurveyStep
      */
     public enum StepResultType
     {
-        Scale("scale", (format) -> PropertyType.DOUBLE),
-        ContinuousScale("continuousScale", (format) -> PropertyType.DOUBLE),
-        TextScale("textScale", (format) -> PropertyType.STRING),
-        ValuePicker ("valuePicker", (format) -> PropertyType.STRING),
-        ImageChoice ("imageChoice", (format) -> PropertyType.STRING),
-        TextChoice ("textChoice", (format) -> PropertyType.STRING),
-        GroupedResult("groupedResult", (format) -> null),
-        Boolean ("boolean", (format) -> PropertyType.BOOLEAN),
-        Numeric ("numeric", StepResultType::getNumericResultType),
-        TimeOfDay("timeOfDay", StepResultType::getDateResultType),
-        Date("date", StepResultType::getDateResultType),
-        Text("text", (format) -> PropertyType.STRING),
-        Email ("email", (format) -> PropertyType.STRING),
-        TimeInterval ("timeInterval", (format) -> PropertyType.DOUBLE),
-        Height("height", (format) -> PropertyType.DOUBLE),
-        Location("location", (format) -> PropertyType.STRING),
+        Scale("scale", (step) -> PropertyType.DOUBLE),
+        ContinuousScale("continuousScale", (step) -> PropertyType.DOUBLE),
+        TextScale("textScale", (step) -> PropertyType.STRING),
+        ValuePicker ("valuePicker", (step) -> PropertyType.STRING),
+        ImageChoice ("imageChoice", (step) -> PropertyType.STRING),
+        TextChoice ("textChoice", (step) -> PropertyType.STRING),
+        GroupedResult("groupedResult", (step) -> null),
+        Boolean ("boolean", (step) -> PropertyType.BOOLEAN),
+        Numeric ("numeric", (step) -> PropertyType.DOUBLE),           //TODO: Per result schema value should always be a double
+        TimeOfDay("timeOfDay", (step) -> PropertyType.TIME),
+        Date("date", (step) -> PropertyType.DATE_TIME),
+//        Date("date", StepResultType::getDateResultType),
+        Text("text", (step) -> PropertyType.STRING),
+        Email ("email", (step) -> PropertyType.STRING),
+        TimeInterval ("timeInterval", (step) -> PropertyType.DOUBLE),
+        Height("height", (step) -> PropertyType.DOUBLE),
+        Location("location", (step) -> PropertyType.STRING),
 
-        UNKNOWN("Unknown", (format) -> null);
+        UNKNOWN("Unknown", (step) -> null);
 
         private static final Map<String, StepResultType> resultTypeMap;
 
@@ -109,33 +110,34 @@ public class SurveyStep
             return resultTypeDelegate.apply(step);
         }
 
-        @Nullable
-        public static PropertyType getNumericResultType(SurveyStep step)
-        {
-            switch(step.getStyle())
-            {
-                case 0:
-                    return PropertyType.INTEGER;
-                case 1:
-                    return PropertyType.DOUBLE;
-                default:
-                    return null;
-            }
-        }
-
-        @Nullable
-        public static PropertyType getDateResultType(SurveyStep step)
-        {
-            switch(step.getStyle())
-            {
-                case 0:
-                    return PropertyType.DATE;
-                case 1:
-                    return PropertyType.DATE_TIME;
-                default:
-                    return null;
-            }
-        }
+        //TODO: not sure if this is needed anymore,
+//        @Nullable
+//        public static PropertyType getNumericResultType(SurveyStep step)
+//        {
+//            switch(step.getStyle())
+//            {
+//                case 0:
+//                    return PropertyType.INTEGER;
+//                case 1:
+//                    return PropertyType.DOUBLE;
+//                default:
+//                    return null;
+//            }
+//        }
+//
+//        @Nullable
+//        public static PropertyType getDateResultType(SurveyStep step)
+//        {
+//            switch(step.getStyle())
+//            {
+//                case 0:
+//                    return PropertyType.DATE;
+//                case 1:
+//                    return PropertyType.DATE_TIME;
+//                default:
+//                    return null;
+//            }
+//        }
     }
 
     public enum PHIClassification
@@ -184,6 +186,16 @@ public class SurveyStep
     private String phi;
     private String title;
     private List<SurveyStep> steps = null;
+
+    public boolean getRepeatable()
+    {
+        return repeatable;
+    }
+
+    public void setRepeatable(boolean repeatable)
+    {
+        this.repeatable = repeatable;
+    }
 
     private Map<String, Object> format;
 

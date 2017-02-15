@@ -488,12 +488,12 @@ public class MobileAppStudyManager
             {
                 try
                 {
-                    if (!isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
+                    if (!isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
                         new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
                 }
                 catch (InvalidDesignException e)
                 {
-                    logger.error(String.format("Failed to update survey design SurveyId: %1$s, version: %2$s", surveyResponse.getSurveyId(), surveyResponse.getSurveyVersion()), e);
+                    logger.error(String.format("Failed to update survey design ActivityId: %1$s, version: %2$s", surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()), e);
                     this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e.getMessage());
                     return;
                 }
@@ -547,16 +547,16 @@ public class MobileAppStudyManager
 
     /**
      * Verify if survey exists
-     * @param surveyId to verify
+     * @param activityId to verify
      * @param container holding study/survey
      * @param user executing query
      * @return true if survey found
      */
-    boolean surveyExists(String surveyId, Container container, User user)
+    boolean surveyExists(String activityId, Container container, User user)
     {
         try
         {
-            getResultTable(surveyId, container, user);
+            getResultTable(activityId, container, user);
             return true;
         }
         catch (NotFoundException e)
@@ -694,10 +694,10 @@ public class MobileAppStudyManager
 
         try (DbScope.Transaction transaction = scope.ensureTransaction())
         {
-            Response response = Response.getResponseObject(surveyResponse.getResponse());
-            storeSurveyResult(response, surveyResponse.getSurveyId(), surveyResponse.getParticipantId(), responseBlobId, response.getResults(), errors, surveyResponse.getContainer(), insertUser);
+            Response response = Response.getResponseObject(surveyResponse.getData());
+            storeSurveyResult(response, surveyResponse.getActivityId(), surveyResponse.getParticipantId(), responseBlobId, response.getResults(), errors, surveyResponse.getContainer(), insertUser);
             if (!errors.isEmpty())
-                throw new Exception("Problem storing data in list '" + surveyResponse.getSurveyId() + "' in container '" + surveyResponse.getContainer().getName() + "'.\n" + StringUtils.join(errors, "\n"));
+                throw new Exception("Problem storing data in list '" + surveyResponse.getActivityId() + "' in container '" + surveyResponse.getContainer().getName() + "'.\n" + StringUtils.join(errors, "\n"));
             else
                 transaction.commit();
         }
@@ -731,10 +731,10 @@ public class MobileAppStudyManager
         Map<String, Object> row = storeListResults(null, listName, results, data, errors, container, user, participantId);
         if (!row.isEmpty())
         {
-            Integer surveyId = (Integer) row.get("Key");
-            Pair<String, Integer> rowKey = new Pair<>("SurveyId", surveyId);
+            Integer activityId = (Integer) row.get("Key");
+            Pair<String, Integer> rowKey = new Pair<>("ActivityId", activityId);
             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, results);
-            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, errors, container, user, participantId);
+            storeMultiValuedResults(multiValuedResults, activityId, rowKey, errors, container, user, participantId);
         }
     }
 
@@ -751,7 +751,7 @@ public class MobileAppStudyManager
         results.stream().filter(result -> result.getValueType().isSingleValued()).forEach(result ->
         {
             result.setListName(list.getName());
-            if (validateListColumn(list, result.getIdentifier(), result.getValueType(), errors))
+            if (validateListColumn(list, result.getKey(), result.getValueType(), errors))
             {
                 singleValuedResults.add(result);
             }
@@ -773,7 +773,7 @@ public class MobileAppStudyManager
         {
             if (!result.getValueType().isSingleValued())
             {
-                result.setListName(baseListName + StringUtils.capitalize(result.getIdentifier()));
+                result.setListName(baseListName + StringUtils.capitalize(result.getKey()));
                 multiValuedResults.add(result);
             }
         }
@@ -852,7 +852,7 @@ public class MobileAppStudyManager
      * Stores a set of SurveyResult objects in a given list. For each given SurveyResult that is single-valued, store it
      * in the column with the corresponding name.
      *
-     * @param surveyId identifier of the survey
+     * @param activityId identifier of the survey
      * @param listName name of the list in which the responses should be stored
      * @param results the superset of results to be stored.  This may contain multi-valued results as well, but these
      *                will not be handled in this method
@@ -864,7 +864,7 @@ public class MobileAppStudyManager
      * @return the newly created list row
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private Map<String, Object> storeListResults(@Nullable Integer surveyId, @NotNull String listName, @NotNull List<SurveyResult> results, @NotNull Map<String, Object> data, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
+    private Map<String, Object> storeListResults(@Nullable Integer activityId, @NotNull String listName, @NotNull List<SurveyResult> results, @NotNull Map<String, Object> data, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
     {
         TableInfo surveyTable = getResultTable(listName, container, user);
         if (surveyTable.getUpdateService() == null)
@@ -879,15 +879,15 @@ public class MobileAppStudyManager
             return Collections.emptyMap();
 
         for (SurveyResult result: singleValuedResults)
-            data.put(result.getIdentifier(), result.getValue());
+            data.put(result.getKey(), result.getParsedValue());
 
         data.put("participantId", participantId);
         Map<String, Object> row = storeListData(surveyTable, data, container, user);
-        if (surveyId == null)
-            surveyId = (Integer) row.get("Key");
+        if (activityId == null)
+            activityId = (Integer) row.get("Key");
 
-        // Add a resultMetadata row for each of the individual rows using the given surveyId
-        storeResponseMetadata(singleValuedResults, surveyId, container, user, participantId);
+        // Add a resultMetadata row for each of the individual rows using the given activityId
+        storeResponseMetadata(singleValuedResults, activityId, container, user, participantId);
 
         return row;
     }
@@ -895,7 +895,7 @@ public class MobileAppStudyManager
     /**
      * Recursively stores a set of multi-valued results
      * @param results the set of multi-valued results to be stored
-     * @param surveyId identifier for the survey being processed
+     * @param activityId identifier for the survey being processed
      * @param parentKey the key for the list that these multi-valued results are associated with
      * @param errors the collection of validation errors encountered thus far
      * @param container container for the lists
@@ -903,27 +903,27 @@ public class MobileAppStudyManager
      * @param participantId of respondent
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private void storeMultiValuedResults(@NotNull List<SurveyResult> results, @NotNull Integer surveyId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
+    private void storeMultiValuedResults(@NotNull List<SurveyResult> results, @NotNull Integer activityId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
     {
         for (SurveyResult result : results)
         {
             if (result.getValueType() == SurveyResult.ValueType.CHOICE)
             {
-                storeResultChoices(result, surveyId, parentKey, errors, container, user, participantId);
+                storeResultChoices(result, activityId, parentKey, errors, container, user, participantId);
             }
             else // result is of type GROUPED_RESULT
             {
                 if (result.getSkipped())
-                    storeResponseMetadata(Collections.singletonList(result), surveyId, container, user, participantId);
+                    storeResponseMetadata(Collections.singletonList(result), activityId, container, user, participantId);
                 else
                 {
                     // two scenarios, groupedResult is an array of SurveyResult objects or is an array of an array of SurveyResult objects
                     List<List<SurveyResult>> groupedResultList = new ArrayList<>();
-                    for (Object gr : (ArrayList) result.getValue())
+                    for (Object gr : (ArrayList) result.getParsedValue())
                     {
                         if (gr instanceof SurveyResult) // this means we have a single set of grouped results to process.
                         {
-                            groupedResultList.add((ArrayList) result.getValue());
+                            groupedResultList.add((ArrayList) result.getParsedValue());
                             break;
                         }
                         else
@@ -938,12 +938,12 @@ public class MobileAppStudyManager
                         String listName = result.getListName();
                         Map<String, Object> data = new ArrayListMap<>();
                         data.put(parentKey.getKey(), parentKey.getValue());
-                        Map<String, Object> row = storeListResults(surveyId, listName, groupResults, data, errors, container, user, participantId);
+                        Map<String, Object> row = storeListResults(activityId, listName, groupResults, data, errors, container, user, participantId);
                         if (!row.isEmpty())
                         {
-                            Pair<String, Integer> rowKey = new Pair<>(result.getIdentifier() + "Id", (Integer) row.get("Key"));
+                            Pair<String, Integer> rowKey = new Pair<>(result.getKey() + "Id", (Integer) row.get("Key"));
                             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, groupResults);
-                            storeMultiValuedResults(multiValuedResults, surveyId, rowKey, errors, container, user, participantId);
+                            storeMultiValuedResults(multiValuedResults, activityId, rowKey, errors, container, user, participantId);
                         }
                     }
                 }
@@ -954,7 +954,7 @@ public class MobileAppStudyManager
     /**
      * Stores a set of values for a choice response
      * @param result the result whose values are being stored
-     * @param surveyId identifier for the survey being processed
+     * @param activityId identifier for the survey being processed
      * @param parentKey the key for the list to which the choice will be associated
      * @param errors the set of validation errors encountered thus far
      * @param container the container for the lists
@@ -962,30 +962,30 @@ public class MobileAppStudyManager
      * @param participantId of respondent
      * @throws Exception if there is a problem finding or updating the appropriate lists
      */
-    private void storeResultChoices(@NotNull SurveyResult result, @NotNull Integer surveyId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
+    private void storeResultChoices(@NotNull SurveyResult result, @NotNull Integer activityId, @NotNull Pair<String, Integer> parentKey, @NotNull List<String> errors, @NotNull Container container, @NotNull User user, @NotNull Integer participantId) throws Exception
     {
         if (result.getSkipped()) // store only metadata if the response was skipped
-            storeResponseMetadata(Collections.singletonList(result), surveyId, container, user, participantId);
+            storeResponseMetadata(Collections.singletonList(result), activityId, container, user, participantId);
         else
         {
             TableInfo table = getResultTable(result.getListName(), container, user);
-            validateListColumn(table, result.getIdentifier(), SurveyResult.ValueType.STRING, errors);
+            validateListColumn(table, result.getKey(), SurveyResult.ValueType.STRING, errors);
 
             if (errors.isEmpty())
             {
-                if (result.getValue() != null)
+                if (result.getParsedValue() != null)
                 {
-                    for (Object value : (ArrayList) result.getValue())
+                    for (Object value : (ArrayList) result.getParsedValue())
                     {
                         Map<String, Object> data = new ArrayListMap<>();
                         data.put(parentKey.getKey(), parentKey.getValue());
-                        data.put(result.getIdentifier(), value);
+                        data.put(result.getKey(), value);
                         data.put("participantId", participantId);
                         storeListData(table, data, container, user);
                     }
                 }
 
-                storeResponseMetadata(Collections.singletonList(result), surveyId, container, user, participantId);
+                storeResponseMetadata(Collections.singletonList(result), activityId, container, user, participantId);
             }
         }
     }
@@ -993,21 +993,21 @@ public class MobileAppStudyManager
     /**
      * Stores the response metadata for the given results
      * @param results the results whose metadata is to be stored
-     * @param surveyId the identifier of the survey whose responses are being stored
+     * @param activityId the identifier of the survey whose responses are being stored
      * @param container the container in which the lists live
      * @param user the user to be used for inserting the data
      * @param participantId of respondent
      */
-    private void storeResponseMetadata(@NotNull List<SurveyResult> results, @NotNull Integer surveyId, @NotNull Container container, @NotNull User user, @NotNull Integer participantId)
+    private void storeResponseMetadata(@NotNull List<SurveyResult> results, @NotNull Integer activityId, @NotNull Container container, @NotNull User user, @NotNull Integer participantId)
     {
         for (SurveyResult result : results)
         {
             MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
             TableInfo responseMetadataTable = schema.getTableInfoResponseMetadata();
-            result.setSurveyId(surveyId);
+            result.setActivityId(activityId);
             result.setContainer(container);
             result.setParticipantId(participantId);
-            result.setFieldName(result.getIdentifier());
+            result.setFieldName(result.getKey());
 
             Table.insert(user, responseMetadataTable, result);
         }
@@ -1169,7 +1169,7 @@ public class MobileAppStudyManager
         return deleteKeys;
     }
 
-    public boolean isKnownVersion(String appToken, String surveyId, String versionId, int responseId)
+    public boolean isKnownVersion(String appToken, String activityId, String versionId, int responseId)
     {
         /* --Equivalent postgres SQL
         SELECT EXISTS(
@@ -1179,7 +1179,7 @@ public class MobileAppStudyManager
               AND p2.studyid = p.studyid
               AND p.rowid = r.participantid
               AND r.rowid = ?
-              AND r.surveyid = ?
+              AND r.activityid = ?
               AND r.surveyversion = ?
               AND r.status = 1
         )
@@ -1196,7 +1196,7 @@ public class MobileAppStudyManager
             .append("    AND p.studyid = p2.studyid\n")                     //Limit study
             .append("    AND p2.apptoken = ?\n").add(appToken)
             .append("    AND r.rowid != ?\n").add(responseId)               //Ignore current response
-            .append("    AND r.surveyid = ?\n").add(surveyId)               //
+            .append("    AND r.activityid = ?\n").add(activityId)               //
             .append("    AND r.surveyversion = ?\n").add(versionId)
                 //pending implies it hasn't been applied and error means it may not have worked...
             .append("    AND r.status = ?\n").add(ResponseStatus.PROCESSED.getPkId());

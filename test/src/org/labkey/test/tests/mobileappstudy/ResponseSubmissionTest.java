@@ -24,8 +24,8 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
     private final static String PROJECT_NAME03 = BASE_PROJECT_NAME + " " + STUDY_NAME03;
     private final static String SURVEY_NAME = "FakeSurvey_1";
     private final static String BASE_RESULTS = "{\n" +
-            "\t\t\"start\": \"2016-09-06 15:48:13 +0000\",\n" +
-            "\t\t\"end\": \"2016-09-06 15:48:45 +0000\",\n" +
+            "\t\t\"start\": \"2016-09-06T15:48:13.000+0000\",\n" +
+            "\t\t\"end\": \"2016-09-06T15:48:45.000+0000\",\n" +
             "\t\t\"results\": []\n" +
             "}";
 
@@ -74,7 +74,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         log("Testing bad request body");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log);
         cmd.execute(400);
-        assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYINFO_MISSING_MESSAGE, cmd.getExceptionMessage());
+        assertEquals("Unexpected error message", SubmitResponseCommand.METADATA_MISSING_MESSAGE, cmd.getExceptionMessage());
         checkExpectedErrors(1);
     }
 
@@ -104,7 +104,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void testSurveyInfo()
+    public void testMetadata()
     {
         //refresh the page
         goToProjectHome(PROJECT_NAME01);
@@ -114,12 +114,12 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         checkErrors();
         int expectedErrorCount = 0;
 
-        //        4. Invalid SurveyInfo
-        //            A. SurveyInfo element missing
-        log("Testing SurveyInfo element not present");
+        //        4. Invalid Metadata
+        //            A. Metadata element missing
+        log("Testing Metadata element not present");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, null, null, appToken, BASE_RESULTS);
         cmd.execute(400);
-        assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYINFO_MISSING_MESSAGE, cmd.getExceptionMessage());
+        assertEquals("Unexpected error message", SubmitResponseCommand.METADATA_MISSING_MESSAGE, cmd.getExceptionMessage());
         expectedErrorCount++;
 
         //            B. Survey Version
@@ -129,11 +129,11 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYVERSION_MISSING_MESSAGE, cmd.getExceptionMessage());
         expectedErrorCount++;
 
-        //            C. Survey SurveyId
-        log("Testing SurveyId not present");
+        //            C. Survey ActivityId
+        log("Testing ActivityId not present");
         cmd = new SubmitResponseCommand(this::log, null, "1", appToken, BASE_RESULTS);
         cmd.execute(400);
-        assertEquals("Unexpected error message", SubmitResponseCommand.SURVEYID_MISSING_MESSAGE, cmd.getExceptionMessage());
+        assertEquals("Unexpected error message", SubmitResponseCommand.ACTIVITYID_MISSING_MESSAGE, cmd.getExceptionMessage());
         expectedErrorCount++;
 
         checkExpectedErrors(expectedErrorCount);

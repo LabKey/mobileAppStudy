@@ -1,0 +1,266 @@
+{
+    "metadata": {
+        "activityId": "NewSurvey",
+        "version": "1"
+    },
+    "steps": [
+    	{
+            "key": "ScaleField",
+            "resultType": "scale",
+            "type": "question"
+        },
+        {
+            "key": "ContinusousScaleField",
+            "resultType": "continuousScale",
+            "type": "question"
+        },
+        {
+            "key": "IntegerField",
+            "format": {
+                "style": 0
+            },
+            "resultType": "numeric",
+            "type": "question"
+        },
+        {
+            "key": "DoubleField",
+            "format": {
+                "style": 1
+            },
+            "resultType": "numeric",
+            "type": "question"
+        },
+        {
+            "key": "DateTimeField",
+            "format": {
+                "style": 1
+            },
+            "resultType": "date",
+            "type": "question"
+        },
+        {
+            "key": "DateField",
+            "format": {
+                "style": 0
+            },
+            "resultType": "date",
+            "type": "question"
+        },
+        {
+            "key": "BooleanField",
+            "resultType": "boolean",
+            "type": "question"
+        },
+        {
+            "key": "TextChoiceField",
+            "resultType": "textChoice",
+            "repeatable": true,
+            "type": "question"
+        },
+        {
+            "key": "TextScaleField",
+            "resultType": "textScale",
+            "type": "question"
+        },
+        {
+            "key": "ValuePickerField",
+            "resultType": "valuePicker",
+            "type": "question"
+        },
+        {
+            "key": "ImageChoiceField",
+            "resultType": "imageChoice",
+            "type": "question"
+        },
+        {
+            "key": "TimeOfDayField",
+            "resultType": "timeOfDay",
+            "type": "question"
+        },
+        {
+            "key": "MaxTextField",
+            "format": {
+                "maxLength": 0
+            },
+            "resultType": "text",
+            "type": "question"
+        },
+        {
+            "key": "ShortTextField",
+            "format": {
+                "maxLength": 250
+            },
+            "resultType": "text",
+            "type": "question"
+        },
+        {
+            "key": "EmailField",
+            "resultType": "email",
+            "type": "question"
+        },
+        {
+            "key": "TimeIntervalField",
+            "resultType": "timeInterval",
+            "type": "question"
+        },
+        {
+            "key": "HeightField",
+            "resultType": "height",
+            "type": "question"
+        },
+        {
+            "key": "LocationField",
+            "resultType": "location",
+            "type": "question"
+        },
+        {
+            "key": "GroupedList",
+            "resultType": "groupedResult",
+            "type": "form",
+            "steps":[
+    	    	{
+		            "key": "ScaleField",
+		            "resultType": "scale",
+		            "type": "question"
+		        },
+		        {
+		            "key": "ContinuousScaleField",
+		            "resultType": "continuousScale",
+		            "type": "question"
+		        },
+		        {
+		            "key": "IntegerField",
+		            "format": {
+		                "style": 0
+		            },
+		            "resultType": "numeric",
+		            "type": "question"
+		        },
+		        {
+		            "key": "DoubleField",
+		            "format": {
+		                "style": 1
+		            },
+		            "resultType": "numeric",
+		            "type": "question"
+		        },
+		        {
+		            "key": "DateTimeField",
+		            "format": {
+		                "style": 1
+		            },
+		            "resultType": "date",
+		            "type": "question"
+		        },
+		        {
+		            "key": "DateField",
+		            "format": {
+		                "style": 0
+		            },
+		            "resultType": "date",
+		            "type": "question"
+		        },
+		        {
+		            "key": "BooleanField",
+		            "resultType": "boolean",
+		            "type": "question"
+		        },
+		        {
+		            "key": "TextChoiceField",
+		            "resultType": "textChoice",
+		            "repeatable": true,
+		            "type": "question"
+		        },
+		        {
+		            "key": "TextScaleField",
+		            "resultType": "textScale",
+		            "type": "question"
+		        },
+		        {
+		            "key": "ValuePickerField",
+		            "resultType": "valuePicker",
+		            "type": "question"
+		        },
+		                {
+		            "key": "ImageChoiceField",
+		            "resultType": "imageChoice",
+		            "type": "question"
+		        },
+		        {
+		            "key": "TimeOfDayField",
+		            "resultType": "timeOfDay",
+		            "type": "question"
+		        },
+		        {
+		            "key": "MaxTextField",
+		            "format": {
+		                "maxLength": 0
+		            },
+		            "resultType": "text",
+		            "type": "question"
+		        },
+		        {
+		            "key": "ShortTextField",
+		            "format": {
+		                "maxLength": 250
+		            },
+		            "resultType": "text",
+		            "type": "question"
+		        },
+		        {
+		            "key": "EmailField",
+		            "resultType": "email",
+		            "type": "question"
+		        },
+		        {
+		            "key": "TimeIntervalField",
+		            "resultType": "timeInterval",
+		            "type": "question"
+		        },
+		        {
+		            "key": "HeightField",
+		            "resultType": "height",
+		            "type": "question"
+		        },
+		        {
+		            "key": "LocationField",
+		            "resultType": "location",
+		            "type": "question"
+		        },
+		        {
+		            "key": "SubGroupedList",
+		            "resultType": "groupedResult",
+		            "type": "form",
+		            "steps":[
+		    	    	{
+				            "key": "ScaleField",
+				            "resultType": "scale",
+				            "type": "question"
+				        },
+				        {
+				            "key": "ContinuousScaleField",
+				            "resultType": "continuousScale",
+				            "type": "question"
+				        },
+				        {
+				            "key": "IntegerField",
+				            "format": {
+				                "style": 0
+				            },
+				            "resultType": "numeric",
+				            "type": "question"
+				        },
+				        {
+				            "key": "DoubleField",
+				            "format": {
+				                "style": 1
+				            },
+				            "resultType": "numeric",
+				            "type": "question"
+				        }
+		            ]
+		        }
+            ]
+        }
+    ]
+}

@@ -22,37 +22,16 @@ public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
     }
 
     @Override
-    public SurveyDesign getSurveyDesign(Container c, String studyId, String surveyId, String version) throws InvalidDesignException
+    public SurveyDesign getSurveyDesign(Container c, String studyId, String activityId, String version) throws InvalidDesignException
     {
         try
         {
             //TODO: make this more flexible
             StringBuilder sb = new StringBuilder();
-            Path filePath = Paths.get(getBasePath(c), String.join("_", studyId, surveyId, version) + ".txt");
+            Path filePath = Paths.get(getBasePath(c), String.join("_", studyId, activityId, version) + ".txt");
             Files.readAllLines(filePath).forEach(sb::append);
 
             return getSurveyDesign(sb.toString());
-
-//            String contents =
-//                    "{\n" +
-//                    "  \"surveyInfo\":{\n" +
-//                    "    \"surveyId\": \"InitialSurvey\"\n" +
-//                    "    , \"version\": \"1\"\n" +
-//                    "  }\n" +
-//                    "  , \"steps\":[{\n" +
-//                    "    \"type\": \"question-scale\"\n" +
-//                    "    , \"resultType\": \"integer\"\n" +
-//                    "    , \"key\": \"Scalar\"\n" +
-//                    "  }, {\n" +
-//                    "    \"type\": \"question-text\"\n" +
-//                    "    , \"resultType\": \"text\"\n " +
-//                    "    , \"key\": \"TextField\"\n " +
-//                    "    , \"format\": {\n" +
-//                    "       \"maxLength\": 0\n" +
-//                    "    }\n " +
-//                    "  }]\n" +
-//                    "}";
-//            return getSurveyDesign(contents);
         }
         catch (IOException x)
         {

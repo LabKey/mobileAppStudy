@@ -9,7 +9,7 @@ import java.util.Date;
 
 public class SurveyResponse
 {
-    public static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    public static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     public enum ResponseStatus {
 
@@ -39,10 +39,10 @@ public class SurveyResponse
     }
 
     private Integer _rowId;
-    private String _response;
+    private String _data;
     private Integer _participantId;
     private String _surveyVersion;
-    private String _surveyId;
+    private String _activityId;
     private ResponseStatus _status;
     private Date _processed;
     private User _processedBy;
@@ -55,13 +55,13 @@ public class SurveyResponse
     {
     }
 
-    public SurveyResponse(String participantId, String response, String surveyId, String version)
+    public SurveyResponse(String participantId, String data, String activityId, String version)
     {
         setStatus(SurveyResponse.ResponseStatus.PENDING);
         setAppToken(participantId);
-        setResponse(response);
+        setData(data);
         setSurveyVersion(version);
-        setSurveyId(surveyId);
+        setActivityId(activityId);
     }
 
     public Container getContainer()
@@ -118,13 +118,13 @@ public class SurveyResponse
         _status = status;
     }
 
-    public String getSurveyId()
+    public String getActivityId()
     {
-        return _surveyId;
+        return _activityId;
     }
-    public void setSurveyId(String surveyId)
+    public void setActivityId(String activityId)
     {
-        _surveyId = surveyId;
+        _activityId = activityId;
     }
 
     public String getSurveyVersion()
@@ -145,13 +145,13 @@ public class SurveyResponse
         _participantId = participantId;
     }
 
-    public String getResponse()
+    public String getData()
     {
-        return _response;
+        return _data;
     }
-    public void setResponse(String response)
+    public void setData(String data)
     {
-        _response = response;
+        _data = data;
     }
 
     public Integer getRowId()

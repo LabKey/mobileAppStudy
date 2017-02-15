@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 
 public class SubmitResponseCommand extends MobileAppCommand
 {
-    public static final String  SURVEYINFO_MISSING_MESSAGE = "SurveyInfo not found.",
-                                SURVEYID_MISSING_MESSAGE = "SurveyId not included in request",
+    public static final String  METADATA_MISSING_MESSAGE = "Metadata not found.",
+                                ACTIVITYID_MISSING_MESSAGE = "ActivityId not included in request",
                                 SURVEYVERSION_MISSING_MESSAGE = "SurveyVersion not included in request.",
                                 RESPONSE_MISSING_MESSAGE = "Response not included in request.",
                                 PARTICIPANTID_MISSING_MESSAGE = "ParticipantId not included in request.",
@@ -28,20 +28,20 @@ public class SubmitResponseCommand extends MobileAppCommand
             "  \"type\": \"SurveyResponse\", \n" +
             "%1$s" +
             "   \"participantId\": \"%2$s\", \n" +
-            "   \"response\": %3$s\n" +
+            "   \"data\": %3$s\n" +
             "}";
 
     public final static String MISSING_RESPONSE_JSON_FORMAT = "{ \n" +
             "  \"type\": \"SurveyResponse\", \n" +
-            "  \"surveyInfo\": { \n" +
-            "      \"surveyId\": \"%1$s\", \n" +
+            "  \"metadata\": { \n" +
+            "      \"activityId\": \"%1$s\", \n" +
             "      \"version\": \"%2$s\" \n" +
             "   }, \n" +
             "   \"participantId\": \"%3$s\"\n" +
             "}";
 
-    private final static String SURVEY_INFO_FORMAT = "  \"surveyInfo\": { \n" +
-            "      \"surveyId\": \"%1$s\", \n" +
+    private final static String SURVEY_METADATA_FORMAT = "  \"metadata\": { \n" +
+            "      \"activityId\": \"%1$s\", \n" +
             "      \"version\": \"%2$s\" \n" +
             "   }, \n";
 
@@ -55,13 +55,13 @@ public class SubmitResponseCommand extends MobileAppCommand
         setBody("");
     }
 
-    public SubmitResponseCommand(Consumer<String> logger, String surveyId, String version, String appToken, String surveyResponses)
+    public SubmitResponseCommand(Consumer<String> logger, String activityId, String version, String appToken, String surveyResponses)
     {
         setLogger(logger);
-        if (StringUtils.isNotBlank(surveyId) || StringUtils.isNotBlank(version))
+        if (StringUtils.isNotBlank(activityId) || StringUtils.isNotBlank(version))
         {
-            String surveyInfo = String.format(SURVEY_INFO_FORMAT, StringUtils.defaultString(surveyId, ""), StringUtils.defaultString(version,""));
-            setBody(String.format(BODY_JSON_FORMAT, surveyInfo, appToken, surveyResponses));
+            String metadata = String.format(SURVEY_METADATA_FORMAT, StringUtils.defaultString(activityId, ""), StringUtils.defaultString(version,""));
+            setBody(String.format(BODY_JSON_FORMAT, metadata, appToken, surveyResponses));
         }
         else
             setBody(String.format(BODY_JSON_FORMAT, "", appToken, surveyResponses));
@@ -70,7 +70,7 @@ public class SubmitResponseCommand extends MobileAppCommand
 
     public SubmitResponseCommand(Consumer<String> logger, Survey survey)
     {
-        this(logger, survey.getSurveyId(), survey.getVersion(), survey.getAppToken(), survey.getResponseJson());
+        this(logger, survey.getActivityId(), survey.getVersion(), survey.getAppToken(), survey.getResponseJson());
     }
 
     public boolean getLogRequest()

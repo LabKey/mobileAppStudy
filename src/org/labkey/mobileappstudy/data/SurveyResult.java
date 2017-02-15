@@ -17,14 +17,28 @@ public class SurveyResult extends ResponseMetadata
 {
     public enum ValueType
     {
-        DATE("Date", true, JdbcType.TIMESTAMP), // in Lists, we use DateTime even for displaying dates
-        BOOLEAN("Bool", true, JdbcType.BOOLEAN),
-        CHOICE("choice", false, null),
-        INTEGER("scale", true, JdbcType.INTEGER),
-        DOUBLE("number", true, JdbcType.DOUBLE),
-        GROUPED_RESULT("groupedResult", false, null),
+        BOOLEAN("boolean", true, JdbcType.BOOLEAN),
+        CHOICE("textChoice", false, null),
+//        INTEGER("scale", true, JdbcType.INTEGER),     //TODO: should we keep?
+//        DOUBLE("number", true, JdbcType.DOUBLE),
+        GROUPED_RESULT("grouped", false, null),
         TEXT("text", true, JdbcType.VARCHAR),
-        STRING("string", true, JdbcType.VARCHAR);
+        STRING("string", true, JdbcType.VARCHAR),
+        SCALE("scale", true, JdbcType.DOUBLE),
+        CONTINUOUS_SCALE("continuousScale", true, JdbcType.DOUBLE),
+        TEXT_SCALE("textScale", true, JdbcType.VARCHAR),
+        VALUE_PICKER("valuePicker", true, JdbcType.VARCHAR),
+        IMAGE_CHOICE("imageChoice", true, JdbcType.VARCHAR),
+        TIME_OF_DAY("timeOfDay", true, JdbcType.TIME),
+        EMAIL("email", true, JdbcType.VARCHAR),
+        TIME_INTERVAL("timeInterval", true, JdbcType.DOUBLE),
+        HEIGHT("height", true, JdbcType.DOUBLE),
+        LOCATION("location", true, JdbcType.VARCHAR),
+
+        //The storage type is dependant on json values that are not passed in the response so use the larger types.
+        DATE("date", true, JdbcType.TIMESTAMP), // in Lists, we use DateTime even for displaying dates
+        NUMERIC("numeric", true, JdbcType.DOUBLE),
+        ;
 
         private String _typeName;
         private Boolean _singleValued;
@@ -70,10 +84,11 @@ public class SurveyResult extends ResponseMetadata
     }
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
     private String _type;
-    private String _identifier;
-    private Object _result;
+    private String _key;
     private Object _value;
+    private Object _parsedValue;
     private String _listName;
 
     public ValueType getValueType()
@@ -91,14 +106,14 @@ public class SurveyResult extends ResponseMetadata
         this._type = type;
     }
 
-    public String getIdentifier()
+    public String getKey()
     {
-        return _identifier;
+        return _key;
     }
 
-    public void setIdentifier(String identifier)
+    public void setKey(String key)
     {
-        this._identifier = identifier;
+        this._key = key;
     }
 
     @Override
@@ -113,90 +128,116 @@ public class SurveyResult extends ResponseMetadata
         this._listName = listName;
     }
 
-    public Object getResult()
-    {
-        return _result;
-    }
-
     public Object getValue()
     {
-        if (_value == null && !getSkipped() && _result != null)
-            setValue();
         return _value;
     }
+    public void setValue(Object result) throws IllegalArgumentException
+    {
+        _value = result;
+    }
 
-    private void setValue()
+
+    public Object getParsedValue()
+    {
+        if (_parsedValue == null && !getSkipped() && _value != null)
+            setParsedValue();
+        return _parsedValue;
+    }
+
+    private void setParsedValue()
     {
         switch (getValueType())
         {
             case DATE:
-                if (_result instanceof String)
+                if (_value instanceof String)
                 {
                     try
                     {
-                        this._value = DATE_FORMAT.parse((String) _result);
+                        this._parsedValue = DATE_FORMAT.parse((String) _value);
                     }
                     catch (ParseException e)
                     {
-                        throw new IllegalArgumentException("Invalid date string format for field '" + getIdentifier() + "' ("+ _result + ")");
+                        throw new IllegalArgumentException("Invalid date string format for field '" + getKey() + "' ("+ _value + ")");
                     }
                 }
                 else
-                    throw new IllegalArgumentException("Value type for Date field '" + getIdentifier() + "' expected to be String but got "+ _result.getClass());
+                    throw new IllegalArgumentException("Value type for Date field '" + getKey() + "' expected to be String but got "+ _value.getClass());
                 break;
             case BOOLEAN:
-                if (_result instanceof Boolean)
-                    this._value = _result;
+                if (_value instanceof Boolean)
+                    this._parsedValue = _value;
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Boolean but got " + _result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Boolean but got " + _value.getClass());
                 break;
             case CHOICE:
-                if (_result instanceof List)
+                if (_value instanceof List)
                 {
-                    this._value = _result;
+                    this._parsedValue = _value;
                 }
                 else
-                    throw new IllegalArgumentException("Value type for choice field '" + getIdentifier() + "' expected to be ArrayList but got " + _result.getClass());
+                    throw new IllegalArgumentException("Value type for choice field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
                 break;
-            case INTEGER:
-                if (_result instanceof Integer)
+            case TIME_OF_DAY:
+                if (_value instanceof String)
                 {
-                    this._value = _result;
+                    try
+                    {
+                        this._parsedValue = TIME_FORMAT.parse((String) _value);
+                    }
+                    catch (ParseException e)
+                    {
+                        throw new IllegalArgumentException("Invalid date string format for field '" + getKey() + "' ("+ _value + ")");
+                    }
                 }
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer but got " + _result.getClass());
+                    throw new IllegalArgumentException("Value type for Date field '" + getKey() + "' expected to be String but got "+ _value.getClass());
                 break;
-            case DOUBLE:
-                if (_result instanceof Double || _result instanceof Float || _result instanceof Integer)
+            //TODO: should we keep?
+//            case INTEGER:
+//                if (_value instanceof Integer)
+//                {
+//                    this._parsedValue = _value;
+//                }
+//                else
+//                    throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Integer but got " + _value.getClass());
+//                break;
+//            case DOUBLE:
+            case NUMERIC:
+            case HEIGHT:
+            case SCALE:
+            case CONTINUOUS_SCALE:
+            case TIME_INTERVAL:
+                if (_value instanceof Double || _value instanceof Float || _value instanceof Integer)
                 {
-                    this._value = _result;
+                    this._parsedValue = _value;
                 }
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be Integer or Float but got " + _result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Integer or Float but got " + _value.getClass());
                 break;
             case GROUPED_RESULT:
-                if (_result instanceof List)
+                if (_value instanceof List)
                 {
-                    this._value = convertSurveyResults((List) _result);
+                    this._parsedValue = convertSurveyResults((List) _value);
                 }
                 else
-                    throw new IllegalArgumentException("Value type for grouped result field '" + getIdentifier() + "' expected to be ArrayList but got " + _result.getClass());
+                    throw new IllegalArgumentException("Value type for grouped result field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
                 break;
+            case TEXT_SCALE:
+            case VALUE_PICKER:
+            case IMAGE_CHOICE:
+            case EMAIL:    //TODO: validation?
+            case LOCATION: //TODO: validation?
             case TEXT:
             case STRING:
-                if (_result instanceof String)
-                    this._value = _result;
+                if (_value instanceof String)
+                    this._parsedValue = _value;
                 else
-                    throw new IllegalArgumentException("Value type for field '" + getIdentifier() + "' expected to be String but got " + _result.getClass());
+                    throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be String but got " + _value.getClass());
                 break;
         }
     }
 
-
-    public void setResult(Object result) throws IllegalArgumentException
-    {
-        _result = result;
-    }
 
     /**
      * recursively convert a list of survey results, which may itself contain lists of survey results, into a list of objects.
@@ -222,7 +263,7 @@ public class SurveyResult extends ResponseMetadata
             }
             else
             {
-                throw new IllegalArgumentException("Value type for grouped result field '" + getIdentifier() + "' expected to be ArrayList or HashMap but got " + item.getClass());
+                throw new IllegalArgumentException("Value type for grouped result field '" + getKey() + "' expected to be ArrayList or HashMap but got " + item.getClass());
             }
         }
         return results;
