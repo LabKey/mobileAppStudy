@@ -47,12 +47,10 @@ public class SurveyDesignProcessor
 
     public void updateSurveyDesign(SurveyResponse surveyResponse, User user) throws InvalidDesignException
     {
-        //Get survey schema
-        // * What format/structure?
+        //get study from response
         MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(surveyResponse.getAppToken());
 
-        logger.info(String.format(LogMessageFormats.START_UPDATE_SURVEY,
-                study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()));
+        logger.info(String.format(LogMessageFormats.START_UPDATE_SURVEY, study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()));
         SurveyDesign design = MobileAppStudyManager.get().getSurveyDesignProvider().getSurveyDesign(study.getContainer(), study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion());
 
         if (design != null)
@@ -101,8 +99,8 @@ public class SurveyDesignProcessor
                 DomainProperty prop = list.getDomain().addProperty(new PropertyStorageSpec("ActivityId", JdbcType.INTEGER));
                 prop.setLookup(new Lookup(container, "lists", parentListName));
             }
-            list.save(user);
 
+            list.save(user);
             logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
 
             //Return a refreshed version of listDefinition
@@ -238,16 +236,10 @@ public class SurveyDesignProcessor
         prop.setPropertyURI(domain.getTypeURI() + "#" + step.getKey());
         prop.setDescription(step.getTitle());
 
-        //Group and Choice will use Integer RowId to appropriate list
         prop.setRangeURI(step.getPropertyType().getTypeUri());
 
         if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
             prop.setScale(step.getMaxLength());
-
-        //TODO: not sure if these are needed...
-//                prop.setMeasure(false);
-//                prop.setDimension(false);
-//                prop.setRequired(true);
 
         return prop;
     }

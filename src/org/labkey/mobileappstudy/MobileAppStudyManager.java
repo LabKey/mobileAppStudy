@@ -481,31 +481,23 @@ public class MobileAppStudyManager
     void shredSurveyResponse(@NotNull Integer rowId, @Nullable User user)
     {
         SurveyResponse surveyResponse = getResponse(rowId);
+        MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(surveyResponse.getAppToken());
 
         if (surveyResponse != null)
         {
-            synchronized (this)
-            {
-                try
-                {
-                    if (!isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
-                        new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
-                }
-                catch (InvalidDesignException e)
-                {
-                    logger.error(String.format("Failed to update survey design ActivityId: %1$s, version: %2$s", surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()), e);
-                    this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e.getMessage());
-                    return;
-                }
-            }
-
-            logger.info(String.format("Processing response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
-
             try
             {
+                updateSurveys(surveyResponse, user);
+                logger.info(String.format("Processing response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
+
                 this.store(surveyResponse, rowId, user);
                 this.updateProcessingStatus(user, rowId, ResponseStatus.PROCESSED);
                 logger.info(String.format("Processed response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
+            }
+            catch (InvalidDesignException e)
+            {
+                logger.error(String.format("Failed to update survey design: StudyId: %1$s, ActivityId: %2$s, version: %3$s", study.getShortName(),  surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()), e);
+                this.updateProcessingStatus(user, rowId, ResponseStatus.ERROR, e.getMessage());
             }
             catch (Exception e)
             {
@@ -516,6 +508,26 @@ public class MobileAppStudyManager
         else
         {
             logger.error("No response found for id " + rowId);
+        }
+    }
+
+    /**
+     * Check if survey was previously seen, if not retrieve schema and apply
+     * @param surveyResponse that was sent, includes SurveyId and Version
+     * @param user executing response (can be null)
+     * @throws InvalidDesignException If design schema cannot be applied
+     */
+    private synchronized void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws InvalidDesignException
+    {
+        //If we've seen this activity metadata before continue
+        if (isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
+            return;
+
+        //Else retrieve and apply any changes
+        try (DbScope.Transaction transaction = MobileAppStudySchema.getInstance().getSchema().getScope().ensureTransaction())
+        {
+            new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
+            transaction.commit();
         }
     }
 

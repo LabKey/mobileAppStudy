@@ -115,7 +115,7 @@
         },
         {
             "key": "GroupedList",
-            "resultType": "groupedResult",
+            "resultType": "grouped",
             "type": "form",
             "steps":[
     	    	{
@@ -229,7 +229,7 @@
 		        },
 		        {
 		            "key": "SubGroupedList",
-		            "resultType": "groupedResult",
+		            "resultType": "grouped",
 		            "type": "form",
 		            "steps":[
 		    	    	{

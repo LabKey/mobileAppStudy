@@ -61,12 +61,12 @@ public class SurveyStep
         TextScale("textScale", (step) -> PropertyType.STRING),
         ValuePicker ("valuePicker", (step) -> PropertyType.STRING),
         ImageChoice ("imageChoice", (step) -> PropertyType.STRING),
-        TextChoice ("textChoice", (step) -> PropertyType.STRING),
-        GroupedResult("groupedResult", (step) -> null),
+        TextChoice ("textChoice", (step) -> PropertyType.STRING),       //Keep type for value field in Choice list
+        GroupedResult("grouped", (step) -> null),
         Boolean ("boolean", (step) -> PropertyType.BOOLEAN),
         Numeric ("numeric", (step) -> PropertyType.DOUBLE),           //TODO: Per result schema value should always be a double
         TimeOfDay("timeOfDay", (step) -> PropertyType.TIME),
-        Date("date", (step) -> PropertyType.DATE_TIME),
+        Date("date", (step) -> PropertyType.DATE_TIME),               //TODO: Per result schema value should always be the same date format
 //        Date("date", StepResultType::getDateResultType),
         Text("text", (step) -> PropertyType.STRING),
         Email ("email", (step) -> PropertyType.STRING),
