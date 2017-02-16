@@ -47,7 +47,7 @@ public class MobileAppStudyModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 16.36;
+        return 16.37;
     }
 
     @Override
