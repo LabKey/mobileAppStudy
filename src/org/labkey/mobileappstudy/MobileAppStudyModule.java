@@ -36,7 +36,7 @@ import java.util.Set;
 public class MobileAppStudyModule extends DefaultModule
 {
     public static final String NAME = "MobileAppStudy";
-    public static final String DROP_DIR_PROP_NAME = "DropDirPropName";
+    public static final String SCHEMA_DIR_PROP_NAME = "DropDirPropName";
 
     @Override
     public String getName()
@@ -79,7 +79,7 @@ public class MobileAppStudyModule extends DefaultModule
         ContainerManager.addContainerListener(new MobileAppStudyContainerListener());
         MobileAppStudyQuerySchema.register(this);
 
-        ModuleProperty designDropDirectory = new ModuleProperty(this, DROP_DIR_PROP_NAME);
+        ModuleProperty designDropDirectory = new ModuleProperty(this, SCHEMA_DIR_PROP_NAME);
         designDropDirectory.setCanSetPerContainer(true);
         this.addModuleProperty(designDropDirectory);
     }

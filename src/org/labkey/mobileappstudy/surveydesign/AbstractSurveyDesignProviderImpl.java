@@ -20,7 +20,6 @@ public abstract class AbstractSurveyDesignProviderImpl implements SurveyDesignPr
     protected SurveyDesign getSurveyDesign(String contents) throws IOException
     {
         ObjectMapper mapper = new ObjectMapper();
-//        mapper.setDateFormat()
         return mapper.readValue(contents, SurveyDesign.class);
     }
 }

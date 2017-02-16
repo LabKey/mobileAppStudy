@@ -26,6 +26,7 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -744,7 +745,7 @@ public class MobileAppStudyManager
         if (!row.isEmpty())
         {
             Integer activityId = (Integer) row.get("Key");
-            Pair<String, Integer> rowKey = new Pair<>("ActivityId", activityId);
+            Pair<String, Integer> rowKey = new Pair<>(listName + "Id", activityId);
             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, results);
             storeMultiValuedResults(multiValuedResults, activityId, rowKey, errors, container, user, participantId);
         }
@@ -824,10 +825,17 @@ public class MobileAppStudyManager
      */
     private boolean validateListColumn(@NotNull TableInfo table, @NotNull String columnName, @NotNull SurveyResult.ValueType resultValueType, @NotNull List<String> errors)
     {
+        //TODO: this should be moved into the SurveyResult.ValueType using a lambda Function<T,R>
+
         ColumnInfo column = table.getColumn(columnName);
         if (column == null)
         {
             errors.add("Unable to find column '" + columnName + "' in list '" + table.getName() + "'");
+        }
+        else if ((resultValueType.getJdbcType() == JdbcType.TIMESTAMP && (column.getJdbcType() == JdbcType.TIMESTAMP || column.getJdbcType() == JdbcType.DATE))
+            || (resultValueType.getJdbcType() == JdbcType.INTEGER && (column.getJdbcType() == JdbcType.INTEGER || column.getJdbcType() == JdbcType.DOUBLE)))
+        {
+            //Some columns storage types require info not included in result so can't match here
         }
         else if (column.getJdbcType() != resultValueType.getJdbcType())
         {
@@ -953,7 +961,7 @@ public class MobileAppStudyManager
                         Map<String, Object> row = storeListResults(activityId, listName, groupResults, data, errors, container, user, participantId);
                         if (!row.isEmpty())
                         {
-                            Pair<String, Integer> rowKey = new Pair<>(result.getKey() + "Id", (Integer) row.get("Key"));
+                            Pair<String, Integer> rowKey = new Pair<>(listName + "Id", (Integer) row.get("Key"));
                             List<SurveyResult> multiValuedResults = getMultiValuedResults(listName, groupResults);
                             storeMultiValuedResults(multiValuedResults, activityId, rowKey, errors, container, user, participantId);
                         }
@@ -1190,7 +1198,7 @@ public class MobileAppStudyManager
             WHERE p2.apptoken = ?
               AND p2.studyid = p.studyid
               AND p.rowid = r.participantid
-              AND r.rowid = ?
+              AND r.rowid != ?
               AND r.activityid = ?
               AND r.surveyversion = ?
               AND r.status = 1

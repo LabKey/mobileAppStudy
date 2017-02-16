@@ -17,7 +17,7 @@
         {
             "key": "IntegerField",
             "format": {
-                "style": 0
+                "style": "Integer"
             },
             "resultType": "numeric",
             "type": "question"
@@ -25,7 +25,7 @@
         {
             "key": "DoubleField",
             "format": {
-                "style": 1
+                "style": "Decimal"
             },
             "resultType": "numeric",
             "type": "question"
@@ -33,7 +33,7 @@
         {
             "key": "DateTimeField",
             "format": {
-                "style": 1
+                "style": "Date-Time"
             },
             "resultType": "date",
             "type": "question"
@@ -41,7 +41,7 @@
         {
             "key": "DateField",
             "format": {
-                "style": 0
+                "style": "Date"
             },
             "resultType": "date",
             "type": "question"
@@ -131,7 +131,7 @@
 		        {
 		            "key": "IntegerField",
 		            "format": {
-		                "style": 0
+		                "style": "Integer"
 		            },
 		            "resultType": "numeric",
 		            "type": "question"
@@ -139,7 +139,7 @@
 		        {
 		            "key": "DoubleField",
 		            "format": {
-		                "style": 1
+		                "style": "Decimal"
 		            },
 		            "resultType": "numeric",
 		            "type": "question"
@@ -147,7 +147,7 @@
 		        {
 		            "key": "DateTimeField",
 		            "format": {
-		                "style": 1
+		                "style": "Date-Time"
 		            },
 		            "resultType": "date",
 		            "type": "question"
@@ -155,7 +155,7 @@
 		        {
 		            "key": "DateField",
 		            "format": {
-		                "style": 0
+		                "style": "Date"
 		            },
 		            "resultType": "date",
 		            "type": "question"
@@ -245,7 +245,7 @@
 				        {
 				            "key": "IntegerField",
 				            "format": {
-				                "style": 0
+				                "style": "Integer"
 				            },
 				            "resultType": "numeric",
 				            "type": "question"
@@ -253,7 +253,7 @@
 				        {
 				            "key": "DoubleField",
 				            "format": {
-				                "style": 1
+				                "style": "Decimal"
 				            },
 				            "resultType": "numeric",
 				            "type": "question"

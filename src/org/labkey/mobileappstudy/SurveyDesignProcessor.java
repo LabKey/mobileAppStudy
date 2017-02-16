@@ -2,6 +2,8 @@ package org.labkey.mobileappstudy;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.PropertyStorageSpec;
@@ -24,7 +26,7 @@ import org.labkey.mobileappstudy.surveydesign.SurveyDesign;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 
-import java.util.Arrays;
+import java.sql.JDBCType;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,9 +38,65 @@ public class SurveyDesignProcessor
     private Logger logger;
 
     /**
-     * List properties that are need for survey relationships
+     * List properties that are needed for survey relationships
      */
-    private static final List<String> REQUIRED_SUBLIST_PROPERTIES = Arrays.asList("Key", "ParticipantId", "ActivityId");
+    private enum StandardProperties
+    {
+        Key("Key", JDBCType.INTEGER),
+        ParticipantId("ParticipantId", JDBCType.INTEGER),
+        ParentId("ParentId", JDBCType.INTEGER);
+
+        private String key;
+        private JDBCType type;
+
+        StandardProperties(String key, JDBCType type)
+        {
+            this.key = key;
+            this.type = type;
+        }
+
+        public static void ensureStandardProperties(Container container, Domain domain, String parentListName) throws InvalidDesignException
+        {
+            if (domain == null)
+                throw new InvalidDesignException("Invalid list domain");
+
+            for (StandardProperties val : values())
+            {
+                DomainProperty prop = domain.getPropertyByName(val.key);
+
+                if (prop == null)
+                    addStandardProperty(container, val, domain, parentListName);
+            }
+        }
+
+        /**
+         * Add properties that are common to the list implementation and any special aspects of that property like Lookups
+         * @param container hosting the list
+         * @param propName name of the property
+         * @param listDomain domain property will belong to
+         * @param parentListName (Optional) of parent list. Required if ParentId property is needed
+         */
+        private static void addStandardProperty(@NotNull Container container, @NotNull StandardProperties propName, @NotNull Domain listDomain, @Nullable String parentListName)
+        {
+            switch (propName)
+            {
+                case Key:
+                    listDomain.addProperty(new PropertyStorageSpec(propName.key, JdbcType.INTEGER));
+                    break;
+                case ParticipantId:
+                    DomainProperty participantProp = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, JdbcType.INTEGER));
+                    participantProp.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
+                    break;
+                case ParentId:
+                    if (StringUtils.isNotBlank(parentListName))
+                    {
+                        DomainProperty prop = listDomain.addProperty(new PropertyStorageSpec( parentListName + "Id", JdbcType.INTEGER));
+                        prop.setLookup(new Lookup(container, "lists", parentListName));
+                    }
+                    break;
+            }
+        }
+    }
 
     public SurveyDesignProcessor(Logger logger)
     {
@@ -60,7 +118,7 @@ public class SurveyDesignProcessor
                     new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
 
             ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), null);
-            applySurveyUpdate(study.getContainer(), insertUser, listDef, design.getSteps(), design.getSurveyName());
+            applySurveyUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getSteps(), design.getSurveyName(), "");
         }
         else
             throw new InvalidDesignException(LogMessageFormats.DESIGN_NULL);
@@ -72,17 +130,15 @@ public class SurveyDesignProcessor
      * @param listName name of list
      * @param container where list resides
      * @param user accessing/creating list
-     * @return ListDef representing list
+     * @return ListDefinition representing list
      * @throws InvalidDesignException if list is not able to be created, this is a wrapper of any other exception
      */
     private ListDefinition ensureList(Container container, User user, String listName, String parentListName) throws InvalidDesignException
     {
         ListDefinition listDef = ListService.get().getList(container, listName);
-        listDef = listDef != null ?
-                listDef :
-                newSurveyListDefinition(container, user, listName, parentListName);
-
-        return listDef;
+        return listDef != null ?
+               listDef :
+               newSurveyListDefinition(container, user, listName, parentListName);
     }
 
     private ListDefinition newSurveyListDefinition(Container container, User user, String listName, String parentListName) throws InvalidDesignException
@@ -91,16 +147,8 @@ public class SurveyDesignProcessor
         {
             ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.AutoIncrementInteger);
             list.setKeyName("Key");
-            list.getDomain().addProperty(new PropertyStorageSpec("Key", JdbcType.INTEGER));
-            list.getDomain().addProperty(new PropertyStorageSpec("ParticipantId", JdbcType.INTEGER));
-
-            if (StringUtils.isNotBlank(parentListName))
-            {
-                DomainProperty prop = list.getDomain().addProperty(new PropertyStorageSpec("ActivityId", JdbcType.INTEGER));
-                prop.setLookup(new Lookup(container, "lists", parentListName));
-            }
-
             list.save(user);
+
             logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
 
             //Return a refreshed version of listDefinition
@@ -112,9 +160,9 @@ public class SurveyDesignProcessor
         }
     }
 
-    private void applySurveyUpdate(Container container, User user, ListDefinition list, List<SurveyStep> steps, String parentListName) throws InvalidDesignException
+    private void applySurveyUpdate(Container container, User user, Domain listDomain, List<SurveyStep> steps, String listName, String parentListName) throws InvalidDesignException
     {
-        Domain listDomain = list.getDomain();
+        StandardProperties.ensureStandardProperties(container, listDomain, parentListName);
 
         try
         {
@@ -125,10 +173,10 @@ public class SurveyDesignProcessor
                 switch(resultType)
                 {
                     case TextChoice:
-                        updateChoiceList(container, user, parentListName, step);
+                        updateChoiceList(container, user, listName, step);
                         break;
                     case GroupedResult:
-                        updateGroupList(container, user, parentListName, step);
+                        updateGroupList(container, user, listName, step);
                         break;
                     case UNKNOWN:
                         throw new InvalidDesignException(String.format(LogMessageFormats.INVALID_RESULTTYPE, step.getKey()));
@@ -160,7 +208,7 @@ public class SurveyDesignProcessor
 
         String subListName = parentListName + step.getKey();
         ListDefinition listDef = ensureList(container, user, subListName, parentListName);
-        applySurveyUpdate(container, user, listDef, step.getSteps(), subListName);
+        applySurveyUpdate(container, user, listDef.getDomain(), step.getSteps(), subListName, parentListName);
     }
 
     private void ensureStepProperty(Domain listDomain, SurveyStep step) throws InvalidDesignException
@@ -169,13 +217,13 @@ public class SurveyDesignProcessor
         if (prop != null)
         {
             //existing property
-            if (prop.getPropertyType() != step.getPropertyType())
+            if (prop.getPropertyDescriptor().getJdbcType() != step.getPropertyType())
                 throw new InvalidDesignException(String.format(LogMessageFormats.RESULTTYPE_MISMATCH, step.getKey()));
 
             //Update a string field's size. Increase only.
             if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
             {
-                //TODO: log?
+                //Logged in List audit log
                 if (step.getMaxLength() > prop.getScale())
                     prop.setScale(step.getMaxLength());
             }
@@ -192,15 +240,11 @@ public class SurveyDesignProcessor
         String listName = parentSurveyName + step.getKey();
 
         //Get existing list or create new one
-        ListDefinition listDef = ListService.get().getList(container, listName);
-        listDef = listDef != null ?
-                listDef :
-                newSurveyListDefinition(container, user, listName, parentSurveyName);
-
+        ListDefinition listDef = ensureList(container, user, listName, parentSurveyName);
         Domain domain = listDef.getDomain();
 
         //Check for key, participantId, and parent survey fields
-        ensureStandardProperties(domain, step, user);
+        StandardProperties.ensureStandardProperties(container, domain, parentSurveyName);
 
         //Add value property
         ensureStepProperty(domain, step);
@@ -215,31 +259,17 @@ public class SurveyDesignProcessor
         }
     }
 
-    private void ensureStandardProperties(Domain domain, SurveyStep step, User user) throws InvalidDesignException
-    {
-        if (domain == null)
-            throw new InvalidDesignException("Invalid list domain");
-
-        for (String propName : REQUIRED_SUBLIST_PROPERTIES)
-        {
-            DomainProperty prop = domain.getPropertyByName(propName);
-
-            if (prop == null)
-                throw new InvalidDesignException("Sub-list missing required fields");
-        }
-    }
-
     private static DomainProperty getNewDomainProperty(Domain domain, SurveyStep step)
     {
-        DomainProperty prop = domain.addProperty();
+        DomainProperty prop = domain.addProperty(new PropertyStorageSpec(step.getKey(), step.getPropertyType()));
         prop.setName(step.getKey());
-        prop.setPropertyURI(domain.getTypeURI() + "#" + step.getKey());
         prop.setDescription(step.getTitle());
-
-        prop.setRangeURI(step.getPropertyType().getTypeUri());
-
         if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
             prop.setScale(step.getMaxLength());
+
+        prop.setMeasure(false);
+        prop.setDimension(false);
+        prop.setRequired(false);
 
         return prop;
     }

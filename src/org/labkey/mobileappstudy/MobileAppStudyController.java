@@ -204,11 +204,6 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_MSG, "AppToken not associated with study");
             else
             {
-//                assert info != null; //Null is checked above, but this gets rid of the lint
-//                if (!MobileAppStudyManager.get().surveyExists(info.getActivityId(), study.getContainer(), getUser()))
-//                    errors.reject(ERROR_MSG, "Survey not found.");
-//                else
-
                 if (!study.getCollectionEnabled())
                     errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
             }

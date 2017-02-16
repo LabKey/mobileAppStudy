@@ -2,7 +2,7 @@ package org.labkey.mobileappstudy.surveydesign;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.exp.PropertyType;
+import org.labkey.api.data.JdbcType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +15,7 @@ import java.util.function.Function;
  */
 public class SurveyStep
 {
+    private static final int VARCHAR_TEXT_BOUNDARY = 4000;
 
     /**
      * Enum describing the various Step Types
@@ -51,28 +52,66 @@ public class SurveyStep
         }
     }
 
+    private enum Style
+    {
+        Integer("Integer", JdbcType.DOUBLE),
+        Double("Decimal", JdbcType.DOUBLE),
+        Date("Date", JdbcType.TIMESTAMP),
+        Date_Time("Date-Time", JdbcType.TIMESTAMP),
+        UNKNOWN(null, null);
+
+        private static final Map<String, Style> styleMap;
+
+        static {
+            Map<String, Style> map = new HashMap<>();
+            for (Style resultType : values())
+                map.put(resultType.designStyleString, resultType);
+
+            styleMap = Collections.unmodifiableMap(map);
+        }
+
+        //String representing this in the design json
+        private String designStyleString;
+        private JdbcType propertyType;
+
+        Style(String key, JdbcType type)
+        {
+            designStyleString = key;
+            propertyType = type;
+        }
+
+        static Style getStyle(String key)
+        {
+            return styleMap.getOrDefault(key, UNKNOWN);
+        }
+        public JdbcType getPropertyType()
+        {
+            return propertyType;
+        }
+    }
+
     /**
      * Enum describing the various possible result types for any given step
      */
     public enum StepResultType
     {
-        Scale("scale", (step) -> PropertyType.DOUBLE),
-        ContinuousScale("continuousScale", (step) -> PropertyType.DOUBLE),
-        TextScale("textScale", (step) -> PropertyType.STRING),
-        ValuePicker ("valuePicker", (step) -> PropertyType.STRING),
-        ImageChoice ("imageChoice", (step) -> PropertyType.STRING),
-        TextChoice ("textChoice", (step) -> PropertyType.STRING),       //Keep type for value field in Choice list
+        //TODO: This should be unified with SurveyResult.ValueType
+        Scale("scale", (step) -> JdbcType.DOUBLE),
+        ContinuousScale("continuousScale", (step) -> JdbcType.DOUBLE),
+        TextScale("textScale", (step) -> JdbcType.VARCHAR),
+        ValuePicker ("valuePicker", (step) -> JdbcType.VARCHAR),
+        ImageChoice ("imageChoice", (step) -> JdbcType.VARCHAR),
+        TextChoice ("textChoice", (step) -> JdbcType.VARCHAR),       //Keep type for value field in Choice list
         GroupedResult("grouped", (step) -> null),
-        Boolean ("boolean", (step) -> PropertyType.BOOLEAN),
-        Numeric ("numeric", (step) -> PropertyType.DOUBLE),           //TODO: Per result schema value should always be a double
-        TimeOfDay("timeOfDay", (step) -> PropertyType.TIME),
-        Date("date", (step) -> PropertyType.DATE_TIME),               //TODO: Per result schema value should always be the same date format
-//        Date("date", StepResultType::getDateResultType),
-        Text("text", (step) -> PropertyType.STRING),
-        Email ("email", (step) -> PropertyType.STRING),
-        TimeInterval ("timeInterval", (step) -> PropertyType.DOUBLE),
-        Height("height", (step) -> PropertyType.DOUBLE),
-        Location("location", (step) -> PropertyType.STRING),
+        Boolean ("boolean", (step) -> JdbcType.BOOLEAN),
+        Numeric ("numeric", (step) -> step.getStyle().getPropertyType()),           //TODO: Per result schema value should always be a double
+        TimeOfDay("timeOfDay", (step) -> JdbcType.TIMESTAMP),
+        Date("date", (step) -> step.getStyle().getPropertyType()),               //TODO: Per result schema value should always be the same date format
+        Text("text", (step) -> JdbcType.VARCHAR),
+        Email ("email", (step) -> JdbcType.VARCHAR),
+        TimeInterval ("timeInterval", (step) -> JdbcType.DOUBLE),
+        Height("height", (step) -> JdbcType.DOUBLE),
+        Location("location", (step) -> JdbcType.VARCHAR),
 
         UNKNOWN("Unknown", (step) -> null);
 
@@ -82,7 +121,7 @@ public class SurveyStep
         private String resultTypeString;
 
         //Corresponding backing property type
-        private Function<SurveyStep, PropertyType> resultTypeDelegate;
+        private Function<SurveyStep, JdbcType> resultTypeDelegate;
 
         static {
             Map<String, StepResultType> map = new HashMap<>();
@@ -93,7 +132,7 @@ public class SurveyStep
         }
 
 
-        StepResultType(String key, Function<SurveyStep, PropertyType> interpretFormat)
+        StepResultType(String key, Function<SurveyStep, JdbcType> interpretFormat)
         {
             resultTypeString = key;
             resultTypeDelegate = interpretFormat;
@@ -105,39 +144,10 @@ public class SurveyStep
         }
 
         @Nullable
-        public PropertyType getPropertyType(SurveyStep step)
+        public JdbcType getPropertyType(SurveyStep step)
         {
             return resultTypeDelegate.apply(step);
         }
-
-        //TODO: not sure if this is needed anymore,
-//        @Nullable
-//        public static PropertyType getNumericResultType(SurveyStep step)
-//        {
-//            switch(step.getStyle())
-//            {
-//                case 0:
-//                    return PropertyType.INTEGER;
-//                case 1:
-//                    return PropertyType.DOUBLE;
-//                default:
-//                    return null;
-//            }
-//        }
-//
-//        @Nullable
-//        public static PropertyType getDateResultType(SurveyStep step)
-//        {
-//            switch(step.getStyle())
-//            {
-//                case 0:
-//                    return PropertyType.DATE;
-//                case 1:
-//                    return PropertyType.DATE_TIME;
-//                default:
-//                    return null;
-//            }
-//        }
     }
 
     public enum PHIClassification
@@ -267,7 +277,7 @@ public class SurveyStep
 
         //Json MaxLength = 0 indicates Max text size
         Integer intVal = Integer.valueOf(val);
-        return intVal == 0 ? Integer.MAX_VALUE : intVal;
+        return intVal == 0 || intVal > VARCHAR_TEXT_BOUNDARY ? Integer.MAX_VALUE : intVal;
     }
 
     @Nullable
@@ -276,7 +286,7 @@ public class SurveyStep
         return steps;
     }
 
-    public Integer getStyle()
+    public Style getStyle()
     {
         if (getFormat() == null)
             return null;
@@ -285,10 +295,10 @@ public class SurveyStep
         if (StringUtils.isBlank(val))
             return null;
 
-        return Integer.valueOf(val);
+        return Style.getStyle(val);
     }
 
-    public PropertyType getPropertyType()
+    public JdbcType getPropertyType()
     {
         return getResultType().getPropertyType(this);
     }

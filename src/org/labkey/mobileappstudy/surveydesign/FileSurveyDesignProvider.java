@@ -42,6 +42,6 @@ public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
     private String getBasePath(Container c)
     {
         Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
-        return module.getModuleProperties().get(MobileAppStudyModule.DROP_DIR_PROP_NAME).getEffectiveValue(c);
+        return module.getModuleProperties().get(MobileAppStudyModule.SCHEMA_DIR_PROP_NAME).getEffectiveValue(c);
     }
 }

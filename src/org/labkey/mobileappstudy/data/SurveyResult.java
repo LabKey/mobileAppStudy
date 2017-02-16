@@ -29,7 +29,7 @@ public class SurveyResult extends ResponseMetadata
         TEXT_SCALE("textScale", true, JdbcType.VARCHAR),
         VALUE_PICKER("valuePicker", true, JdbcType.VARCHAR),
         IMAGE_CHOICE("imageChoice", true, JdbcType.VARCHAR),
-        TIME_OF_DAY("timeOfDay", true, JdbcType.TIME),
+        TIME_OF_DAY("timeOfDay", true, JdbcType.TIMESTAMP),
         EMAIL("email", true, JdbcType.VARCHAR),
         TIME_INTERVAL("timeInterval", true, JdbcType.DOUBLE),
         HEIGHT("height", true, JdbcType.DOUBLE),
