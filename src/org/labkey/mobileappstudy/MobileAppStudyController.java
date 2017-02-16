@@ -130,8 +130,8 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
                 errors.reject(ERROR_REQUIRED, "StudyId must be provided.");
-            else if (MobileAppStudyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
-                errors.rejectValue("shortName", ERROR_MSG, "StudyId '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
+            else if (MobileAppStudyManager.get().studyExistsAsSibling(form.getShortName(), getContainer()))
+                errors.rejectValue("shortName", ERROR_MSG, "StudyId '" + form.getShortName() + "' is already associated with a different container within this folder. Each study can be associated with only one container per folder.");
             //Check if study exists, name has changed, and at least one participant has enrolled
             else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");

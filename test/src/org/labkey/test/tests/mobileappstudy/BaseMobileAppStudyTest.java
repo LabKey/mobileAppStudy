@@ -79,7 +79,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         initTest.setupProjects();
     }
 
-    abstract void setupProjects();
+    void setupProjects()
     {
         //Do nothing as default, Tests can override if needed
     }
