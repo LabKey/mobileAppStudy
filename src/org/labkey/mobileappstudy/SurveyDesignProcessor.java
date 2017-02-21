@@ -62,10 +62,16 @@ public class SurveyDesignProcessor
 
             for (StandardProperties val : values())
             {
-                DomainProperty prop = domain.getPropertyByName(val.key);
+                //ParentId uses parentListName as the field name
+                String key = val.key == ParentId.key ? getParentListKey(parentListName) : val.key;
+                DomainProperty prop = domain.getPropertyByName(key);
 
                 if (prop == null)
-                    addStandardProperty(container, val, domain, parentListName);
+                {
+                    prop = addStandardProperty(container, val, domain, parentListName);
+                    if (prop != null)
+                        prop.setPropertyURI(domain.getTypeURI() + "#" + key);
+                }
             }
         }
 
@@ -76,25 +82,33 @@ public class SurveyDesignProcessor
          * @param listDomain domain property will belong to
          * @param parentListName (Optional) of parent list. Required if ParentId property is needed
          */
-        private static void addStandardProperty(@NotNull Container container, @NotNull StandardProperties propName, @NotNull Domain listDomain, @Nullable String parentListName)
+        private static DomainProperty addStandardProperty(@NotNull Container container, @NotNull StandardProperties propName, @NotNull Domain listDomain, @Nullable String parentListName)
         {
+            DomainProperty prop = null;
             switch (propName)
             {
                 case Key:
-                    listDomain.addProperty(new PropertyStorageSpec(propName.key, JdbcType.INTEGER));
+                    prop = listDomain.addProperty(new PropertyStorageSpec(propName.key, JdbcType.INTEGER));
                     break;
                 case ParticipantId:
-                    DomainProperty participantProp = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, JdbcType.INTEGER));
-                    participantProp.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
+                    prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, JdbcType.INTEGER));
+                    prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
                     break;
                 case ParentId:
                     if (StringUtils.isNotBlank(parentListName))
                     {
-                        DomainProperty prop = listDomain.addProperty(new PropertyStorageSpec( parentListName + "Id", JdbcType.INTEGER));
+                        prop = listDomain.addProperty(new PropertyStorageSpec( getParentListKey(parentListName), JdbcType.INTEGER));
                         prop.setLookup(new Lookup(container, "lists", parentListName));
                     }
                     break;
             }
+
+            return prop;
+        }
+
+        private static String getParentListKey(String parentName)
+        {
+            return parentName + "Id";
         }
     }
 
@@ -264,6 +278,7 @@ public class SurveyDesignProcessor
         DomainProperty prop = domain.addProperty(new PropertyStorageSpec(step.getKey(), step.getPropertyType()));
         prop.setName(step.getKey());
         prop.setDescription(step.getTitle());
+        prop.setPropertyURI(domain.getTypeURI() + "#" + step.getKey());
         if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
             prop.setScale(step.getMaxLength());
 
