@@ -197,6 +197,14 @@ public class SurveyStep
     private String title;
     private List<SurveyStep> steps = null;
 
+    private Map<String, Object> format;
+
+    //Currently ignored since we need to make the field
+    private boolean skippable = true;
+
+    //Currently ignored. Only applicable to forms and choice, and those are distinguished by result type
+    private boolean repeatable = false;
+
     public boolean getRepeatable()
     {
         return repeatable;
@@ -207,13 +215,52 @@ public class SurveyStep
         this.repeatable = repeatable;
     }
 
-    private Map<String, Object> format;
 
-    //Currently ignored since we need to make the field
-    private boolean skippable = true;
+    public boolean isSkippable()
+    {
+        return skippable;
+    }
 
-    //Currently ignored. Only applicable to forms and choice, and those are distinguished by result type
-    private boolean repeatable = false;
+    public void setSkippable(boolean skippable)
+    {
+        this.skippable = skippable;
+    }
+
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public String getPhi()
+    {
+        return phi;
+    }
+
+    public void setPhi(String phi)
+    {
+        this.phi = phi;
+    }
+
+    public void setTitle(String title)
+    {
+        this.title = title;
+    }
+
+    public void setSteps(List<SurveyStep> steps)
+    {
+        this.steps = steps;
+    }
+
+    public void setFormat(Map<String, Object> format)
+    {
+        this.format = format;
+    }
+
+    public boolean isRepeatable()
+    {
+        return repeatable;
+    }
 
     public SurveyStepType getStepType()
     {

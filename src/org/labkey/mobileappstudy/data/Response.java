@@ -20,8 +20,6 @@ public class Response
     {
         ObjectMapper mapper = new ObjectMapper();
 
-        mapper.setDateFormat(SurveyResponse.DATE_TIME_FORMAT);
-
         return mapper.readValue(responseString, Response.class);
     }
 
