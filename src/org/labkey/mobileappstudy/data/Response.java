@@ -1,5 +1,6 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.util.List;
 /**
  * A response element in a SurveyResponse type.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Response
 {
     private Date _startTime;

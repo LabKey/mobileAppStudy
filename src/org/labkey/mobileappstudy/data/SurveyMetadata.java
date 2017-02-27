@@ -1,8 +1,11 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Created by iansigmon on 11/3/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyMetadata
 {
     private String _studyId;

@@ -1,5 +1,6 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.labkey.api.data.JdbcType;
 
@@ -13,6 +14,7 @@ import java.util.List;
 /**
  * Created by susanh on 11/28/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyResult extends ResponseMetadata
 {
     public enum ValueType

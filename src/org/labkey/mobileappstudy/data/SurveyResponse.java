@@ -1,10 +1,12 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 
 import java.util.Date;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyResponse
 {
     public enum ResponseStatus {
