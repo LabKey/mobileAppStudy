@@ -148,7 +148,7 @@
         "endTime": "2016-09-06T15:54:22.123+0000",
         "skipped": false,
         "value": "(47.6061° N, 122.3321° W)"
-      },
+      }
       {
         "type": "grouped",
         "key": "GroupedList",
