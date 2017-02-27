@@ -86,6 +86,8 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     {
         //Import static survey lists to populate
         goToProjectHome();
+        //TODO: This archive has not been updated to match some of the newer BTC & dynamic schema changes
+        //       specifically: SurveyId is now dynamically named in sub-lists to match the parent-list
         _listHelper.importListArchive(TestFileUtils.getSampleData("TestLists.lists.zip"));
         goToProjectHome();
         setSurveyMetadataDropDir();

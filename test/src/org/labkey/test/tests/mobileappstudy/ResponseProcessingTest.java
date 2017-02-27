@@ -71,7 +71,8 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
 
     private void setupLists()
     {
-        //Import static survey lists to populate
+        //TODO: This archive has not been updated to match some of the newer BTC & dynamic schema changes
+        //       specifically: SurveyId is now dynamically named in sub-lists to match the parent-list
         _listHelper.importListArchive(TestFileUtils.getSampleData("TestLists.lists.zip"));
     }
 
@@ -794,9 +795,9 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         table.openCustomizeGrid();
         table.getCustomizeView().clearFilters();
         //Leaving this reference to SurveyId instead of altering the lists archive. //TODO: Change SurveyId to ActivityId
-        table.getCustomizeView().addFilter("RxId/ParticipantId/AppToken", "Equals", appToken);
-        table.getCustomizeView().clickViewGrid();
-        refresh();
+        table.getCustomizeView().addFilter("ParticipantId/AppToken", "Equals", appToken);
+        doAndWaitForPageToLoad(() -> table.getCustomizeView().clickViewGrid());
+
 
         List values = table.getColumnDataAsText("MedName");
         assertEquals("Unexpected number of meds", 5, Collections.frequency(values, "Advil"));
