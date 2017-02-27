@@ -29,8 +29,6 @@ import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 import java.sql.JDBCType;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Class to process and apply a survey design to the underlying lists
@@ -182,13 +180,8 @@ public class SurveyDesignProcessor
 
         try
         {
-            //Check for duplicate field keys (sub-lists ok to overlap)
-            Set<String> fieldKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             for (SurveyStep step: steps)
             {
-                if (fieldKeys.contains(step.getKey()))
-                    throw new InvalidDesignException(String.format(LogMessageFormats.DUPLICATE_FIELD_KEY, step.getKey()));
-
                 StepResultType resultType = step.getResultType();
                 //need to check for choice/group
                 switch(resultType)
@@ -205,8 +198,6 @@ public class SurveyDesignProcessor
                         ensureStepProperty(listDomain, step);
                         break;
                 }
-
-                fieldKeys.add(step.getKey());
             }
 
             listDomain.save(user);
@@ -310,6 +301,5 @@ public class SurveyDesignProcessor
         public static final String LIST_CREATED = "Survey list [%1$s] successfully created.";
         public static final String SUBLIST_PROPERTY_ERROR = "Unable to add sub-list property: %1$s";
         public static final String NO_GROUP_STEPS = "Form contains no steps: Step: %1$s";
-        public static final String DUPLICATE_FIELD_KEY = "Design schema contains duplicate field keys: %1$s";
     }
 }
