@@ -5,9 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.remoteapi.CommandException;
-import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
@@ -22,7 +19,6 @@ import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -37,8 +33,6 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
 {
     private static final String PROJECT_NAME = "StudyWithdrawTestProject";
     private static final String STUDY_NAME = "StudyWithdrawTestStudy";
-    private static final String MOBILEAPP_SCHEMA = "mobileappstudy";
-    private static final String LIST_SCHEMA = "lists";
     private final static String BASE_RESULTS = "{\n" +
             "\t\t\"start\": \"2016-09-06 15:48:13 +0000\",\n" +
             "\t\t\"end\": \"2016-09-06 15:48:45 +0000\",\n" +
@@ -164,25 +158,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         return getMobileAppData(table, MOBILEAPP_SCHEMA);
     }
 
-    private SelectRowsResponse getMobileAppData(String table, String schema)
-    {
-        Connection cn = createDefaultConnection(true);
-        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
-        selectCmd.setColumns(Arrays.asList("*"));
 
-        SelectRowsResponse selectResp = null;
-        try
-        {
-            selectResp = selectCmd.execute(cn,getCurrentContainerPath());
-        }
-        catch (CommandException | IOException e)
-        {
-            log(e.getMessage());
-            throw new RuntimeException(e);
-        }
-
-        return selectResp;
-    }
 
     private void submitResponses(List<String> appTokens)
     {

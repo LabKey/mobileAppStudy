@@ -65,6 +65,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         setupPage.studySetupWebPart.clickSubmit();
 
         setupLists();
+        setSurveyMetadataDropDir();
         goToProjectHome(PROJECT_NAME01);
     }
 
