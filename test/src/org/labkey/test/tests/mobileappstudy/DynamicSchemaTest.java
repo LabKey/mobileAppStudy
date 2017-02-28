@@ -269,51 +269,29 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Unexpected number of new columns in NewSurveyAddedGroupedListTextChoiceField with group and subgroup added. Response text 13",2, getTableData("NewSurveyGroupedListAddedTextChoiceField").size());
     }
 
-    //@Test
-//    public void testMismatchedResponseAndSchema()
-//    {
-//        resetListState();
-//        log("Submitting response with mismatched schema. Response text 10");
-//        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-//        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_10--RESPONSE_JSON.txt");
-//        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "10", appToken, responseString);
-//        cmd.execute(200);
-//        sleep(5000);
-//        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10",0,getNewRows(newSurveyMap,getTableData("NewSurvey")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
-//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with mismatched schema. Response text 10",0,getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with mismatched schema. Response text 10",0,getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-//        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with mismatched schema. Response text 10",2,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField with mismatched schema. Response text 10",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
-//    }
-
-    //@Test
-//    public void testMalformedSchema()
-//    {
-//        resetListState();
-//        checkErrors();
-//        log("Submitting response with malformed schema. Response text 11");
-//        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-//        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_11--RESPONSE_JSON.txt");
-//        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "11", appToken, responseString);
-//        cmd.execute(200);
-//        sleep(5000);
-//        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyMap,getTableData("NewSurvey")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurvey after addidn single response with malformed schema. Response text 11", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
-//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-//        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
-//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
-//        checkExpectedErrors(1);
-//    }
+    @Test
+    public void testMalformedSchema()
+    {
+        resetListState();
+        checkErrors();
+        log("Submitting response with malformed schema. Response text 11");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_11--RESPONSE_JSON.txt");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "11", appToken, responseString);
+        cmd.execute(200);
+        sleep(5000);
+        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyMap,getTableData("NewSurvey")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurvey after addidn single response with malformed schema. Response text 11", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
+        checkExpectedErrors(1);
+    }
 
     private List<Map<String,Object>> getTableData(String table)
     {
