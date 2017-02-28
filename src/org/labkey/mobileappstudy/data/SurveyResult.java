@@ -87,7 +87,7 @@ public class SurveyResult extends ResponseMetadata
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
-    private String _type;
+    private String _resultType;
     private String _key;
     private Object _value;
     private Object _parsedValue;
@@ -95,17 +95,17 @@ public class SurveyResult extends ResponseMetadata
 
     public ValueType getValueType()
     {
-        return ValueType.fromTypeName(getType());
+        return ValueType.fromTypeName(getResultType());
     }
 
-    public String getType()
+    public String getResultType()
     {
-        return _type;
+        return _resultType;
     }
 
-    public void setType(String type)
+    public void setResultType(String resultType)
     {
-        this._type = type;
+        this._resultType = resultType;
     }
 
     public String getKey()
@@ -252,7 +252,6 @@ public class SurveyResult extends ResponseMetadata
     {
         List<Object> results = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
-        mapper.setDateFormat(SurveyResponse.DATE_TIME_FORMAT);
         for (Object item : list)
         {
             if (item instanceof List)

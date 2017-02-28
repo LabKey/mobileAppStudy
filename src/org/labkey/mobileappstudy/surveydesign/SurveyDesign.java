@@ -9,8 +9,19 @@ import java.util.List;
  */
 public class SurveyDesign
 {
+    private String _type;
     private SurveyMetadata _metadata;
     private List<SurveyStep> steps;
+
+    public String getType()
+    {
+        return _type;
+    }
+
+    public void setType(String type)
+    {
+        _type = type;
+    }
 
     public List<SurveyStep> getSteps()
     {

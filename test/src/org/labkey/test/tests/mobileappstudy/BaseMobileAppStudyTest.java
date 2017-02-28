@@ -1,10 +1,6 @@
 package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.BeforeClass;
-import org.labkey.remoteapi.CommandException;
-import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.query.SelectRowsCommand;
-import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.TestFileUtils;
@@ -17,7 +13,6 @@ import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
 import org.labkey.test.util.PostgresOnlyTest;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -30,9 +25,6 @@ import static org.junit.Assert.assertNotNull;
  */
 public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
-    protected static final String MOBILEAPP_SCHEMA = "mobileappstudy";
-    protected static final String LIST_SCHEMA = "lists";
-
     @Override
     protected BrowserType bestBrowser()
     {
@@ -63,41 +55,6 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         log("AppToken received: " + appToken);
 
         return appToken;
-    }
-
-    protected SelectRowsResponse getMobileAppData(String table, String schema)
-    {
-        Boolean retried = false;
-        Connection cn = createDefaultConnection(true);
-        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
-        selectCmd.setColumns(Arrays.asList("*"));
-
-        SelectRowsResponse selectResp = null;
-        try
-        {
-            selectResp = selectCmd.execute(cn,getCurrentContainerPath());
-        }
-        catch (CommandException | IOException e)
-        {
-            log(e.getMessage());
-            throw new RuntimeException(e);
-        }
-
-        return selectResp;
-    }
-
-    protected SelectRowsResponse getMobileAppDataWithRetry(String table, String schema)
-    {
-        SelectRowsResponse selectResp = null;
-        try{
-           selectResp = getMobileAppData(table,schema);
-        }
-        catch(RuntimeException e)
-        {
-            sleep(5000);
-            selectResp = getMobileAppData(table,schema);
-        }
-        return selectResp;
     }
 
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
@@ -165,8 +122,6 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
         return cmd.getExceptionMessage();
     }
-
-
 
     protected void setSurveyMetadataDropDir()
     {
