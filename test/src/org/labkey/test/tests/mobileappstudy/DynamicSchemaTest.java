@@ -203,7 +203,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void testAddGroup()
+    public void testAddChoice()
     {
         resetListState();
         log("Submitting response with single group added. Response text 8");
@@ -212,16 +212,19 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "8", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
-        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single group added. Response text 8",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
-        Assert.assertEquals("Unexpected number of new columns in NewSurvey after adding single response with single group added. Response text 8", 1, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single group added. Response text 8",2,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList after adding single response with single group added. Response text 8",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with single group added. Response text 8",1,getNewRowCount(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")));
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList after adding single response with single group added. Response text 8",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with single group added. Response text 8",2,getNewRowCount(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")));
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with single group added. Response text 8",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with single group added. Response text 8",4,getNewRowCount(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")));
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with single group added. Response text 8",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyMap, getTableData("NewSurvey")));
+        Assert.assertEquals("Unexpected number of new columns in NewSurvey after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyGroupedMap, getTableData("NewSurveyGroupedList")));
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyGroupedMap, getTableData("NewSurveyGroupedList")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyGroupedSubGroupedMap, getTableData("NewSurveyGroupedListSubGroupedList")));
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyGroupedSubGroupedMap, getTableData("NewSurveyGroupedListSubGroupedList")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with single group added. Response text 8", 2, getNewRowCount(newSurveyTextChoiceField, getTableData("NewSurveyTextChoiceField")));
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyTextChoiceField, getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with single group added. Response text 8", 2, getNewRowCount(newSurveyGroupedTextChoiceField, getTableData("NewSurveyGroupedListTextChoiceField")));
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyGroupedTextChoiceField, getTableData("NewSurveyGroupedListTextChoiceField")).size());
+
+        Assert.assertEquals("Unexpected new row count in NewSurveyNewTextChoiceField after adding single response with new text choice field. Response text 8", 2, getTableData("NewSurveyNewTextChoiceField").size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyNewTextChoiceField with new text choice field. Response text 8", 2, getTableData("NewSurveyNewTextChoiceField").size());
     }
 
     @Test

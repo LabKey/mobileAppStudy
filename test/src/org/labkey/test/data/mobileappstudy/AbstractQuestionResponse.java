@@ -129,7 +129,7 @@ public abstract class AbstractQuestionResponse implements QuestionResult
     {
         ArrayList<String> props = new ArrayList();
         if (!_omitType)
-            props.add("\"type\": \"%1$s\"");
+            props.add("\"resultType\": \"%1$s\"");
         if (!_omitQuestionId)
             props.add("\"key\": \"%2$s\"");
         if (!_omitStart)
