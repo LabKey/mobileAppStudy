@@ -75,7 +75,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         SelectRowsResponse selectResp = null;
         try
         {
-            selectResp = selectCmd.execute(cn,getCurrentContainerPath());
+            selectResp = selectCmd.execute(cn, getCurrentContainerPath());
         }
         catch (CommandException | IOException e)
         {
@@ -100,6 +100,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
                 if (waitTime > 30000)
                     throw e;
 
+                log("Waiting " + waitTime + " before retrying");
                 sleep(waitTime);
                 waitTime *= 2;
             }

@@ -22,7 +22,7 @@ import java.util.Set;
 public class DynamicSchemaTest extends BaseMobileAppStudyTest
 {
     private static final String PROJECT_NAME = "DynamicSchemaTestProject";
-    private static final String STUDY_NAME = "DynamicSchemaStudy";
+    private static final String STUDY_NAME = "DYNAMICSCHEMASTUDY";
     private static final String SURVEY_NAME = "NewSurvey";
     private static final String LIST_SCHEMA = "lists";
 
@@ -60,7 +60,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         //Send initial response to get lists into a known state
         log("Setting initial state, response txt 1");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_1--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_1--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, responseString);
         cmd.execute(200);
 
@@ -74,7 +74,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question added. Response text 2");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_2--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_2--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "2", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -97,7 +97,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question removed. Response text 3");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_3--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_3--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "3", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -119,7 +119,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with a single question added to group. Response text 4");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_4--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_4--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "4", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -141,7 +141,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question removed from group. Response text 5");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_5--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_5--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "5", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -163,7 +163,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question added to sub subgroup. Response text 6");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_6--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_6--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "6", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -187,7 +187,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question removed from sub. Response text 7");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_7--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_7--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "7", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -209,7 +209,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single group added. Response text 8");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_8--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_8--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "8", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -234,7 +234,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with group removed. Response text 9");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_9--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_9--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "9", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -256,7 +256,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with group removed. Response text 13");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_13--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_13--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "13", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -277,7 +277,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with mismatched schema. Response text 10");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_10--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_10--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "10", appToken, responseString); //Schema name in the metadata is: "NewSurvey_Mismatch"
         cmd.execute(200);
         sleep(5000);
@@ -310,7 +310,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         checkErrors();
         log("Submitting response with malformed schema. Response text 11");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_11--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_11--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "11", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
