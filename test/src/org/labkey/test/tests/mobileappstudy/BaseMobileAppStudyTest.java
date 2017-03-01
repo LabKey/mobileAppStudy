@@ -94,7 +94,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         }
         catch(RuntimeException e)
         {
-            sleep(5000);
+            sleep(10000);
             selectResp = getMobileAppData(table,schema);
         }
         return selectResp;

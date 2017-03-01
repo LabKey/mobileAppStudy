@@ -8,6 +8,7 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
+import org.labkey.test.util.PortalHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +32,6 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
     private static List<Map<String,Object>> newSurveyGroupedTextChoiceField;
     private static List<Map<String,Object>> newSurveyTextChoiceField;
 
-    private static List<Map<String,Object>> newSurveyNewGroupedMap;
-    private static List<Map<String,Object>> newSurveyNewGroupedSubGroupedMap;
-    private static List<Map<String,Object>> newSurveyNewGroupedtextChoiceMap;
-    private static List<Map<String,Object>> newSurveyNewTextChoiceMap;
-
     protected
     @Nullable String getProjectName()
     {
@@ -58,12 +54,17 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         //setupLists();
         setSurveyMetadataDropDir();
         goToProjectHome(PROJECT_NAME);
+        PortalHelper portalHelper = new PortalHelper(this);
+        portalHelper.addWebPart("Lists");
+
         //Send initial response to get lists into a known state
         log("Setting initial state, response txt 1");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
         String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_1--RESPONSE_JSON.txt");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, responseString);
         cmd.execute(200);
+
+        getMobileAppDataWithRetry("NewSurvey", "lists");
     }
 
     @Test
@@ -270,6 +271,39 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
     }
 
     @Test
+    public void testMismatchedResponseAndSchema()
+    {
+        //We do not currently confirm if the survey metadata contained in schema file matches the filename (Response survey metadata)
+        resetListState();
+        log("Submitting response with mismatched schema. Response text 10");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DynamicSchemaStudy_NewSurvey_10--RESPONSE_JSON.txt");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "10", appToken, responseString); //Schema name in the metadata is: "NewSurvey_Mismatch"
+        cmd.execute(200);
+        sleep(5000);
+
+        goToProjectHome(PROJECT_NAME);  //refresh Project page
+
+        log("Check mismatch lists created in addition to existing lists");
+        assertTextPresentInThisOrder("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
+                "NewSurvey_MismatchGroupedListSubGroupedList", "NewSurvey_MismatchGroupedListTextChoiceField",
+                "NewSurvey_MismatchTextChoiceField", "NewSurveyGroupedList", "NewSurveyGroupedListSubGroupedList",
+                "NewSurveyGroupedListTextChoiceField", "NewSurveyTextChoiceField");
+
+        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10", 1, getNewRows(newSurveyMap,getTableData("NewSurvey")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with mismatched schema. Response text 10", 1,getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with mismatched schema. Response text 10",1,getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with mismatched schema. Response text 10",2,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField with mismatched schema. Response text 10",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10",2,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
+    }
+
+
+    @Test
     public void testMalformedSchema()
     {
         resetListState();
@@ -286,8 +320,8 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
         Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
+        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyTextChoiceField, getTableData("NewSurveyTextChoiceField")).size());
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
         Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
         checkExpectedErrors(1);
@@ -314,7 +348,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         return getNewRows(tableBefore,tableAfter).size();
     }
 
-    private List<Map<String,Object>> getNewRows(List<Map<String,Object>> tableBefore,List<Map<String,Object>> tableAfter)
+    private List<Map<String,Object>> getNewRows(List<Map<String,Object>> tableBefore, List<Map<String,Object>> tableAfter)
     {
         Assert.assertEquals("Rows missing ", 0, getMissingRows(new ArrayList(tableBefore),new ArrayList(tableAfter)).size());
         List<Map<String,Object>> newRows = new ArrayList<>();
@@ -416,23 +450,13 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         log("reset lists");
         newSurveyMap = new ArrayList(getTableData("NewSurvey"));
         log("NewSurvey list now has " + String.valueOf(newSurveyMap.size() + " rows"));
-//        log("NewSurvey list now has " + newSurveyMap.get(0).keySet().size() + " columns");
-//        log("NewSurvey list column names are " + getPrintableColumnNames("NewSurvey"));
         newSurveyGroupedMap = new ArrayList(getTableData("NewSurveyGroupedList"));
         log("NewSurveyGroupedList now has " + String.valueOf( newSurveyGroupedMap.size()) + " rows");
-//        log("NewSurveyGroupedList now has " + newSurveyGroupedMap.get(0).keySet().size() + " columns");
-//        log("NewSurveyGroupedList column names are " + getPrintableColumnNames("NewSurveyGroupedList"));
         newSurveyGroupedSubGroupedMap = new ArrayList(getTableData("NewSurveyGroupedListSubGroupedList"));
         log("NewSurveyGroupedSubGroupedList now has " + String.valueOf(newSurveyGroupedSubGroupedMap.size()) + " rows");
-//        log("NewSurveyGroupedSubGroupedList now has " + newSurveyGroupedSubGroupedMap.get(0).keySet().size() + " columns");
-//        log("NewSurveyGroupedSubGroupedList column names are " + getPrintableColumnNames("NewSurveyGroupedListSubGroupedList"));
         newSurveyGroupedTextChoiceField = new ArrayList(getTableData("NewSurveyGroupedListTextChoiceField"));
         log("NewSurveyGroupedTextChoiceList now has " + String.valueOf(newSurveyGroupedTextChoiceField.size()) + " rows");
-//        log("NewSurveyGroupedTextChoiceList now has " + newSurveyGroupedTextChoiceField.get(0).keySet().size() + " columns");
-//        log("NewSurveyGroupedTextChoiceList column names are " + getPrintableColumnNames("NewSurveyGroupedListTextChoiceField"));
         newSurveyTextChoiceField = new ArrayList(getTableData("NewSurveyTextChoiceField"));
         log("NewSurveyTextChoiceList now has " + String.valueOf(newSurveyTextChoiceField.size()) + " rows");
-//        log("NewSurveyTextChoiceList now has " + newSurveyTextChoiceField.get(0).keySet().size() + " columns");
-//        log("NewSurveyTextChoiceList column names are " + getPrintableColumnNames("NewSurveyTextChoiceField"));
     }
 }
