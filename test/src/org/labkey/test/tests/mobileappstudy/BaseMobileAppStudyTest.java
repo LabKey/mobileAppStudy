@@ -89,14 +89,23 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     protected SelectRowsResponse getMobileAppDataWithRetry(String table, String schema)
     {
         SelectRowsResponse selectResp = null;
-        try{
-           selectResp = getMobileAppData(table,schema);
-        }
-        catch(RuntimeException e)
+        int waitTime = 1000;
+        while (waitTime < 30000)
         {
-            sleep(10000);
-            selectResp = getMobileAppData(table,schema);
+            try
+            {
+                selectResp = getMobileAppData(table, schema);
+            }
+            catch (RuntimeException e)
+            {
+                if (waitTime > 30000)
+                    throw e;
+
+                sleep(waitTime);
+                waitTime *= 2;
+            }
         }
+
         return selectResp;
     }
 

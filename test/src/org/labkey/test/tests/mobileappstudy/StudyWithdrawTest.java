@@ -103,6 +103,8 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     @Test
     public void testParticipantWithdrawal()
     {
+        goToProjectHome();
+
         //foreach, validate status update, data deletion, appToken null
         //invalid token
         WithdrawParticipantCommand command = new WithdrawParticipantCommand("BadToken",false, this::log);
