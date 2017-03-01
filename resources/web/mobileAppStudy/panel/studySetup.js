@@ -150,6 +150,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 this.shortName = obj.data.studyId;
                 this.collectionEnabled = obj.data.collectionEnabled;
                 this.getSuccessMessage().show();
+                new Ext4.util.DelayedTask(hideSuccess, this).delay(5000);
                 this.validateForm(btn);
             }
             else
@@ -167,6 +168,11 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName
                 Ext4.Msg.alert("Error", "There were problems storing the configuration. " + obj.errors[0].message);
             }
+        }
+
+        function hideSuccess()
+        {
+            this.getSuccessMessage().hide();
         }
 
         Ext4.Ajax.request({
@@ -199,8 +205,6 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
         return this.collectionCheckbox;
     },
     validateForm: function(field){
-        this.getSuccessMessage().hide();
-
         var form = field.up('form');
         var saveBtn = form.getSubmitButton();
         if (saveBtn.hidden)

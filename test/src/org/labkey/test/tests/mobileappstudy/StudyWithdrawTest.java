@@ -5,9 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.remoteapi.CommandException;
-import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
@@ -21,9 +18,7 @@ import org.labkey.test.data.mobileappstudy.MedForm;
 import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
-import org.labkey.test.util.ListHelper;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -38,8 +33,6 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
 {
     private static final String PROJECT_NAME = "StudyWithdrawTestProject";
     private static final String STUDY_NAME = "StudyWithdrawTestStudy";
-    private static final String MOBILEAPP_SCHEMA = "mobileappstudy";
-    private static final String LIST_SCHEMA = "lists";
     private final static String BASE_RESULTS = "{\n" +
             "\t\t\"start\": \"2016-09-06 15:48:13 +0000\",\n" +
             "\t\t\"end\": \"2016-09-06 15:48:45 +0000\",\n" +
@@ -84,7 +77,6 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         NRD_KEY = appTokenToParticipantId(NO_RESPONSES_DELETE);
         WT_KEY = appTokenToParticipantId(WITHDRAWS_TWICE);
         SI_KEY = appTokenToParticipantId(STAYS_IN);
-        _listHelper.createList(getProjectName(), SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
         setupLists();
         submitResponses(Arrays.asList(HAS_RESPONSES_DELETE,HAS_RESPONSES_NO_DELETE,WITHDRAWS_TWICE,STAYS_IN));
 
@@ -94,7 +86,11 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     {
         //Import static survey lists to populate
         goToProjectHome();
+        //TODO: This archive has not been updated to match some of the newer BTC & dynamic schema changes
+        //       specifically: SurveyId is now dynamically named in sub-lists to match the parent-list
         _listHelper.importListArchive(TestFileUtils.getSampleData("TestLists.lists.zip"));
+        goToProjectHome();
+        setSurveyMetadataDropDir();
     }
 
     @Nullable
@@ -107,6 +103,8 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     @Test
     public void testParticipantWithdrawal()
     {
+        goToProjectHome();
+
         //foreach, validate status update, data deletion, appToken null
         //invalid token
         WithdrawParticipantCommand command = new WithdrawParticipantCommand("BadToken",false, this::log);
@@ -162,25 +160,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         return getMobileAppData(table, MOBILEAPP_SCHEMA);
     }
 
-    private SelectRowsResponse getMobileAppData(String table, String schema)
-    {
-        Connection cn = createDefaultConnection(true);
-        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
-        selectCmd.setColumns(Arrays.asList("*"));
 
-        SelectRowsResponse selectResp = null;
-        try
-        {
-            selectResp = selectCmd.execute(cn,getCurrentContainerPath());
-        }
-        catch (CommandException | IOException e)
-        {
-            log(e.getMessage());
-            throw new RuntimeException(e);
-        }
-
-        return selectResp;
-    }
 
     private void submitResponses(List<String> appTokens)
     {
@@ -224,8 +204,7 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
             QuestionResponse groupedQuestionResponse1 = new GroupedQuestionResponse("rx",
                     new Date(), new Date(), false, new GroupedQuestionResponse("Group", new Date(), new Date(), false,
                     new QuestionResponse(AbstractQuestionResponse.SupportedResultType.BOOL, "Bool", new Date(), new Date(), false, true),
-                    new QuestionResponse(AbstractQuestionResponse.SupportedResultType.NUMBER, "Decimal", new Date(), new Date(), false, 3.14),
-                    new QuestionResponse(AbstractQuestionResponse.SupportedResultType.SCALE, "Integer", new Date(), new Date(), false, 400),
+                    new QuestionResponse(AbstractQuestionResponse.SupportedResultType.NUMERIC, "Decimal", new Date(), new Date(), false, 3.14),
                     new QuestionResponse(AbstractQuestionResponse.SupportedResultType.TEXT, "Text", new Date(), new Date(), false, "I'm part of a grouped group"),
                     new QuestionResponse(AbstractQuestionResponse.SupportedResultType.DATE, "Date", new Date(), new Date(), false, new Date())
             ));

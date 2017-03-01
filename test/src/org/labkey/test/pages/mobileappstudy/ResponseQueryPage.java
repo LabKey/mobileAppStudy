@@ -30,7 +30,7 @@ public class ResponseQueryPage extends LabKeyPage
         ParticipantId("Participant Id"),
         AppToken("App Token"),
         SurveyVersion("Survey Version"),
-        SurveyId("Survey Id"),
+        ActivityId("Activity Id"),
         Processed("Processed"),
         ProcessedBy("Processed By"),
         Error("Error Message"),

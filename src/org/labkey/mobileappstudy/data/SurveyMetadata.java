@@ -1,12 +1,15 @@
 package org.labkey.mobileappstudy.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Created by iansigmon on 11/3/16.
  */
-public class SurveyInfo
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SurveyMetadata
 {
     private String _studyId;
-    private String _surveyId;
+    private String _activityId;
     private String _version;
 
     public String getVersion()
@@ -18,13 +21,13 @@ public class SurveyInfo
         _version = version;
     }
 
-    public String getSurveyId()
+    public String getActivityId()
     {
-        return _surveyId;
+        return _activityId;
     }
-    public void setSurveyId(String surveyId)
+    public void setActivityId(String activityId)
     {
-        _surveyId = surveyId;
+        _activityId = activityId;
     }
 
     public String getStudyId()

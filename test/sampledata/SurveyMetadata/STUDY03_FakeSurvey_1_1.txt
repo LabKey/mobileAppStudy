@@ -1,0 +1,7 @@
+{
+    "metadata": {
+        "activityId": "FakeSurvey_1",
+        "version": "1"
+    },
+    "steps": []
+}
