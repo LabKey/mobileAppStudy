@@ -88,13 +88,12 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
     protected SelectRowsResponse getMobileAppDataWithRetry(String table, String schema)
     {
-        SelectRowsResponse selectResp = null;
         int waitTime = 1000;
-        while (waitTime < 30000)
+        while (waitTime < 45000)
         {
             try
             {
-                selectResp = getMobileAppData(table, schema);
+                return getMobileAppData(table, schema);
             }
             catch (RuntimeException e)
             {
@@ -106,7 +105,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
             }
         }
 
-        return selectResp;
+        return null;
     }
 
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
