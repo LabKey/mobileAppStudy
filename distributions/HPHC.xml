@@ -7,7 +7,6 @@
         <ant antfile="${basedir}/build.xml" target="package_redistributables">
             <property name="dist_sub.dir" value="HPHC" />
             <property name="skip.windowsInstaller" value="true" />
-            <property name="skip.tarGZDistribution" value="false" />
             <property name="extraFileIdentifier" value="-HPHC" />
             <property name="skip.zipDistribution" value="true" />
         </ant>
