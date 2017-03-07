@@ -7,7 +7,9 @@ apply plugin: 'org.labkey.distribution'
 
 Distribution.inheritDependencies(project, ":server:distributions:base")
 
-BuildUtils.addModuleDistributionDependencies(project, [":server:optionalModules:mobileAppStudy"])
+BuildUtils.addModuleDistributionDependencies(project, [":server:optionalModules:mobileAppStudy",
+                                                       ":server:modules:search",
+                                                       ":server:modules:list"])
 
 project.task(
         "distribution",
