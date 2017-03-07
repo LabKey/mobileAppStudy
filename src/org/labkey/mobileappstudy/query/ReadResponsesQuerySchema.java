@@ -2,6 +2,7 @@ package org.labkey.mobileappstudy.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.Module;
@@ -9,15 +10,16 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.HttpView;
 import org.labkey.api.view.UnauthorizedException;
-import org.labkey.mobileappstudy.MobileAppStudyManager;
 import org.labkey.mobileappstudy.data.Participant;
 
 import java.util.Set;
@@ -27,30 +29,17 @@ import java.util.Set;
  */
 public class ReadResponsesQuerySchema extends UserSchema
 {
-    private static final String NAME = "MobileAppResponse";
+    public static final String NAME = "MobileAppResponse";
 
     private final UserSchema _listSchema;
-    private final int _participantId = 1;
+    private final @Nullable Participant _participant;
 
-    private ReadResponsesQuerySchema(User user, Container container, UserSchema listSchema)
+    private ReadResponsesQuerySchema(User user, Container container, UserSchema listSchema, @Nullable Participant participant)
     {
         super(NAME, "Special query schema that allows the mobile application to read responses submitted by the participant using that device", user, container, listSchema.getDbSchema());
         _listSchema = listSchema;
-
-        Participant participant = null;
-
-        if (HttpView.hasCurrentView())
-        {
-            String token = HttpView.currentView().getViewContext().getRequest().getParameter("token");
-
-            if (null != token)
-                participant = MobileAppStudyManager.get().getParticipantFromAppToken(token);
-        }
-
-//        if (null != participant)
-//            _participantId = participant.getRowId();
-//        else
-//            throw new UnauthorizedException("Missing or invalid app token");
+        _participant = participant;
+        setRestricted(true);
     }
 
     public static void register(Module module)
@@ -65,17 +54,26 @@ public class ReadResponsesQuerySchema extends UserSchema
 
             public QuerySchema createSchema(DefaultSchema schema, Module module)
             {
-                Container c = schema.getContainer();
                 UserSchema list = schema.getUserSchema("lists");
-                return new ReadResponsesQuerySchema(User.guest, c, list);
+
+                return new ReadResponsesQuerySchema(schema.getUser(), schema.getContainer(), list, null);
             }
         });
+    }
+
+    public static ReadResponsesQuerySchema get(Participant participant)
+    {
+        Container c = participant.getContainer();
+        UserSchema list = QueryService.get().getUserSchema(User.guest, c, SchemaKey.fromParts("lists"));
+
+        return new ReadResponsesQuerySchema(User.guest, c, list, participant);
     }
 
     @Override
     public boolean canReadSchema() throws UnauthorizedException
     {
-        return true;  // We checked app token in the constructor
+        // Either we have a participant filter or the user needs read permissions
+        return null != _participant || super.canReadSchema();
     }
 
     @Nullable
@@ -83,14 +81,14 @@ public class ReadResponsesQuerySchema extends UserSchema
     public TableInfo createTable(String name)
     {
         TableInfo listTable = _listSchema.createTable(name);
-        return listTable == null ? null : new ResponseTable(listTable, _participantId, this);
+        return listTable == null ? null : new ResponseTable(listTable, _participant, this);
     }
 
     private static class ResponseTable extends FilteredTable<ReadResponsesQuerySchema>
     {
         private final TableInfo _listTable;
 
-        public ResponseTable(@NotNull TableInfo table, int participantId, @NotNull ReadResponsesQuerySchema userSchema)
+        public ResponseTable(@NotNull TableInfo table, @Nullable Participant participant, @NotNull ReadResponsesQuerySchema userSchema)
         {
             super(table, userSchema);
 
@@ -99,13 +97,20 @@ public class ReadResponsesQuerySchema extends UserSchema
 
             setDefaultVisibleColumns(_listTable.getDefaultVisibleColumns());
 
-            addCondition(_listTable.getColumn("Key"), participantId);
+            if (null != participant)
+            {
+                // TODO: Seems wrong... we should get the column from this, not _listTable... but if we do that, the assertCorrectParentTable() assert fails
+                ColumnInfo pid = _listTable.getColumn("ParticipantId");
+
+                if (null != pid)  // Maybe throw instead?
+                    addCondition(pid, participant.getRowId());
+            }
         }
 
         @Override
         public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
         {
-            return false;
+            return ReadPermission.class == perm;
         }
 
         @Override
