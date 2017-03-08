@@ -16,6 +16,7 @@
         <ant antfile="${basedir}/distributions/base.xml" target="gather_modules" />
         <copy todir="${dist.modules.dir}">
             <filelist dir="${staging.modules.dir}">
+                <file name="compliance.module" />
                 <file name="list.module" />
                 <file name="search.module" />
                 <file name="mobileAppStudy.module" />
