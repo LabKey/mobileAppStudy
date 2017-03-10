@@ -177,7 +177,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
     protected void setSurveyMetadataDropDir()
     {
-        ModulePropertyValue val = new ModulePropertyValue("MobileAppStudy", "/", "DropDirPropName", TestFileUtils.getLabKeyRoot() + "/server/optionalModules/mobileAppStudy/test/sampledata/SurveyMetadata/");
+        ModulePropertyValue val = new ModulePropertyValue("MobileAppStudy", "/", "SurveyMetadataDirectory", TestFileUtils.getLabKeyRoot() + "/server/optionalModules/mobileAppStudy/test/sampledata/SurveyMetadata/");
         setModuleProperties(Arrays.asList(val));
     }
 }
