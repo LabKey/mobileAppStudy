@@ -8,7 +8,7 @@ apply plugin: 'org.labkey.distribution'
 Distribution.inheritDependencies(project, ":server:distributions:base")
 
 BuildUtils.addModuleDistributionDependencies(project, [":server:optionalModules:mobileAppStudy",
-                                                       ":server:modules:search",
+                                                       ":server:optionalModules:compliance",
                                                        ":server:modules:list"])
 
 project.task(
@@ -16,7 +16,7 @@ project.task(
         group: GroupNames.DISTRIBUTION,
         type: ModuleDistribution,
         {ModuleDistribution dist ->
-            dist.subDirName='hphc'
+            dist.subDirName='HPHC'
             dist.includeTarGZArchive=true
             dist.extraFileIdentifier='-HPHC'
         }
