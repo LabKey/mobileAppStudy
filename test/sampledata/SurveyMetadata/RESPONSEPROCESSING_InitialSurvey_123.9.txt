@@ -1,0 +1,7 @@
+{
+    "metadata": {
+        "activityId": "InitialSurvey",
+        "version": "123.9"
+    },
+    "steps": []
+}

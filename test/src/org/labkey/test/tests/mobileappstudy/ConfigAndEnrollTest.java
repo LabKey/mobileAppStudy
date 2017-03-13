@@ -20,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
+import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
@@ -44,12 +45,6 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         return "ConfigAndEnrollTest Project";
     }
 
-    @Override
-    void setupProjects()
-    {
-        //Do nothing, not needed for this test
-    }
-
     @Test
     public void testStudyName()
     {
@@ -57,7 +52,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         final String PROMPT_ASSIGNED = "The StudyId associated with this folder is $STUDY_NAME$.";
         final String STUDY_NAME01 = "StudyName01";  // Study names are case insensitive, so test it once.
         final String STUDY_NAME02 = "STUDYNAME02";
-        final String REUSED_STUDY_NAME_ERROR = "There were problems storing the configuration. StudyId '$STUDY_NAME$' is already associated with a different container. Each study can be associated with only one container.";
+        final String REUSED_STUDY_NAME_ERROR = "There were problems storing the configuration. StudyId '$STUDY_NAME$' is already associated with a different container within this folder. Each study can be associated with only one container per folder.";
         final String PROJECT_NAME01 = getProjectName() + " TestStudyName01";
         final String PROJECT_NAME02 = getProjectName() + " TestStudyName02";
 
@@ -162,6 +157,34 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
 
         log("Prompt was as expected. Go home.");
         goToHome();
+    }
+
+    @Test
+    public void testStudyNameShared()
+    {
+        final String PROJECT_NAME01 = getProjectName() + " DataPartner1";
+        final String PROJECT_NAME02 = getProjectName() + " DataPartner2";
+        final String STUDY_FOLDER_NAME = "StudyFolder";
+        final String SHORT_NAME = "Shared";
+
+        _containerHelper.deleteProject(PROJECT_NAME01, false);
+        _containerHelper.deleteProject(PROJECT_NAME02, false);
+
+        _containerHelper.createProject(PROJECT_NAME01, "Collaboration");
+        _containerHelper.createSubfolder(PROJECT_NAME01, STUDY_FOLDER_NAME,"Mobile App Study");
+
+        SetupPage setupPage = new SetupPage(this);
+        setupPage.studySetupWebPart.setShortName(SHORT_NAME);
+        setupPage.studySetupWebPart.clickSubmit();
+
+        _containerHelper.createProject(PROJECT_NAME02, "Collaboration");
+        _containerHelper.createSubfolder(PROJECT_NAME02, STUDY_FOLDER_NAME, "Mobile App Study");
+
+        setupPage.studySetupWebPart.setShortName(SHORT_NAME);
+        setupPage.studySetupWebPart.clickSubmit();
+        goToProjectHome(PROJECT_NAME02);
+        clickFolder(STUDY_FOLDER_NAME);
+        assertEquals("Study name not saved for second project", SHORT_NAME.toUpperCase(), setupPage.studySetupWebPart.getShortName());
     }
 
     @Test
@@ -379,7 +402,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Do not provide a study name (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error msg \"StudyId is required for enrollment\".", failurePage.contains("StudyId is required for enrollment"));
+        assertTrue("Json result did not contain error msg \"" + EnrollmentTokenValidationCommand.BLANK_STUDYID +"\".", failurePage.contains(EnrollmentTokenValidationCommand.BLANK_STUDYID));
 
         log("Provide a study name that doesn't exists (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "THIS_STUDY_IS_NOT_HERE");
@@ -425,7 +448,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Provide a valid token but no study name.");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(2), PROJECT_NAME01, "");
         assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error: \"StudyId is required for enrollment\".", failurePage.contains("StudyId is required for enrollment"));
+        assertTrue("Json result did not contain error: \"" + EnrollmentTokenValidationCommand.BLANK_STUDYID + "\".", failurePage.contains(EnrollmentTokenValidationCommand.BLANK_STUDYID));
 
         log("Looks good. Go home.");
         goToHome();

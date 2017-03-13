@@ -37,8 +37,8 @@ public class QuestionResponse extends AbstractQuestionResponse
 
     public String getJsonString()
     {
-        return String.format(getQuestionResponseJsonFormat(), getType().getDisplayText(), getQuestionId(), getStart(),
-                getEnd(), getSkipped(), getResultJsonString());
+        return String.format(getQuestionResponseJsonFormat(), getType().getDisplayText(), getQuestionId(), DATE_FORMAT.format(getStart()),
+                DATE_FORMAT.format(getEnd()), getSkipped(), getResultJsonString());
     }
 
     protected String getResultJsonString()

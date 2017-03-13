@@ -1,5 +1,7 @@
 package org.labkey.test.data.mobileappstudy;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -10,11 +12,11 @@ public abstract class AbstractQuestionResponse implements QuestionResult
 {
     public enum SupportedResultType
     {
-        BOOL("bool", "%1$s"),
-        CHOICE("choice", "[%1$s]"),
+        BOOL("boolean", "%1$s"),
+        CHOICE("textchoice", "[%1$s]"),
         DATE("date", "\"%1$tY-%1$tm-%1$td\""),
-        GROUPED_RESULT("groupedResult", "[%1$s]"),
-        NUMBER("number", "%1$s"),
+        GROUPED_RESULT("grouped", "[%1$s]"),
+        NUMERIC("numeric", "%1$s"),
         SCALE("scale", "%1$s"),
         TEXT("text", "\"%1$s\"");
 
@@ -37,6 +39,7 @@ public abstract class AbstractQuestionResponse implements QuestionResult
         }
     }
 
+    protected static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     private SupportedResultType _type;
     private String _questionId;
     private Date _start;
@@ -126,17 +129,17 @@ public abstract class AbstractQuestionResponse implements QuestionResult
     {
         ArrayList<String> props = new ArrayList();
         if (!_omitType)
-            props.add("\"type\": \"%1$s\"");
+            props.add("\"resultType\": \"%1$s\"");
         if (!_omitQuestionId)
-            props.add("\"identifier\": \"%2$s\"");
+            props.add("\"key\": \"%2$s\"");
         if (!_omitStart)
-            props.add("\"start\": \"%3$tY-%3$tm-%3$td %3$tH:%3$tM:%3$tS %3$tz\"");
+            props.add("\"start\": \"%3$s\"");
         if (!_omitEnd)
-            props.add("\"end\": \"%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS %4$tz\"");
+            props.add("\"end\": \"%4$s\"");
         if (!_omitSkipped)
             props.add("\"skipped\": %5$b");
         if (!_omitResult)
-            props.add("\"result\": %6$s");
+            props.add("\"value\": %6$s");
 
         return "{\n" + String.join(",\n", props) + "}";
     }

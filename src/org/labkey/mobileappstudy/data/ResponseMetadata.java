@@ -13,7 +13,7 @@ public class ResponseMetadata
     private Integer _rowId;
     private Container _container;
     private String _listName;
-    private Integer _surveyId;
+    private Integer _activityId;
     private String _fieldName;
     private Date _startTime;
     private Date _endTime;
@@ -53,14 +53,14 @@ public class ResponseMetadata
         this._listName = listName;
     }
 
-    public Integer getSurveyId()
+    public Integer getActivityId()
     {
-        return _surveyId;
+        return _activityId;
     }
 
-    public void setSurveyId(Integer surveyId)
+    public void setActivityId(Integer activityId)
     {
-        this._surveyId = surveyId;
+        this._activityId = activityId;
     }
 
     public String getFieldName()

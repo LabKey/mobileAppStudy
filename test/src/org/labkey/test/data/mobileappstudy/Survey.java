@@ -1,5 +1,7 @@
 package org.labkey.test.data.mobileappstudy;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -10,9 +12,10 @@ import java.util.stream.Collectors;
 public abstract class Survey extends Form
 {
     private static final String RESPONSE_FORMAT = "{\n" + "%1$s\n" + "}";
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     private String _appToken;
-    private String _surveyId;
+    private String _activityId;
     private String _version;
     private Date _start;
     private Date _end;
@@ -21,10 +24,10 @@ public abstract class Survey extends Form
     private boolean _omitEnd;
     private boolean _omitResults;
 
-    public Survey(String appToken, String surveyId, String version, Date start, Date end)
+    public Survey(String appToken, String activityId, String version, Date start, Date end)
     {
         _appToken = appToken;
-        _surveyId = surveyId;
+        _activityId = activityId;
         _version = version;
         _start = start;
         _end = end;
@@ -35,9 +38,9 @@ public abstract class Survey extends Form
         return _version;
     }
 
-    public String getSurveyId()
+    public String getActivityId()
     {
-        return _surveyId;
+        return _activityId;
     }
 
     public String getAppToken()
@@ -76,9 +79,7 @@ public abstract class Survey extends Form
     {
         String format = getFormatString();
 
-
-
-        return String.format(getFormatString(), getStart(), getEnd(),
+        return String.format(getFormatString(), DATE_FORMAT.format(getStart()), DATE_FORMAT.format(getEnd()),
             String.join(",\n",
                     responses.stream().map(QuestionResponse::getJsonString).collect(Collectors.toList())
             )
@@ -89,9 +90,9 @@ public abstract class Survey extends Form
     {
         ArrayList<String> props = new ArrayList();
         if (!_omitStart)
-            props.add("\"start\": \"%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %1$tz\"");
+            props.add("\"start\": \"%1$s\"");
         if (!_omitEnd)
-            props.add("\"end\": \"%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS %2$tz\"");
+            props.add("\"end\": \"%2$s\"");
         if (!_omitResults)
             props.add("\"results\": [%3$s]");
 

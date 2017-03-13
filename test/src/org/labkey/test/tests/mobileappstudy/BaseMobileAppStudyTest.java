@@ -1,7 +1,13 @@
 package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.BeforeClass;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
+import org.labkey.test.ModulePropertyValue;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
@@ -11,6 +17,8 @@ import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
 import org.labkey.test.util.PostgresOnlyTest;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -22,6 +30,9 @@ import static org.junit.Assert.assertNotNull;
  */
 public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
+    protected static final String MOBILEAPP_SCHEMA = "mobileappstudy";
+    protected static final String LIST_SCHEMA = "lists";
+
     @Override
     protected BrowserType bestBrowser()
     {
@@ -54,6 +65,50 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         return appToken;
     }
 
+    protected SelectRowsResponse getMobileAppData(String table, String schema)
+    {
+        Boolean retried = false;
+        Connection cn = createDefaultConnection(true);
+        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
+        selectCmd.setColumns(Arrays.asList("*"));
+
+        SelectRowsResponse selectResp = null;
+        try
+        {
+            selectResp = selectCmd.execute(cn, getCurrentContainerPath());
+        }
+        catch (CommandException | IOException e)
+        {
+            log(e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        return selectResp;
+    }
+
+    protected SelectRowsResponse getMobileAppDataWithRetry(String table, String schema)
+    {
+        int waitTime = 1000;
+        while (waitTime < 45000)
+        {
+            try
+            {
+                return getMobileAppData(table, schema);
+            }
+            catch (RuntimeException e)
+            {
+                if (waitTime > 30000)
+                    throw e;
+
+                log("Waiting " + waitTime + " before retrying");
+                sleep(waitTime);
+                waitTime *= 2;
+            }
+        }
+
+        return null;
+    }
+
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
     {
         final String API_STRING = WebTestHelper.getBaseURL() + "/mobileappstudy/$PROJECT_NAME$/enroll.api?shortName=$STUDY_NAME$&token=";
@@ -76,7 +131,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         initTest.setupProjects();
     }
 
-    abstract void setupProjects();
+    void setupProjects()
     {
         //Do nothing as default, Tests can override if needed
     }
@@ -118,5 +173,11 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         cmd.execute(expectedStatusCode);
 
         return cmd.getExceptionMessage();
+    }
+
+    protected void setSurveyMetadataDropDir()
+    {
+        ModulePropertyValue val = new ModulePropertyValue("MobileAppStudy", "/", "DropDirPropName", TestFileUtils.getLabKeyRoot() + "/server/optionalModules/mobileAppStudy/test/sampledata/SurveyMetadata/");
+        setModuleProperties(Arrays.asList(val));
     }
 }

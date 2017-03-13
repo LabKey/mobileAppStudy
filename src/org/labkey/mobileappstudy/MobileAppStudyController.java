@@ -46,7 +46,7 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
-import org.labkey.mobileappstudy.data.SurveyInfo;
+import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
@@ -145,8 +145,8 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_MSG, "Invalid input format.  Please check the log for errors.");
             else if (StringUtils.isEmpty(form.getShortName()))
                 errors.reject(ERROR_REQUIRED, "StudyId must be provided.");
-            else if (MobileAppStudyManager.get().studyExistsElsewhere(form.getShortName(), getContainer()))
-                errors.rejectValue("shortName", ERROR_MSG, "StudyId '" + form.getShortName() + "' is already associated with a different container. Each study can be associated with only one container.");
+            else if (MobileAppStudyManager.get().studyExistsAsSibling(form.getShortName(), getContainer()))
+                errors.rejectValue("shortName", ERROR_MSG, "StudyId '" + form.getShortName() + "' is already associated with a different container within this folder. Each study can be associated with only one container per folder.");
             //Check if study exists, name has changed, and at least one participant has enrolled
             else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
@@ -185,6 +185,51 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             form.validate(errors);
+/* TODO: resolve against form.validateForm()
+            //Check if form's required fields are present
+            SurveyMetadata info = form.getMetadata();
+            if (info == null)
+                errors.reject(ERROR_REQUIRED, "Metadata not found.");
+            else
+            {
+                if (isBlank(info.getActivityId()))
+                    errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
+                if (isBlank(info.getVersion()))
+                    errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request.");
+            }
+            if (form.getData() == null)
+                errors.reject(ERROR_REQUIRED, "Response not included in request.");
+            if (StringUtils.isBlank(form.getParticipantId()))
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+            if (errors.hasErrors())
+            {
+                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
+                return;
+            }
+
+
+            //Check if there is an associated participant for the appToken
+            Participant participant = MobileAppStudyManager.get().getParticipantFromAppToken(form.getAppToken());
+            if (participant == null)
+                errors.reject(ERROR_MSG, "Unable to identify participant.");
+            else if (Participant.ParticipantStatus.Withdrawn == participant.getStatus())
+                errors.reject(ERROR_MSG, "Participant has withdrawn from study");
+
+            //Check if there is an associated study for the appToken
+            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
+            if(study == null)
+                errors.reject(ERROR_MSG, "AppToken not associated with study");
+            else
+            {
+                if (!study.getCollectionEnabled())
+                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
+            }
+
+            if (errors.hasErrors())
+            {
+                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
+            }
+*/
         }
 
         @Override
@@ -195,9 +240,9 @@ public class MobileAppStudyController extends SpringActionController
             //Null checks are done in the validate method
             SurveyResponse resp = new SurveyResponse(
                     form.getParticipantId(),
-                    form.getResponse().toString(),
-                    form.getSurveyInfo().getSurveyId(),
-                    form.getSurveyInfo().getVersion()
+                    form.getData().toString(),
+                    form.getMetadata().getActivityId(),
+                    form.getMetadata().getVersion()
             );
             resp = manager.insertResponse(resp);
 
@@ -239,7 +284,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
-    public class EnrollAction extends ApiAction<EnrollmentForm>
+    private abstract class BaseEnrollmentAction extends ApiAction<EnrollmentForm>
     {
         public void validateForm(EnrollmentForm form, Errors errors)
         {
@@ -251,10 +296,10 @@ public class MobileAppStudyController extends SpringActionController
             {
                 if (StringUtils.isEmpty(form.getShortName()))
                     //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName.  Issue #28419
-                    errors.reject(ERROR_REQUIRED, "StudyId is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "StudyId is required");
                 else if (!MobileAppStudyManager.get().studyExists(form.getShortName()))
                     errors.rejectValue("studyId", ERROR_MSG, "Study with StudyId '" + form.getShortName() + "' does not exist");
-                else if (!StringUtils.isEmpty(form.getToken()))
+                else if (StringUtils.isNotEmpty(form.getToken()))
                 {
                     if (MobileAppStudyManager.get().hasParticipant(form.getShortName(), form.getToken()))
                         errors.reject(ERROR_MSG, "Token already in use");
@@ -266,10 +311,46 @@ public class MobileAppStudyController extends SpringActionController
                 // we allow for the possibility that someone can enroll without using an enrollment token
                 else if (MobileAppStudyManager.get().enrollmentTokenRequired(form.getShortName()))
                 {
-                    errors.reject(ERROR_REQUIRED, "Token is required for enrollment");
+                    errors.reject(ERROR_REQUIRED, "Token is required");
                 }
             }
         }
+    }
+
+    @RequiresNoPermission
+    /**
+     * Execute the validation steps for an enrollment token without enrolling
+     */
+    public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+        }
+
+        @Override
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
+        {
+            //If action passes validation then it was successful
+            return success();
+        }
+    }
+
+    @RequiresNoPermission
+    public class EnrollAction extends BaseEnrollmentAction
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            //If errors were already found return
+            if (errors.hasErrors())
+                return;
+
+        }
+
 
         @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
@@ -651,25 +732,25 @@ public class MobileAppStudyController extends SpringActionController
 
     public static class ResponseForm extends ParticipantForm
     {
-        private JsonNode _response;
-        private SurveyInfo _surveyInfo;
+        private JsonNode _data;
+        private SurveyMetadata _metadata;
 
-        public SurveyInfo getSurveyInfo()
+        public SurveyMetadata getMetadata()
         {
-            return _surveyInfo;
+            return _metadata;
         }
-        public void setSurveyInfo(@NotNull SurveyInfo surveyInfo)
+        public void setMetadata(@NotNull SurveyMetadata metadata)
         {
-            _surveyInfo = surveyInfo;
+            _metadata = metadata;
         }
 
-        public JsonNode getResponse()
+        public JsonNode getData()
         {
-            return _response;
+            return _data;
         }
-        public void setResponse (@NotNull JsonNode response)
+        public void setData(@NotNull JsonNode data)
         {
-            _response = response;
+            _data = data;
         }
 
         @Override

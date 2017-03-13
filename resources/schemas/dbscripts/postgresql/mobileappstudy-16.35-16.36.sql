@@ -1,0 +1,1 @@
+ALTER TABLE mobileappstudy.study DROP CONSTRAINT uq_study_shortname;

@@ -7,7 +7,6 @@
         <ant antfile="${basedir}/build.xml" target="package_redistributables">
             <property name="dist_sub.dir" value="HPHC" />
             <property name="skip.windowsInstaller" value="true" />
-            <property name="skip.tarGZDistribution" value="false" />
             <property name="extraFileIdentifier" value="-HPHC" />
             <property name="skip.zipDistribution" value="true" />
         </ant>
@@ -17,6 +16,9 @@
         <ant antfile="${basedir}/distributions/base.xml" target="gather_modules" />
         <copy todir="${dist.modules.dir}">
             <filelist dir="${staging.modules.dir}">
+                <file name="compliance.module" />
+                <file name="list.module" />
+                <file name="search.module" />
                 <file name="mobileAppStudy.module" />
             </filelist>
         </copy>
