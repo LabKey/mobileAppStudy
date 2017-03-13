@@ -194,7 +194,7 @@ public class MobileAppStudyController extends SpringActionController
             MobileAppStudyManager manager = MobileAppStudyManager.get();
             //Null checks are done in the validate method
             SurveyResponse resp = new SurveyResponse(
-                    form.getAppToken(),
+                    form.getParticipantId(),
                     form.getResponse().toString(),
                     form.getSurveyInfo().getSurveyId(),
                     form.getSurveyInfo().getVersion()
