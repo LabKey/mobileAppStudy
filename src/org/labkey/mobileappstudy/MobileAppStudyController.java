@@ -651,7 +651,6 @@ public class MobileAppStudyController extends SpringActionController
 
     public static class ResponseForm extends ParticipantForm
     {
-        private String _type;  // TODO: Delete this? Unused...
         private JsonNode _response;
         private SurveyInfo _surveyInfo;
 
@@ -671,15 +670,6 @@ public class MobileAppStudyController extends SpringActionController
         public void setResponse (@NotNull JsonNode response)
         {
             _response = response;
-        }
-
-        public String getType()
-        {
-            return _type;
-        }
-        public void setType(String type)
-        {
-            _type = type;
         }
 
         @Override
