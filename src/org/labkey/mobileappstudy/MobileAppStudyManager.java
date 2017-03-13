@@ -65,6 +65,7 @@ import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
+import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 
 import java.util.ArrayList;
@@ -107,8 +108,6 @@ public class MobileAppStudyManager
                 enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null));
             });
         }
-
-        setSurveyDesignProvider(() -> new FileSurveyDesignProvider(logger));
     }
 
     public static MobileAppStudyManager get()
@@ -554,7 +553,7 @@ public class MobileAppStudyManager
      * @param user executing response (can be null)
      * @throws InvalidDesignException If design schema cannot be applied
      */
-    private synchronized void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws InvalidDesignException
+    private synchronized void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws Exception
     {
         //If we've seen this activity metadata before continue
         if (isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
@@ -704,6 +703,8 @@ public class MobileAppStudyManager
         response.setStatus(newStatus);
         if (errorMessage != null)
             response.setErrorMessage(errorMessage.length() > ERROR_MESSAGE_MAX_SIZE ? errorMessage.substring(0, ERROR_MESSAGE_MAX_SIZE) + TRUNCATED_MESSAGE_SUFFIX : errorMessage);
+        else
+            response.setErrorMessage(null);
         // we currently have only start and end statuses, so we can safely set the processed and processedBy
         // fields at this point.
         response.setProcessed(new Date());
@@ -1260,13 +1261,20 @@ public class MobileAppStudyManager
         return new SqlSelector(schema.getSchema(), sql).exists();
     }
 
-    public SurveyDesignProvider getSurveyDesignProvider()
+    public SurveyDesignProvider getSurveyDesignProvider(Container container)
     {
-        return surveySchemaProvider.get();
+        if (ServiceSurveyDesignProvider.isConfigured(container))
+            return new ServiceSurveyDesignProvider(container, logger);
+        else if (FileSurveyDesignProvider.getBasePath(container) != null)
+        {
+            logger.info("Metadata service parameters not configured; using file system as design metadata provider");
+            return new FileSurveyDesignProvider(container, logger);
+        }
+        else
+        {
+            logger.error("No SurveyDesignProvider configured.  Please set the appropriate Module Properties.");
+            return null;
+        }
     }
 
-    public void setSurveyDesignProvider(Supplier<SurveyDesignProvider> provider)
-    {
-        surveySchemaProvider = provider;
-    }
 }
