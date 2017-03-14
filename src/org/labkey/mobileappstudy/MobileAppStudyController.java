@@ -185,51 +185,6 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             form.validate(errors);
-/* TODO: resolve against form.validateForm()
-            //Check if form's required fields are present
-            SurveyMetadata info = form.getMetadata();
-            if (info == null)
-                errors.reject(ERROR_REQUIRED, "Metadata not found.");
-            else
-            {
-                if (isBlank(info.getActivityId()))
-                    errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
-                if (isBlank(info.getVersion()))
-                    errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request.");
-            }
-            if (form.getData() == null)
-                errors.reject(ERROR_REQUIRED, "Response not included in request.");
-            if (StringUtils.isBlank(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
-            if (errors.hasErrors())
-            {
-                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
-                return;
-            }
-
-
-            //Check if there is an associated participant for the appToken
-            Participant participant = MobileAppStudyManager.get().getParticipantFromAppToken(form.getAppToken());
-            if (participant == null)
-                errors.reject(ERROR_MSG, "Unable to identify participant.");
-            else if (Participant.ParticipantStatus.Withdrawn == participant.getStatus())
-                errors.reject(ERROR_MSG, "Participant has withdrawn from study");
-
-            //Check if there is an associated study for the appToken
-            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
-            if(study == null)
-                errors.reject(ERROR_MSG, "AppToken not associated with study");
-            else
-            {
-                if (!study.getCollectionEnabled())
-                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
-            }
-
-            if (errors.hasErrors())
-            {
-                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
-            }
-*/
         }
 
         @Override
