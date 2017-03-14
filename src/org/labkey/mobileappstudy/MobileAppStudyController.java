@@ -87,6 +87,7 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public Object execute(ActivityMetadataForm form, BindException errors) throws Exception
         {
+            logger.info("Processing request with Authorization header: " + getViewContext().getRequest().getHeader("Authorization"));
             FileSurveyDesignProvider provider = new FileSurveyDesignProvider(getContainer(), logger);
             return provider.getSurveyDesign(getContainer(), form.getStudyId(), form.getActivityId(), form.getActivityVersion());
         }

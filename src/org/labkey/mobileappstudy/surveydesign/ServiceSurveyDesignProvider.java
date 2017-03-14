@@ -1,21 +1,22 @@
 package org.labkey.mobileappstudy.surveydesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpRequest;
-import org.apache.http.message.BasicHttpRequest;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URI;
 
 /**
  * Created by susanh on 3/10/17.
@@ -34,38 +35,30 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     @Override
     public SurveyDesign getSurveyDesign(Container c, String shortName, String activityId, String version) throws Exception
     {
-
-        try
+        URIBuilder uriBuilder = new URIBuilder(getServiceUrl(c));
+        uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
+        uriBuilder.setParameter(ACTIVITY_ID_PARAM, activityId);
+        uriBuilder.setParameter(VERSION_PARAM, version);
+        URI uri = uriBuilder.build();
+        try (CloseableHttpClient httpclient = HttpClients.createDefault())
         {
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put(STUDY_ID_PARAM, shortName);
-            parameters.put(ACTIVITY_ID_PARAM, activityId);
-            parameters.put(VERSION_PARAM, version);
-            URL url = new URL(getServiceUrl(c) + "?" + PageFlowUtil.toQueryString(parameters.entrySet()));
-            try
-            {
-                HttpRequest request = new BasicHttpRequest("GET", url.toString());
-                request.setHeader("Authorization", "Basic bundleid:" + getServiceToken(c));
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                int status = connection.getResponseCode();
+            HttpGet httpGet = new HttpGet(uri);
+            httpGet.addHeader("Authorization", "Basic bundleid:" + getServiceToken(c));
 
-                if (status == HttpURLConnection.HTTP_OK)
+            try (CloseableHttpResponse response = httpclient.execute(httpGet))
+            {
+                ResponseHandler<String> handler = new BasicResponseHandler();
+                StatusLine status = response.getStatusLine();
+
+                if (status.getStatusCode() == HttpStatus.SC_OK || status.getStatusCode() == HttpStatus.SC_CREATED)
                 {
-                    return getSurveyDesign(connection.getInputStream());
+                    return getSurveyDesign(handler.handleResponse(response));
                 }
                 else
                 {
-                    throw new Exception(String.format("Received response status %d from %s",  status, url.toString()));
+                    throw new Exception(String.format("Received response status %d using uri %s",  status.getStatusCode(), uri));
                 }
             }
-            catch (IOException e)
-            {
-                throw new Exception("IOException connecting to url: " + url, e);
-            }
-        }
-        catch (MalformedURLException e)
-        {
-            throw new Exception(String.format("Malformed URL for shortName %s activityId %s and version %s", shortName, activityId, version));
         }
     }
 
