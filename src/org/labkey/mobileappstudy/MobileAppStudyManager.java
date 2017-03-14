@@ -91,7 +91,6 @@ public class MobileAppStudyManager
     private static final int THREAD_COUNT = 10; //TODO: Verify this is an appropriate number
     private static JobRunner _shredder;
     private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
-    private Supplier<SurveyDesignProvider> surveySchemaProvider;
 
     private MobileAppStudyManager()
     {
