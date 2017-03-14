@@ -761,24 +761,21 @@ public class MobileAppStudyController extends SpringActionController
             if (!errors.hasErrors())
             {
                 //Check if form's required fields are present
-                SurveyInfo info = getSurveyInfo();
+                SurveyMetadata info = getMetadata();
 
                 if (info == null)
                 {
-                    errors.reject(ERROR_REQUIRED, "SurveyInfo not found");
+                    errors.reject(ERROR_REQUIRED, "Metadata not found");
                 }
                 else
                 {
-                    if (isBlank(info.getSurveyId()))
-                        errors.reject(ERROR_REQUIRED, "SurveyId not included in request");
+                    if (isBlank(info.getActivityId()))
+                        errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
                     if (isBlank(info.getVersion()))
                         errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request");
-                    if (getResponse() == null)
+                    if (getData() == null)
                         errors.reject(ERROR_REQUIRED, "Response not included in request");
-
-                    if (!MobileAppStudyManager.get().surveyExists(info.getSurveyId(), _study.getContainer(), User.guest))
-                        errors.reject(ERROR_MSG, "Survey not found");
-                    else if (!_study.getCollectionEnabled())
+                    if (!_study.getCollectionEnabled())
                         errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ]", _study.getShortName()));
                 }
             }
