@@ -7,5 +7,5 @@ import org.labkey.api.data.Container;
  */
 public interface SurveyDesignProvider
 {
-    SurveyDesign getSurveyDesign(Container c, String shortName, String activityId, String version) throws InvalidDesignException;
+    SurveyDesign getSurveyDesign(Container c, String shortName, String activityId, String version) throws Exception;
 }

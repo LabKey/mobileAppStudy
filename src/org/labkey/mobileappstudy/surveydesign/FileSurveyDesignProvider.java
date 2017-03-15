@@ -16,9 +16,9 @@ import java.nio.file.Paths;
  */
 public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
 {
-    public FileSurveyDesignProvider(Logger logger)
+    public FileSurveyDesignProvider(Container container, Logger logger)
     {
-        super(logger);
+        super(container, logger);
     }
 
     @Override
@@ -39,9 +39,9 @@ public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
         }
     }
 
-    private String getBasePath(Container c)
+    public static String getBasePath(Container c)
     {
         Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
-        return module.getModuleProperties().get(MobileAppStudyModule.SCHEMA_DIR_PROP_NAME).getEffectiveValue(c);
+        return module.getModuleProperties().get(MobileAppStudyModule.SURVEY_METADATA_DIRECTORY).getEffectiveValue(c);
     }
 }

@@ -37,7 +37,9 @@ import java.util.Set;
 public class MobileAppStudyModule extends DefaultModule
 {
     public static final String NAME = "MobileAppStudy";
-    public static final String SCHEMA_DIR_PROP_NAME = "DropDirPropName";
+    public static final String SURVEY_METADATA_DIRECTORY = "SurveyMetadataDirectory";
+    public static final String METADATA_SERVICE_BASE_URL = "MetadataServiceBaseUrl";
+    public static final String METADATA_SERVICE_ACCESS_TOKEN = "MetadataServiceAccessToken";
 
     @Override
     public String getName()
@@ -80,9 +82,20 @@ public class MobileAppStudyModule extends DefaultModule
         ContainerManager.addContainerListener(new MobileAppStudyContainerListener());
         MobileAppStudyQuerySchema.register(this);
         ReadResponsesQuerySchema.register(this);
+        ModuleProperty designDropDirectory = new ModuleProperty(this, SURVEY_METADATA_DIRECTORY);
         ModuleProperty designDropDirectory = new ModuleProperty(this, SCHEMA_DIR_PROP_NAME);
         designDropDirectory.setCanSetPerContainer(true);
+        designDropDirectory.setDescription("Directory in which to find survey design metadata files (for use when metadata service is not available).");
         this.addModuleProperty(designDropDirectory);
+        ModuleProperty metadataServiceBaseURL = new ModuleProperty(this, METADATA_SERVICE_BASE_URL);
+        metadataServiceBaseURL.setCanSetPerContainer(true);
+        metadataServiceBaseURL.setDescription("Base URL for the Activity Metadata Service");
+        this.addModuleProperty(metadataServiceBaseURL);
+
+        ModuleProperty metadataServiceAccessToken = new ModuleProperty(this, METADATA_SERVICE_ACCESS_TOKEN);
+        metadataServiceAccessToken.setCanSetPerContainer(true);
+        metadataServiceAccessToken.setDescription("Token to be passed in the header of requests to the Activity Metadata Service to identify this client of that service.");
+        this.addModuleProperty(metadataServiceAccessToken);
     }
 
     @Override

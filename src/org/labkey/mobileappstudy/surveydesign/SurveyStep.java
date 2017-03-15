@@ -1,5 +1,6 @@
 package org.labkey.mobileappstudy.surveydesign;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.JdbcType;
@@ -215,7 +216,6 @@ public class SurveyStep
         this.repeatable = repeatable;
     }
 
-
     public boolean isSkippable()
     {
         return skippable;
@@ -225,7 +225,6 @@ public class SurveyStep
     {
         this.skippable = skippable;
     }
-
 
     public String getType()
     {
@@ -262,6 +261,7 @@ public class SurveyStep
         return repeatable;
     }
 
+    @JsonIgnore
     public SurveyStepType getStepType()
     {
         return SurveyStepType.getStepType(type);
@@ -277,9 +277,9 @@ public class SurveyStep
         this.key = key;
     }
 
-    public StepResultType getResultType()
+    public String getResultType()
     {
-        return StepResultType.getStepResultType(this.resultType);
+        return this.resultType;
     }
 
     void setResultType(String resultType)
@@ -302,6 +302,7 @@ public class SurveyStep
         this.phi = classification.getJsonValue();
     }
 
+    @JsonIgnore
     public PHIClassification getPHIClassification()
     {
         return PHIClassification.getClassicication(phi);
@@ -312,6 +313,7 @@ public class SurveyStep
         return title;
     }
 
+    @JsonIgnore
     @Nullable
     public Integer getMaxLength()
     {
@@ -333,6 +335,7 @@ public class SurveyStep
         return steps;
     }
 
+    @JsonIgnore
     public Style getStyle()
     {
         if (getFormat() == null)
@@ -345,8 +348,9 @@ public class SurveyStep
         return Style.getStyle(val);
     }
 
+    @JsonIgnore
     public JdbcType getPropertyType()
     {
-        return getResultType().getPropertyType(this);
+        return StepResultType.getStepResultType(getResultType()).getPropertyType(this);
     }
 }
