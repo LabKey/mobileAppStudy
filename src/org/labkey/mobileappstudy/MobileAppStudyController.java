@@ -37,6 +37,7 @@ import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
+import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.validation.BindException;
@@ -64,6 +65,39 @@ public class MobileAppStudyController extends SpringActionController
         return new ActionURL(TokenBatchAction.class, getContainer());
     }
 
+    /**
+     * This action is used only for testing purposes.  It relies on the configuration of the SurveyMetadataDir module property.
+     * It will read the file corresponding to the given query parameters and server up a JSON response by reading the corresponding
+     * file in the configured directory.
+     */
+    @RequiresNoPermission
+    public class ActivityMetadataAction extends ApiAction<ActivityMetadataForm>
+    {
+        @Override
+        public void validateForm(ActivityMetadataForm form, Errors errors)
+        {
+            if (FileSurveyDesignProvider.getBasePath(getContainer()) == null)
+            {
+                errors.reject(ERROR_REQUIRED, "No SurveyMetadataDirectory configured. Please set the appropriate Module Properties.");
+                return;
+            }
+
+            if (form.getStudyId() == null)
+                errors.reject(ERROR_REQUIRED, "studyId is a required parameter");
+            if (form.getActivityId() == null)
+                errors.reject(ERROR_REQUIRED, "activityId is a required parameter");
+            if (form.getActivityVersion() == null)
+                errors.reject(ERROR_REQUIRED, "activityVersion is a required parameter");
+        }
+
+        @Override
+        public Object execute(ActivityMetadataForm form, BindException errors) throws Exception
+        {
+            logger.info("Processing request with Authorization header: " + getViewContext().getRequest().getHeader("Authorization"));
+            FileSurveyDesignProvider provider = new FileSurveyDesignProvider(getContainer(), logger);
+            return provider.getSurveyDesign(getContainer(), form.getStudyId(), form.getActivityId(), form.getActivityVersion());
+        }
+    }
 
     @RequiresPermission(AdminPermission.class)
     public class TokenBatchAction extends SimpleViewAction
@@ -550,6 +584,43 @@ public class MobileAppStudyController extends SpringActionController
         public void setType(String type)
         {
             _type = type;
+        }
+    }
+
+    public static class ActivityMetadataForm
+    {
+        private String studyId;
+        private String activityId;
+        private String activityVersion;
+
+        public String getStudyId()
+        {
+            return studyId;
+        }
+
+        public void setStudyId(String studyId)
+        {
+            this.studyId = studyId;
+        }
+
+        public String getActivityId()
+        {
+            return activityId;
+        }
+
+        public void setActivityId(String activityId)
+        {
+            this.activityId = activityId;
+        }
+
+        public String getActivityVersion()
+        {
+            return activityVersion;
+        }
+
+        public void setActivityVersion(String activityVersion)
+        {
+            this.activityVersion = activityVersion;
         }
     }
 }

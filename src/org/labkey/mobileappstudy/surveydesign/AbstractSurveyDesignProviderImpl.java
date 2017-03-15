@@ -2,6 +2,7 @@ package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.Container;
 
 import java.io.IOException;
 
@@ -10,10 +11,12 @@ import java.io.IOException;
  */
 public abstract class AbstractSurveyDesignProviderImpl implements SurveyDesignProvider
 {
+    protected Container container;
     protected final Logger logger;
 
-    public AbstractSurveyDesignProviderImpl(Logger logger)
+    public AbstractSurveyDesignProviderImpl(Container container, Logger logger)
     {
+        this.container = container;
         this.logger = logger;
     }
 
