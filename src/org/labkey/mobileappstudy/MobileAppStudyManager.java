@@ -628,7 +628,7 @@ public class MobileAppStudyManager
      * @return Participant if found, null if not
      */
     @Nullable
-    Participant getParticipantFromAppToken(String appToken)
+    public Participant getParticipantFromAppToken(String appToken)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         FieldKey pKey = FieldKey.fromParts("apptoken");
@@ -658,7 +658,7 @@ public class MobileAppStudyManager
     }
 
     /**
-     * Retrieve the study associated to an appToken via the participant
+     * Retrieve the study associated with an appToken via the participant
      * @param appToken to lookup
      * @return MobileAppStudy object, will return null if participant or study not found
      */
@@ -666,8 +666,19 @@ public class MobileAppStudyManager
     MobileAppStudy getStudyFromAppToken(String appToken)
     {
         Participant participant = getParticipantFromAppToken(appToken);
-        if (participant == null)
+        if (null == participant)
             return null;
+        return getStudyFromParticipant(participant);
+    }
+
+    /**
+     * Retrieve the study associated with the participant
+     * @param participant to lookup
+     * @return MobileAppStudy object, will return null if participant or study not found
+     */
+    @Nullable
+    MobileAppStudy getStudyFromParticipant(@NotNull Participant participant)
+    {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("rowId"), participant.getStudyId());
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoStudy(),  filter, null).getObject(MobileAppStudy.class);
     }
