@@ -23,6 +23,7 @@ import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesign;
+import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 
@@ -125,8 +126,11 @@ public class SurveyDesignProcessor
         MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(surveyResponse.getAppToken());
 
         logger.info(String.format(LogMessageFormats.START_UPDATE_SURVEY, study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()));
-        SurveyDesign design = MobileAppStudyManager.get().getSurveyDesignProvider(study.getContainer()).getSurveyDesign(study.getContainer(), study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion());
+        SurveyDesignProvider provider = MobileAppStudyManager.get().getSurveyDesignProvider(study.getContainer());
+        if (provider == null)
+            throw new InvalidDesignException(LogMessageFormats.PROVIDER_NULL);
 
+        SurveyDesign design = provider.getSurveyDesign(study.getContainer(), study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion());
         if (design != null)
         {
             // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
@@ -303,6 +307,7 @@ public class SurveyDesignProcessor
         public static final String UNABLE_TO_APPLY_SURVEY = "Unable to apply survey changes";
         public static final String RESULTTYPE_MISMATCH = "Can not change question result types. Field: %1$s";
         public static final String INVALID_RESULTTYPE = "Unknown step result type for key: %1$s";
+        public static final String PROVIDER_NULL = "No SurveyDesignProvider configured.";
         public static final String DESIGN_NULL = "Design was null";
         public static final String START_UPDATE_SURVEY = "Getting new survey version: Study: %1$s, Survey: %2$s, Version: %3$s";
         public static final String END_SURVEY_UPDATE = "Survey update completed";

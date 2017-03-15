@@ -76,6 +76,12 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public void validateForm(ActivityMetadataForm form, Errors errors)
         {
+            if (FileSurveyDesignProvider.getBasePath(getContainer()) == null)
+            {
+                errors.reject(ERROR_REQUIRED, "No SurveyMetadataDirectory configured. Please set the appropriate Module Properties.");
+                return;
+            }
+
             if (form.getStudyId() == null)
                 errors.reject(ERROR_REQUIRED, "studyId is a required parameter");
             if (form.getActivityId() == null)

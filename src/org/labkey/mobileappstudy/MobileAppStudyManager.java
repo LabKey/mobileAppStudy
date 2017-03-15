@@ -1263,10 +1263,12 @@ public class MobileAppStudyManager
     public SurveyDesignProvider getSurveyDesignProvider(Container container)
     {
         if (ServiceSurveyDesignProvider.isConfigured(container))
+        {
             return new ServiceSurveyDesignProvider(container, logger);
+        }
         else if (FileSurveyDesignProvider.getBasePath(container) != null)
         {
-            logger.info("Metadata service parameters not configured; using file system as design metadata provider");
+            logger.info("Metadata service parameters not configured; using file system as design metadata provider.");
             return new FileSurveyDesignProvider(container, logger);
         }
         else
