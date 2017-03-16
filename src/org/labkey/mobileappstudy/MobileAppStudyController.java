@@ -26,13 +26,24 @@ import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiQueryResponse;
+import org.labkey.api.action.ExtendedApiQueryResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.data.ShowRows;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryForm;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.query.TempQuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
@@ -42,6 +53,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.NavTree;
+import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
@@ -57,6 +69,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpSession;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -464,14 +477,48 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public ApiQueryResponse getResponse(ExecuteSqlForm form, UserSchema schema, BindException errors)
         {
-            String sql = form.getSql();
+            String sql = StringUtils.trimToNull(form.getSql());
+            if (null == sql)
+                throw new IllegalArgumentException("No value was supplied for the required parameter 'sql'.");
 
-            // TODO:
-            //ensureSqlExists(form);
+            //create a temp query settings object initialized with the posted LabKey SQL
+            //this will provide a temporary QueryDefinition to Query
+            QuerySettings settings = new TempQuerySettings(getViewContext(), sql, form.getQuerySettings());
 
-            // NYI: execute that SQL... this is just a stub
+            //need to explicitly turn off various UI options that will try to refer to the
+            //current URL and query string
+            settings.setAllowChooseView(false);
+            settings.setAllowCustomizeView(false);
 
-            return null;
+            // Issue 12233: add implicit maxRows=100k when using client API
+//            settings.setShowRows(ShowRows.PAGINATED);
+//            settings.setMaxRows(100000);
+
+//            // 16961: ExecuteSql API without maxRows parameter defaults to returning 100 rows
+//            //apply optional settings (maxRows, offset)
+//            boolean metaDataOnly = false;
+//            if (null != form.getMaxRows() && form.getMaxRows() >= 0)
+//            {
+//                settings.setMaxRows(form.getMaxRows());
+//                metaDataOnly = Table.NO_ROWS == form.getMaxRows();
+//            }
+//
+//            int offset = 0;
+//            if (null != form.getOffset())
+//            {
+//                settings.setOffset(form.getOffset().longValue());
+//                offset = form.getOffset();
+//            }
+
+            //build a query view using the schema and settings
+            QueryView view = new QueryView(schema, settings, errors);
+            view.setShowRecordSelectors(false);
+            view.setShowExportButtons(false);
+            view.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
+            view.setShowPagination(false);
+
+            // 13.2 introduced the getData API action, a condensed response wire format, and a js wrapper to consume the wire format
+            return new ReportingApiQueryResponse(view, false, false, "sql", 0, null, false, false, false);
         }
     }
 
