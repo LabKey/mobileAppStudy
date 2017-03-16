@@ -794,18 +794,18 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         protected void validateForm(Errors errors)
         {
-            super.validateForm(errors);
+            // First, check if form's required fields are present
+            SurveyMetadata info = getMetadata();
 
-            if (!errors.hasErrors())
+            if (info == null)
             {
-                //Check if form's required fields are present
-                SurveyMetadata info = getMetadata();
+                errors.reject(ERROR_REQUIRED, "Metadata not found");
+            }
+            else
+            {
+                super.validateForm(errors);
 
-                if (info == null)
-                {
-                    errors.reject(ERROR_REQUIRED, "Metadata not found");
-                }
-                else
+                if (!errors.hasErrors())
                 {
                     if (isBlank(info.getActivityId()))
                         errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
