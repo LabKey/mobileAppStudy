@@ -26,21 +26,14 @@ import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiQueryResponse;
-import org.labkey.api.action.ExtendedApiQueryResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
-import org.labkey.api.data.ShowRows;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryForm;
-import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.TempQuerySettings;
@@ -53,15 +46,14 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.NavTree;
-import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
-import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
+import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.beans.PropertyValues;
@@ -69,7 +61,6 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpSession;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -95,7 +86,7 @@ public class MobileAppStudyController extends SpringActionController
 
     /**
      * This action is used only for testing purposes.  It relies on the configuration of the SurveyMetadataDir module property.
-     * It will read the file corresponding to the given query parameters and server up a JSON response by reading the corresponding
+     * It will read the file corresponding to the given query parameters and serve up a JSON response by reading the corresponding
      * file in the configured directory.
      */
     @RequiresNoPermission
@@ -272,7 +263,7 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             if (StringUtils.isBlank(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request");
             else if(!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
                 errors.reject(ERROR_REQUIRED, "Invalid ParticipantId.");
         }
@@ -725,9 +716,6 @@ public class MobileAppStudyController extends SpringActionController
         {
             validateForm(errors);
 
-            // If we have participant and study then we shouldn't have errors (and vice versa)
-            assert (null != _participant && null != _study) == !errors.hasErrors();
-
             if (errors.hasErrors())
                 LOG.error("Problem processing participant request: " + errors.getAllErrors().toString());
         }
@@ -757,6 +745,9 @@ public class MobileAppStudyController extends SpringActionController
                         errors.reject(ERROR_MSG, "AppToken not associated with study");
                 }
             }
+
+            // If we have participant and study then we shouldn't have errors (and vice versa)
+            assert (null != _participant && null != _study) == !errors.hasErrors();
         }
 
         @JsonIgnore
@@ -768,6 +759,7 @@ public class MobileAppStudyController extends SpringActionController
 
     public static class ResponseForm extends ParticipantForm
     {
+        private String _type; // Unused, but don't delete... Jackson binding against our test responses goes crazy without it
         private JsonNode _data;
         private SurveyMetadata _metadata;
 
@@ -787,6 +779,16 @@ public class MobileAppStudyController extends SpringActionController
         public void setData(@NotNull JsonNode data)
         {
             _data = data;
+        }
+
+        public String getType()
+        {
+            return _type;
+        }
+
+        public void setType(String type)
+        {
+            _type = type;
         }
 
         @Override
