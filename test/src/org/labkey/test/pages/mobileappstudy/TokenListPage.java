@@ -20,11 +20,12 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.WebTestHelper;
+import org.labkey.test.components.CustomizeView;
 import org.labkey.test.pages.LabKeyPage;
-import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.DataRegionTable;
 import org.openqa.selenium.WebElement;
 
+import java.util.List;
 import java.util.Map;
 
 public class TokenListPage extends LabKeyPage<TokenListPage.ElementCache>
@@ -61,8 +62,31 @@ public class TokenListPage extends LabKeyPage<TokenListPage.ElementCache>
 
     public String getToken(int index)
     {
+        return getColumnData(index, "Token");
+    }
+
+    public String getColumnData(int index, String columnName)
+    {
         DataRegionTable dataRegion = new DataRegionTable("enrollmentTokens", getDriver());
-        return dataRegion.getDataAsText(index, "Token");
+        return dataRegion.getDataAsText(index, columnName);
+    }
+
+    public void addColumnsToView(String ... columns)
+    {
+        DataRegionTable dataRegion = new DataRegionTable("enrollmentTokens", getDriver());
+        CustomizeView cv = dataRegion.openCustomizeGrid();
+        cv.showHiddenItems();
+        for(String column : columns)
+        {
+            cv.addColumn(column);
+        }
+        cv.clickViewGrid();
+    }
+
+    public List<List<String>> getRows(String ... columnNames)
+    {
+        DataRegionTable dataRegion = new DataRegionTable("enrollmentTokens", getDriver());
+        return dataRegion.getRows(columnNames);
     }
 
     @Override
@@ -73,6 +97,6 @@ public class TokenListPage extends LabKeyPage<TokenListPage.ElementCache>
 
     protected class ElementCache extends LabKeyPage.ElementCache
     {
-        WebElement tokenBatchLink = new LazyWebElement(Locator.linkWithText("Token Batches"), this);
+        WebElement tokenBatchLink = Locator.linkWithText("Token Batches").findWhenNeeded(this);
     }
 }
