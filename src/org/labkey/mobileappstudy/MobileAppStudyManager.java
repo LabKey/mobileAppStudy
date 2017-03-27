@@ -131,7 +131,14 @@ public class MobileAppStudyManager
      */
     public boolean isChecksumValid(@NotNull String token)
     {
-        return _checksumUtil.isValid(token.toUpperCase());
+        try
+        {
+            return _checksumUtil.isValid(token.toUpperCase());
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
     }
 
     /**
