@@ -397,7 +397,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Give data that can not be parsed.");
         String invalidToken = proj01_tokensNotAssignBatch01.get(1) + 1;
         failurePage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        assertTrue("Json result did not contain error message: \"Input string '" + invalidToken + "' not from valid input character set 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'\".", failurePage.contains("Input string '" + invalidToken + "' not from valid input character set 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"));
+        assertTrue("Json result did not contain error message: \"Invalid token: '" + invalidToken + "'\"", failurePage.contains("Invalid token: '" + invalidToken + "'"));
 
         log("Do not provide a study name (but have a valid token).");
         failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
