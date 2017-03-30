@@ -2,6 +2,7 @@ package org.labkey.mobileappstudy.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.Sets;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableInfo;
@@ -17,6 +18,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.UnauthorizedException;
@@ -93,7 +95,7 @@ public class ReadResponsesQuerySchema extends UserSchema
             super(table, userSchema);
 
             _listTable = table;
-            _listTable.getColumns().forEach(this::addWrapColumn);  // Limit to NotPHI columns only?
+            _listTable.getColumns().forEach(this::addWrapColumn);  // Future: Limit to NotPHI columns only
 
             setDefaultVisibleColumns(_listTable.getDefaultVisibleColumns());
 
@@ -105,6 +107,20 @@ public class ReadResponsesQuerySchema extends UserSchema
                 if (null != pid)  // Maybe throw instead?
                     addCondition(pid, participant.getRowId());
             }
+        }
+
+        private static final Set<String> NAUGHTY_COLUMNS = Sets.newCaseInsensitiveHashSet("CreatedBy", "ModifiedBy", "Container");
+
+        @Override
+        public ColumnInfo addWrapColumn(ColumnInfo column)
+        {
+            ColumnInfo wrapped = super.addWrapColumn(column);
+
+            // Nuke standard columns that have foreign keys to other schemas... otherwise, selectRows and executeSql would blow up when these columns are selected
+            if (NAUGHTY_COLUMNS.contains(wrapped.getColumnName()))
+                wrapped.setFk(null);
+
+            return wrapped;
         }
 
         @Override
