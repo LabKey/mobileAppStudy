@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiAction;
@@ -311,8 +310,8 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
-    /**
-     * Execute the validation steps for an enrollment token without enrolling
+    /*
+      Execute the validation steps for an enrollment token without enrolling
      */
     public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
     {
@@ -334,18 +333,6 @@ public class MobileAppStudyController extends SpringActionController
     public class EnrollAction extends BaseEnrollmentAction
     {
         @Override
-        public void validateForm(EnrollmentForm form, Errors errors)
-        {
-            super.validateForm(form, errors);
-
-            //If errors were already found return
-            if (errors.hasErrors())
-                return;
-
-        }
-
-
-        @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
         {
             Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
@@ -356,6 +343,8 @@ public class MobileAppStudyController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class ReprocessResponseAction extends ApiAction<ReprocessResponseForm>
     {
+        private Set<Integer> _ids;
+
         @Override
         public void validateForm(ReprocessResponseForm form, Errors errors)
         {
@@ -366,20 +355,17 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, false);
-            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            if (listIds.size() == 0)
-                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
+            _ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
 
+            if (_ids.isEmpty())
+                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
         }
 
         @Override
         public Object execute(ReprocessResponseForm form, BindException errors) throws Exception
         {
-            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, true);
-            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
-            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(),
-                    ids);
+            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(_ids);
+            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(), _ids);
 
             return success(PageFlowUtil.map("countReprocessed", enqueued, "notReprocessed", nonErrorIds));
         }
@@ -403,10 +389,17 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public final void validateForm(FORM form, Errors errors)
+        public void validateForm(FORM form, Errors errors)
         {
             super.validateForm(form, errors);
             form.getParticipantForm().validateForm(errors);
+
+            if (!errors.hasErrors())
+            {
+                // Set our special, filtered schema on the form so getQuerySettings() works right
+                UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
+                form.setSchema(schema);
+            }
         }
 
         @Override
@@ -426,11 +419,7 @@ public class MobileAppStudyController extends SpringActionController
                 root.setContainer(participant.getContainer());
             }
 
-            // Set our special, filtered schema on the form so getQuerySettings() works right
-            UserSchema schema = ReadResponsesQuerySchema.get(participant);
-            form.setSchema(schema);
-
-            return getResponse(form, schema, errors);
+            return getResponse(form, errors);
         }
 
         @Override
@@ -439,7 +428,7 @@ public class MobileAppStudyController extends SpringActionController
             return "getResponse";
         }
 
-        abstract public ApiQueryResponse getResponse(FORM form, UserSchema schema, BindException errors);
+        abstract public ApiQueryResponse getResponse(FORM form, BindException errors);
     }
 
     @RequiresNoPermission
@@ -447,10 +436,25 @@ public class MobileAppStudyController extends SpringActionController
     public class SelectRowsAction extends BaseQueryAction<SelectRowsForm>
     {
         @Override
-        public ApiQueryResponse getResponse(SelectRowsForm form, UserSchema schema, BindException errors)
+        public void validateForm(SelectRowsForm form, Errors errors)
         {
-            // TODO:
-            //ensureQueryExists(form);
+            super.validateForm(form, errors);
+
+            if (!errors.hasErrors())
+            {
+                String queryName = StringUtils.trimToNull(form.getQueryName());
+
+                if (null == queryName)
+                    errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'queryName'");
+                else if (null == form.getSchema().getTable(queryName))
+                    errors.reject(ERROR_MSG, "Query '" + queryName + "' doesn't exist");
+            }
+        }
+
+        @Override
+        public ApiQueryResponse getResponse(SelectRowsForm form, BindException errors)
+        {
+            UserSchema schema = form.getSchema();
 
             // First parameter (ViewContext) is ignored, so just pass null
             QueryView view = QueryView.create(null, schema, form.getQuerySettings(), errors);
@@ -465,50 +469,37 @@ public class MobileAppStudyController extends SpringActionController
     @Action(ActionType.SelectData.class)
     public class ExecuteSqlAction extends BaseQueryAction<ExecuteSqlForm>
     {
-        @Override
-        public ApiQueryResponse getResponse(ExecuteSqlForm form, UserSchema schema, BindException errors)
-        {
-            String sql = StringUtils.trimToNull(form.getSql());
-            if (null == sql)
-                throw new IllegalArgumentException("No value was supplied for the required parameter 'sql'.");
+        private String _sql;
 
+        @Override
+        public void validateForm(ExecuteSqlForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            _sql = StringUtils.trimToNull(form.getSql());
+            if (null == _sql)
+                errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'sql'");
+        }
+
+        @Override
+        public ApiQueryResponse getResponse(ExecuteSqlForm form, BindException errors)
+        {
             //create a temp query settings object initialized with the posted LabKey SQL
             //this will provide a temporary QueryDefinition to Query
-            QuerySettings settings = new TempQuerySettings(getViewContext(), sql, form.getQuerySettings());
+            QuerySettings settings = new TempQuerySettings(getViewContext(), _sql, form.getQuerySettings());
 
             //need to explicitly turn off various UI options that will try to refer to the
             //current URL and query string
             settings.setAllowChooseView(false);
             settings.setAllowCustomizeView(false);
 
-            // Issue 12233: add implicit maxRows=100k when using client API
-//            settings.setShowRows(ShowRows.PAGINATED);
-//            settings.setMaxRows(100000);
-
-//            // 16961: ExecuteSql API without maxRows parameter defaults to returning 100 rows
-//            //apply optional settings (maxRows, offset)
-//            boolean metaDataOnly = false;
-//            if (null != form.getMaxRows() && form.getMaxRows() >= 0)
-//            {
-//                settings.setMaxRows(form.getMaxRows());
-//                metaDataOnly = Table.NO_ROWS == form.getMaxRows();
-//            }
-//
-//            int offset = 0;
-//            if (null != form.getOffset())
-//            {
-//                settings.setOffset(form.getOffset().longValue());
-//                offset = form.getOffset();
-//            }
-
             //build a query view using the schema and settings
-            QueryView view = new QueryView(schema, settings, errors);
+            QueryView view = new QueryView(form.getSchema(), settings, errors);
             view.setShowRecordSelectors(false);
             view.setShowExportButtons(false);
             view.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
             view.setShowPagination(false);
 
-            // 13.2 introduced the getData API action, a condensed response wire format, and a js wrapper to consume the wire format
             return new ReportingApiQueryResponse(view, false, false, "sql", 0, null, false, false, false);
         }
     }
@@ -523,7 +514,7 @@ public class MobileAppStudyController extends SpringActionController
             _userSchema = userSchema;
         }
 
-        @Nullable
+        @NotNull
         @Override
         public UserSchema getSchema()
         {
