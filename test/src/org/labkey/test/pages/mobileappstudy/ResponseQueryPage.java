@@ -66,6 +66,7 @@ public class ResponseQueryPage extends LabKeyPage
     public void reprocessRows(int...rowIds)
     {
         DataRegionTable table = new DataRegionTable("query", getDriver());
+        table.uncheckAll();
         for(int i : rowIds)
             table.checkCheckbox(i);
 
