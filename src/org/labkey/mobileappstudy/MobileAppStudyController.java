@@ -21,18 +21,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiQueryResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.query.QueryForm;
+import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.query.TempQuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
@@ -48,8 +51,8 @@ import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
-import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
+import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.beans.PropertyValues;
@@ -82,7 +85,7 @@ public class MobileAppStudyController extends SpringActionController
 
     /**
      * This action is used only for testing purposes.  It relies on the configuration of the SurveyMetadataDir module property.
-     * It will read the file corresponding to the given query parameters and server up a JSON response by reading the corresponding
+     * It will read the file corresponding to the given query parameters and serve up a JSON response by reading the corresponding
      * file in the configured directory.
      */
     @RequiresNoPermission
@@ -259,7 +262,7 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             if (StringUtils.isBlank(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request");
             else if(!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
                 errors.reject(ERROR_REQUIRED, "Invalid ParticipantId.");
         }
@@ -307,8 +310,8 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
-    /**
-     * Execute the validation steps for an enrollment token without enrolling
+    /*
+      Execute the validation steps for an enrollment token without enrolling
      */
     public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
     {
@@ -330,18 +333,6 @@ public class MobileAppStudyController extends SpringActionController
     public class EnrollAction extends BaseEnrollmentAction
     {
         @Override
-        public void validateForm(EnrollmentForm form, Errors errors)
-        {
-            super.validateForm(form, errors);
-
-            //If errors were already found return
-            if (errors.hasErrors())
-                return;
-
-        }
-
-
-        @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
         {
             Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
@@ -352,6 +343,8 @@ public class MobileAppStudyController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class ReprocessResponseAction extends ApiAction<ReprocessResponseForm>
     {
+        private Set<Integer> _ids;
+
         @Override
         public void validateForm(ReprocessResponseForm form, Errors errors)
         {
@@ -362,20 +355,17 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, false);
-            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            if (listIds.size() == 0)
-                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
+            _ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
 
+            if (_ids.isEmpty())
+                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
         }
 
         @Override
         public Object execute(ReprocessResponseForm form, BindException errors) throws Exception
         {
-            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, true);
-            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
-            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(),
-                    ids);
+            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(_ids);
+            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(), _ids);
 
             return success(PageFlowUtil.map("countReprocessed", enqueued, "notReprocessed", nonErrorIds));
         }
@@ -399,10 +389,17 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public final void validateForm(FORM form, Errors errors)
+        public void validateForm(FORM form, Errors errors)
         {
             super.validateForm(form, errors);
             form.getParticipantForm().validateForm(errors);
+
+            if (!errors.hasErrors())
+            {
+                // Set our special, filtered schema on the form so getQuerySettings() works right
+                UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
+                form.setSchema(schema);
+            }
         }
 
         @Override
@@ -422,11 +419,7 @@ public class MobileAppStudyController extends SpringActionController
                 root.setContainer(participant.getContainer());
             }
 
-            // Set our special, filtered schema on the form so getQuerySettings() works right
-            UserSchema schema = ReadResponsesQuerySchema.get(participant);
-            form.setSchema(schema);
-
-            return getResponse(form, schema, errors);
+            return getResponse(form, errors);
         }
 
         @Override
@@ -435,7 +428,7 @@ public class MobileAppStudyController extends SpringActionController
             return "getResponse";
         }
 
-        abstract public ApiQueryResponse getResponse(FORM form, UserSchema schema, BindException errors);
+        abstract public ApiQueryResponse getResponse(FORM form, BindException errors);
     }
 
     @RequiresNoPermission
@@ -443,10 +436,25 @@ public class MobileAppStudyController extends SpringActionController
     public class SelectRowsAction extends BaseQueryAction<SelectRowsForm>
     {
         @Override
-        public ApiQueryResponse getResponse(SelectRowsForm form, UserSchema schema, BindException errors)
+        public void validateForm(SelectRowsForm form, Errors errors)
         {
-            // TODO:
-            //ensureQueryExists(form);
+            super.validateForm(form, errors);
+
+            if (!errors.hasErrors())
+            {
+                String queryName = StringUtils.trimToNull(form.getQueryName());
+
+                if (null == queryName)
+                    errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'queryName'");
+                else if (null == form.getSchema().getTable(queryName))
+                    errors.reject(ERROR_MSG, "Query '" + queryName + "' doesn't exist");
+            }
+        }
+
+        @Override
+        public ApiQueryResponse getResponse(SelectRowsForm form, BindException errors)
+        {
+            UserSchema schema = form.getSchema();
 
             // First parameter (ViewContext) is ignored, so just pass null
             QueryView view = QueryView.create(null, schema, form.getQuerySettings(), errors);
@@ -461,17 +469,38 @@ public class MobileAppStudyController extends SpringActionController
     @Action(ActionType.SelectData.class)
     public class ExecuteSqlAction extends BaseQueryAction<ExecuteSqlForm>
     {
+        private String _sql;
+
         @Override
-        public ApiQueryResponse getResponse(ExecuteSqlForm form, UserSchema schema, BindException errors)
+        public void validateForm(ExecuteSqlForm form, Errors errors)
         {
-            String sql = form.getSql();
+            super.validateForm(form, errors);
 
-            // TODO:
-            //ensureSqlExists(form);
+            _sql = StringUtils.trimToNull(form.getSql());
+            if (null == _sql)
+                errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'sql'");
+        }
 
-            // NYI: execute that SQL... this is just a stub
+        @Override
+        public ApiQueryResponse getResponse(ExecuteSqlForm form, BindException errors)
+        {
+            //create a temp query settings object initialized with the posted LabKey SQL
+            //this will provide a temporary QueryDefinition to Query
+            QuerySettings settings = new TempQuerySettings(getViewContext(), _sql, form.getQuerySettings());
 
-            return null;
+            //need to explicitly turn off various UI options that will try to refer to the
+            //current URL and query string
+            settings.setAllowChooseView(false);
+            settings.setAllowCustomizeView(false);
+
+            //build a query view using the schema and settings
+            QueryView view = new QueryView(form.getSchema(), settings, errors);
+            view.setShowRecordSelectors(false);
+            view.setShowExportButtons(false);
+            view.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
+            view.setShowPagination(false);
+
+            return new ReportingApiQueryResponse(view, false, false, "sql", 0, null, false, false, false);
         }
     }
 
@@ -485,7 +514,7 @@ public class MobileAppStudyController extends SpringActionController
             _userSchema = userSchema;
         }
 
-        @Nullable
+        @NotNull
         @Override
         public UserSchema getSchema()
         {
@@ -678,9 +707,6 @@ public class MobileAppStudyController extends SpringActionController
         {
             validateForm(errors);
 
-            // If we have participant and study then we shouldn't have errors (and vice versa)
-            assert (null != _participant && null != _study) == !errors.hasErrors();
-
             if (errors.hasErrors())
                 LOG.error("Problem processing participant request: " + errors.getAllErrors().toString());
         }
@@ -710,6 +736,9 @@ public class MobileAppStudyController extends SpringActionController
                         errors.reject(ERROR_MSG, "AppToken not associated with study");
                 }
             }
+
+            // If we have participant and study then we shouldn't have errors (and vice versa)
+            assert (null != _participant && null != _study) == !errors.hasErrors();
         }
 
         @JsonIgnore
@@ -721,6 +750,7 @@ public class MobileAppStudyController extends SpringActionController
 
     public static class ResponseForm extends ParticipantForm
     {
+        private String _type; // Unused, but don't delete... Jackson binding against our test responses goes crazy without it
         private JsonNode _data;
         private SurveyMetadata _metadata;
 
@@ -742,21 +772,31 @@ public class MobileAppStudyController extends SpringActionController
             _data = data;
         }
 
+        public String getType()
+        {
+            return _type;
+        }
+
+        public void setType(String type)
+        {
+            _type = type;
+        }
+
         @Override
         protected void validateForm(Errors errors)
         {
-            super.validateForm(errors);
+            // First, check if form's required fields are present
+            SurveyMetadata info = getMetadata();
 
-            if (!errors.hasErrors())
+            if (info == null)
             {
-                //Check if form's required fields are present
-                SurveyMetadata info = getMetadata();
+                errors.reject(ERROR_REQUIRED, "Metadata not found");
+            }
+            else
+            {
+                super.validateForm(errors);
 
-                if (info == null)
-                {
-                    errors.reject(ERROR_REQUIRED, "Metadata not found");
-                }
-                else
+                if (!errors.hasErrors())
                 {
                     if (isBlank(info.getActivityId()))
                         errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
