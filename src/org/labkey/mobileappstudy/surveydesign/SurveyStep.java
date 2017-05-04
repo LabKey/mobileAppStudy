@@ -1,6 +1,7 @@
 package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.JdbcType;
@@ -14,6 +15,7 @@ import java.util.function.Function;
 /**
  * Created by iansigmon on 2/2/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyStep
 {
     private static final int VARCHAR_TEXT_BOUNDARY = 4000;
