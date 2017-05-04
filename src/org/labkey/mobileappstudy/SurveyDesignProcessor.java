@@ -190,6 +190,9 @@ public class SurveyDesignProcessor
             Set<String> fieldKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             for (SurveyStep step: steps)
             {
+                if (step.getType().equalsIgnoreCase("instruction"))
+                    continue;
+
                 if (fieldKeys.contains(step.getKey()))
                     throw new InvalidDesignException(String.format(LogMessageFormats.DUPLICATE_FIELD_KEY, step.getKey()));
 
