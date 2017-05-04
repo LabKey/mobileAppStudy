@@ -21,8 +21,6 @@ public class SurveyResult extends ResponseMetadata
     {
         BOOLEAN("boolean", true, JdbcType.BOOLEAN),
         CHOICE("textChoice", false, null),
-//        INTEGER("scale", true, JdbcType.INTEGER),     //TODO: should we keep?
-//        DOUBLE("number", true, JdbcType.DOUBLE),
         GROUPED_RESULT("grouped", false, null),
         TEXT("text", true, JdbcType.VARCHAR),
         STRING("string", true, JdbcType.VARCHAR),
@@ -195,16 +193,6 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for Date field '" + getKey() + "' expected to be String but got "+ _value.getClass());
                 break;
-            //TODO: should we keep?
-//            case INTEGER:
-//                if (_value instanceof Integer)
-//                {
-//                    this._parsedValue = _value;
-//                }
-//                else
-//                    throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Integer but got " + _value.getClass());
-//                break;
-//            case DOUBLE:
             case NUMERIC:
             case HEIGHT:
             case SCALE:
@@ -228,8 +216,8 @@ public class SurveyResult extends ResponseMetadata
             case TEXT_SCALE:
             case VALUE_PICKER:
             case IMAGE_CHOICE:
-            case EMAIL:    //TODO: validation?
-            case LOCATION: //TODO: validation?
+            case EMAIL:
+            case LOCATION:
             case TEXT:
             case STRING:
                 if (_value instanceof String)
