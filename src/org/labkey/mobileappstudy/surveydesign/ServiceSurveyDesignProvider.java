@@ -43,7 +43,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
         try (CloseableHttpClient httpclient = HttpClients.createDefault())
         {
             HttpGet httpGet = new HttpGet(uri);
-            httpGet.addHeader("Authorization", "Basic bundleid:" + getServiceToken(c));
+            httpGet.addHeader("Authorization", "Basic " + getServiceToken(c));
 
             try (CloseableHttpResponse response = httpclient.execute(httpGet))
             {
@@ -71,7 +71,8 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static String getServiceUrl(Container container)
     {
         Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
-        return module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container);
+        String value = module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container);
+        return value == null ? null : value.trim();
     }
 
     public static Boolean isConfigured(Container c)
