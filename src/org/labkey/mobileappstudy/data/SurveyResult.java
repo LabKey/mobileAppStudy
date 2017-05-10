@@ -34,6 +34,9 @@ public class SurveyResult extends ResponseMetadata
         TIME_INTERVAL("timeInterval", true, JdbcType.DOUBLE),
         HEIGHT("height", true, JdbcType.DOUBLE),
         LOCATION("location", true, JdbcType.VARCHAR),
+        FETAL_KICK_COUNTER("fetalKickCounter", false, null),
+        SPATIAL_SPAN_MEMORY("spatialSpanMemory", false, null),
+        TOWER_OF_HANOI("towerOfHanoi", false, null),
 
         //The storage type is dependant on json values that are not passed in the response so use the larger types.
         DATE("date", true, JdbcType.TIMESTAMP), // in Lists, we use DateTime even for displaying dates
@@ -206,6 +209,9 @@ public class SurveyResult extends ResponseMetadata
                     throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Integer or Float but got " + _value.getClass());
                 break;
             case GROUPED_RESULT:
+            case FETAL_KICK_COUNTER:
+            case TOWER_OF_HANOI:
+            case SPATIAL_SPAN_MEMORY:
                 if (_value instanceof List)
                 {
                     this._parsedValue = convertSurveyResults((List) _value);

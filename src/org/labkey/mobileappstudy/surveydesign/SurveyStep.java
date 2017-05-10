@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.JdbcType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -115,6 +117,90 @@ public class SurveyStep
         TimeInterval ("timeInterval", (step) -> JdbcType.DOUBLE),
         Height("height", (step) -> JdbcType.DOUBLE),
         Location("location", (step) -> JdbcType.VARCHAR),
+        FetalKickCounter("fetalKickCounter", (step) -> null) {
+            @Override
+            public List<SurveyStep> getDataValues()
+            {
+                Map<String, Object> intFormat = new HashMap<>();
+                intFormat.put("style", "Integer");
+
+                List<SurveyStep> dataValues = new ArrayList<>();
+
+                SurveyStep duration = new SurveyStep();
+                duration.setKey("duration");
+                duration.setResultType(Numeric.resultTypeString);
+                duration.setType("taskData");
+                duration.setFormat(intFormat);
+                dataValues.add(duration);
+
+                SurveyStep count = new SurveyStep();
+                count.setKey("count");
+                count.setResultType(Numeric.resultTypeString);
+                count.setFormat(intFormat);
+                count.setType("taskData");
+                dataValues.add(count);
+                return dataValues;
+            }
+        },
+        SpatialSpanMemory("spatialSpanMemory", (step) -> null) {
+            @Override
+            public List<SurveyStep> getDataValues()
+            {
+                Map<String, Object> intFormat = new HashMap<>();
+                intFormat.put("style", "Integer");
+
+                List<SurveyStep> dataValues = new ArrayList<>();
+
+                SurveyStep score = new SurveyStep();
+                score.setKey("score");
+                score.setType("taskData");
+                score.setResultType(Numeric.resultTypeString);
+                score.setFormat(intFormat);
+                dataValues.add(score);
+
+                SurveyStep numGames = new SurveyStep();
+                numGames.setKey("numberOfGames");
+                numGames.setType("taskData");
+                numGames.setResultType(Numeric.resultTypeString);
+                numGames.setFormat(intFormat);
+                dataValues.add(numGames);
+
+                SurveyStep numFailures = new SurveyStep();
+                numFailures.setKey("numberOfFailures");
+                numFailures.setType("taskData");
+                numFailures.setResultType(Numeric.resultTypeString);
+                numFailures.setFormat(intFormat);
+                dataValues.add(numFailures);
+
+                return dataValues;
+            }
+        },
+        TowerOfHanoi("towerOfHanoi", (step) -> null) {
+            @Override
+            public List<SurveyStep> getDataValues()
+            {
+                Map<String, Object> intFormat = new HashMap<>();
+                intFormat.put("style", "Integer");
+
+                List<SurveyStep> dataValues = new ArrayList<>();
+
+                SurveyStep solved = new SurveyStep();
+                solved.setKey("puzzleWasSolved");
+                solved.setResultType(Boolean.resultTypeString);
+                solved.setType("taskData");
+                dataValues.add(solved);
+
+                SurveyStep numMoves = new SurveyStep();
+                numMoves.setKey("numberOfMoves");
+                numMoves.setResultType(Numeric.resultTypeString);
+                numMoves.setFormat(intFormat);
+                numMoves.setType("taskData");
+                dataValues.add(numMoves);
+
+                return dataValues;
+            }
+        }
+        ,
 
         UNKNOWN("Unknown", (step) -> null);
 
@@ -127,7 +213,7 @@ public class SurveyStep
         private Function<SurveyStep, JdbcType> resultTypeDelegate;
 
         static {
-            Map<String, StepResultType> map = new HashMap<>();
+            Map<String, StepResultType> map = new CaseInsensitiveHashMap<>();
             for (StepResultType resultType : values())
                 map.put(resultType.resultTypeString, resultType);
 
@@ -141,9 +227,20 @@ public class SurveyStep
             resultTypeDelegate = interpretFormat;
         }
 
+        public String getResultTypeString()
+        {
+            return resultTypeString;
+        }
+
         public static StepResultType getStepResultType(String key)
         {
             return resultTypeMap.getOrDefault(key, UNKNOWN);
+        }
+
+        @Nullable
+        public List<SurveyStep> getDataValues()
+        {
+            return null;
         }
 
         @Nullable
@@ -274,7 +371,7 @@ public class SurveyStep
         return key;
     }
 
-    void setKey(String key)
+    public void setKey(String key)
     {
         this.key = key;
     }
@@ -284,12 +381,12 @@ public class SurveyStep
         return this.resultType;
     }
 
-    void setResultType(String resultType)
+    public void setResultType(String resultType)
     {
         this.resultType = resultType;
     }
 
-    void setType(String type)
+    public void setType(String type)
     {
         this.type = type;
     }

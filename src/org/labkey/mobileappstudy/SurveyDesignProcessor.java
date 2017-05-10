@@ -206,6 +206,12 @@ public class SurveyDesignProcessor
                     case GroupedResult:
                         updateGroupList(container, user, listName, step);
                         break;
+                    case FetalKickCounter:
+                    case TowerOfHanoi:
+                    case SpatialSpanMemory:
+                        step.setSteps(resultType.getDataValues());
+                        updateGroupList(container, user, listName, step);
+                        break;
                     case UNKNOWN:
                         throw new InvalidDesignException(String.format(LogMessageFormats.INVALID_RESULTTYPE, step.getKey()));
                     default:
@@ -231,9 +237,12 @@ public class SurveyDesignProcessor
         }
     }
 
+
     private void updateGroupList(Container container, User user, String parentListName, SurveyStep step) throws InvalidDesignException
     {
-        if (step == null || step.getSteps() == null)
+        if (step == null)
+            throw new InvalidDesignException(LogMessageFormats.STEP_IS_NULL);
+        if (step.getSteps() == null)
             throw new InvalidDesignException(String.format(LogMessageFormats.NO_GROUP_STEPS, step.getKey()));
 
         String subListName = parentListName + step.getKey();
@@ -308,6 +317,7 @@ public class SurveyDesignProcessor
     private static class LogMessageFormats
     {
         public static final String UNABLE_TO_APPLY_SURVEY = "Unable to apply survey changes";
+        public static final String STEP_IS_NULL = "Step is null";
         public static final String RESULTTYPE_MISMATCH = "Can not change question result types. Field: %1$s";
         public static final String INVALID_RESULTTYPE = "Unknown step result type for key: %1$s";
         public static final String PROVIDER_NULL = "No SurveyDesignProvider configured.";
