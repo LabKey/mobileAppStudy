@@ -2,7 +2,7 @@ package org.labkey.mobileappstudy.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.labkey.api.data.JdbcType;
+import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,74 +17,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyResult extends ResponseMetadata
 {
-    public enum ValueType
-    {
-        BOOLEAN("boolean", true, JdbcType.BOOLEAN),
-        CHOICE("textChoice", false, null),
-        GROUPED_RESULT("grouped", false, null),
-        TEXT("text", true, JdbcType.VARCHAR),
-        STRING("string", true, JdbcType.VARCHAR),
-        SCALE("scale", true, JdbcType.DOUBLE),
-        CONTINUOUS_SCALE("continuousScale", true, JdbcType.DOUBLE),
-        TEXT_SCALE("textScale", true, JdbcType.VARCHAR),
-        VALUE_PICKER("valuePicker", true, JdbcType.VARCHAR),
-        IMAGE_CHOICE("imageChoice", true, JdbcType.VARCHAR),
-        TIME_OF_DAY("timeOfDay", true, JdbcType.TIMESTAMP),
-        EMAIL("email", true, JdbcType.VARCHAR),
-        TIME_INTERVAL("timeInterval", true, JdbcType.DOUBLE),
-        HEIGHT("height", true, JdbcType.DOUBLE),
-        LOCATION("location", true, JdbcType.VARCHAR),
-        FETAL_KICK_COUNTER("fetalKickCounter", false, null),
-        SPATIAL_SPAN_MEMORY("spatialSpanMemory", false, null),
-        TOWER_OF_HANOI("towerOfHanoi", false, null),
-
-        //The storage type is dependant on json values that are not passed in the response so use the larger types.
-        DATE("date", true, JdbcType.TIMESTAMP), // in Lists, we use DateTime even for displaying dates
-        NUMERIC("numeric", true, JdbcType.DOUBLE),
-        ;
-
-        private String _typeName;
-        private Boolean _singleValued;
-        private JdbcType _jdbcType;
-
-        ValueType(String typeName, Boolean singleValued, JdbcType jdbcType)
-        {
-            _typeName = typeName;
-            _singleValued = singleValued;
-            _jdbcType = jdbcType;
-        }
-
-        public Boolean isSingleValued()
-        {
-            return _singleValued;
-        }
-
-        public JdbcType getJdbcType()
-        {
-            return _jdbcType;
-        }
-
-        public String getTypeName()
-        {
-            return _typeName;
-        }
-
-        public static ValueType fromTypeName(String name)
-        {
-            if (name != null)
-            {
-                for (ValueType t : ValueType.values())
-                {
-                    if (t.getTypeName().equalsIgnoreCase(name))
-                    {
-                        return t;
-                    }
-                }
-            }
-            throw new IllegalArgumentException("No field value type with name " + name + " found");
-        }
-
-    }
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
@@ -94,10 +26,7 @@ public class SurveyResult extends ResponseMetadata
     private Object _parsedValue;
     private String _listName;
 
-    public ValueType getValueType()
-    {
-        return ValueType.fromTypeName(getResultType());
-    }
+    public SurveyStep.StepResultType getStepResultType() { return SurveyStep.StepResultType.getStepResultType(getResultType()); }
 
     public String getResultType()
     {
@@ -150,9 +79,9 @@ public class SurveyResult extends ResponseMetadata
 
     private void setParsedValue()
     {
-        switch (getValueType())
+        switch (getStepResultType())
         {
-            case DATE:
+            case Date:
                 if (_value instanceof String)
                 {
                     try
@@ -167,13 +96,13 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for Date field '" + getKey() + "' expected to be String but got "+ _value.getClass());
                 break;
-            case BOOLEAN:
+            case Boolean:
                 if (_value instanceof Boolean)
                     this._parsedValue = _value;
                 else
                     throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Boolean but got " + _value.getClass());
                 break;
-            case CHOICE:
+            case TextChoice:
                 if (_value instanceof List)
                 {
                     this._parsedValue = _value;
@@ -181,7 +110,7 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for choice field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
                 break;
-            case TIME_OF_DAY:
+            case TimeOfDay:
                 if (_value instanceof String)
                 {
                     try
@@ -196,11 +125,11 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for Date field '" + getKey() + "' expected to be String but got "+ _value.getClass());
                 break;
-            case NUMERIC:
-            case HEIGHT:
-            case SCALE:
-            case CONTINUOUS_SCALE:
-            case TIME_INTERVAL:
+            case Numeric:
+            case Height:
+            case Scale:
+            case ContinuousScale:
+            case TimeInterval:
                 if (_value instanceof Double || _value instanceof Float || _value instanceof Integer)
                 {
                     this._parsedValue = _value;
@@ -208,10 +137,10 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Integer or Float but got " + _value.getClass());
                 break;
-            case GROUPED_RESULT:
-            case FETAL_KICK_COUNTER:
-            case TOWER_OF_HANOI:
-            case SPATIAL_SPAN_MEMORY:
+            case GroupedResult:
+            case FetalKickCounter:
+            case TowerOfHanoi:
+            case SpatialSpanMemory:
                 if (_value instanceof List)
                 {
                     this._parsedValue = convertSurveyResults((List) _value);
@@ -219,13 +148,12 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for grouped result field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
                 break;
-            case TEXT_SCALE:
-            case VALUE_PICKER:
-            case IMAGE_CHOICE:
-            case EMAIL:
-            case LOCATION:
-            case TEXT:
-            case STRING:
+            case TextScale:
+            case ValuePicker:
+            case ImageChoice:
+            case Email:
+            case Location:
+            case Text:
                 if (_value instanceof String)
                     this._parsedValue = _value;
                 else
