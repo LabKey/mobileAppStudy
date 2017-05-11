@@ -65,14 +65,31 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         return appToken;
     }
 
-    protected SelectRowsResponse getMobileAppData(String table, String schema)
+    protected boolean mobileAppTableExists(String table, String schema)
     {
-        Boolean retried = false;
         Connection cn = createDefaultConnection(true);
         SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
         selectCmd.setColumns(Arrays.asList("*"));
 
-        SelectRowsResponse selectResp = null;
+        try
+        {
+            selectCmd.execute(cn, getCurrentContainerPath());
+        }
+        catch (CommandException | IOException e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected SelectRowsResponse getMobileAppData(String table, String schema)
+    {
+        Connection cn = createDefaultConnection(true);
+        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
+        selectCmd.setColumns(Arrays.asList("*"));
+
+        SelectRowsResponse selectResp;
         try
         {
             selectResp = selectCmd.execute(cn, getCurrentContainerPath());

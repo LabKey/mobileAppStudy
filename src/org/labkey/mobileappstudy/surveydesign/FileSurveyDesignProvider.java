@@ -28,7 +28,7 @@ public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
         {
             //TODO: make this more flexible
             StringBuilder sb = new StringBuilder();
-            Path filePath = Paths.get(getBasePath(c), String.join("_", studyId, activityId, version) + ".txt");
+            Path filePath = Paths.get(getBasePath(c), String.join("_", studyId, activityId, version) + ".json");
             Files.readAllLines(filePath).forEach(sb::append);
 
             return getSurveyDesign(sb.toString());
