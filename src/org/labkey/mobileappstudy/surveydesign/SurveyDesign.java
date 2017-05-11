@@ -1,6 +1,7 @@
 package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * Created by iansigmon on 2/2/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyDesign
 {
     private String _type;
