@@ -67,6 +67,7 @@ import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
+import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -815,10 +816,10 @@ public class MobileAppStudyManager
     private List<SurveyResult> getSingleValuedResults(@NotNull TableInfo list, @NotNull List<SurveyResult> results, @NotNull List<String> errors)
     {
         List<SurveyResult> singleValuedResults = new ArrayList<>();
-        results.stream().filter(result -> result.getValueType().isSingleValued()).forEach(result ->
+        results.stream().filter(result -> result.getStepResultType().isSingleValued()).forEach(result ->
         {
             result.setListName(list.getName());
-            if (validateListColumn(list, result.getKey(), result.getValueType(), errors))
+            if (validateListColumn(list, result.getKey(), result.getStepResultType(), errors))
             {
                 singleValuedResults.add(result);
             }
@@ -838,7 +839,7 @@ public class MobileAppStudyManager
         List<SurveyResult> multiValuedResults = new ArrayList<>();
         for (SurveyResult result : results)
         {
-            if (!result.getValueType().isSingleValued())
+            if (!result.getStepResultType().isSingleValued())
             {
                 result.setListName(baseListName + StringUtils.capitalize(result.getKey()));
                 multiValuedResults.add(result);
@@ -873,11 +874,10 @@ public class MobileAppStudyManager
      * Determine if a column of the appropriate type is available in the given table
      * @param table the table in question
      * @param columnName name of the column
-     * @param resultValueType the type of the column we expect
-     * @param errors collection of validation errors accumulated thus far
-     * @return true if the expected column with the expected type is found; false otherwise
+     * @param resultType the type of the column we expect
+     *@param errors collection of validation errors accumulated thus far  @return true if the expected column with the expected type is found; false otherwise
      */
-    private boolean validateListColumn(@NotNull TableInfo table, @NotNull String columnName, @NotNull SurveyResult.ValueType resultValueType, @NotNull List<String> errors)
+    private boolean validateListColumn(@NotNull TableInfo table, @NotNull String columnName, SurveyStep.StepResultType resultType, @NotNull List<String> errors)
     {
         //TODO: this should be moved into the SurveyResult.ValueType using a lambda Function<T,R>
 
@@ -886,14 +886,15 @@ public class MobileAppStudyManager
         {
             errors.add("Unable to find column '" + columnName + "' in list '" + table.getName() + "'");
         }
-        else if ((resultValueType.getJdbcType() == JdbcType.TIMESTAMP && (column.getJdbcType() == JdbcType.TIMESTAMP || column.getJdbcType() == JdbcType.DATE))
-            || (resultValueType.getJdbcType() == JdbcType.INTEGER && (column.getJdbcType() == JdbcType.INTEGER || column.getJdbcType() == JdbcType.DOUBLE)))
+        else if ((resultType.getDefaultJdbcType() == JdbcType.TIMESTAMP && (column.getJdbcType() == JdbcType.TIMESTAMP || column.getJdbcType() == JdbcType.DATE))
+            || (resultType.getDefaultJdbcType() == JdbcType.INTEGER && (column.getJdbcType() == JdbcType.INTEGER || column.getJdbcType() == JdbcType.DOUBLE)))
         {
+            // TODO this seems not quite right. We don't have any INTEGER fields, though perhaps we should.
             //Some columns storage types require info not included in result so can't match here
         }
-        else if (column.getJdbcType() != resultValueType.getJdbcType())
+        else if (column.getJdbcType() != resultType.getDefaultJdbcType())
         {
-            errors.add("Type '" + resultValueType.getTypeName() + "' (" + resultValueType.getJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
+            errors.add("Type '" + resultType.getResultTypeString() + "' (" + resultType.getDefaultJdbcType() + ") of result '" + columnName + "' does not match expected type (" + column.getJdbcType() + ")");
         }
 
         return errors.isEmpty();
@@ -981,7 +982,7 @@ public class MobileAppStudyManager
     {
         for (SurveyResult result : results)
         {
-            if (result.getValueType() == SurveyResult.ValueType.CHOICE)
+            if (result.getStepResultType() == SurveyStep.StepResultType.TextChoice)
             {
                 storeResultChoices(result, activityId, parentKey, errors, container, user, participantId);
             }
@@ -1043,7 +1044,7 @@ public class MobileAppStudyManager
         else
         {
             TableInfo table = getResultTable(result.getListName(), container, user);
-            validateListColumn(table, result.getKey(), SurveyResult.ValueType.STRING, errors);
+            validateListColumn(table, result.getKey(), SurveyStep.StepResultType.Text, errors);
 
             if (errors.isEmpty())
             {

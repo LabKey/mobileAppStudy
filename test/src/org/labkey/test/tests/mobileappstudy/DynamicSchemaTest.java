@@ -60,7 +60,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         //Send initial response to get lists into a known state
         log("Setting initial state, response txt 1");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_1--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_1--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "1", appToken, responseString);
         cmd.execute(200);
 
@@ -74,7 +74,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question added. Response text 2");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_2--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_2--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "2", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -97,7 +97,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question removed. Response text 3");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_3--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_3--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "3", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -119,7 +119,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with a single question added to group. Response text 4");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_4--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_4--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "4", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -141,7 +141,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question removed from group. Response text 5");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_5--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_5--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "5", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -163,7 +163,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question added to sub subgroup. Response text 6");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_6--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_6--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "6", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -187,7 +187,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single question removed from sub. Response text 7");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_7--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_7--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "7", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -209,7 +209,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with single group added. Response text 8");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_8--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_8--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "8", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -234,7 +234,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with group removed. Response text 9");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_9--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_9--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "9", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -256,7 +256,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with group removed. Response text 13");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_13--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_13--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "13", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -277,7 +277,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         resetListState();
         log("Submitting response with mismatched schema. Response text 10");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_10--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_10--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "10", appToken, responseString); //Schema name in the metadata is: "NewSurvey_Mismatch"
         cmd.execute(200);
         sleep(5000);
@@ -310,7 +310,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         checkErrors();
         log("Submitting response with malformed schema. Response text 11");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
-        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_11--RESPONSE_JSON.txt");
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_11--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "11", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -325,6 +325,72 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
         Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with malformed schema. Response text 11",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
         checkExpectedErrors(1);
+    }
+
+    @Test
+    public void testFetalKickCountActiveTask()
+    {
+        List<Map<String, Object>> beforeTableData;
+        if (!mobileAppTableExists("FKC-74counter", LIST_SCHEMA))
+            beforeTableData = new ArrayList<>();
+        else
+            beforeTableData = getTableData("FKC-74counter");
+
+        log("Submitting response with fetalKickCounter active task (FKC-74)");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_FKC-74_1.0--RESPONSE.json");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "FKC-74", "1.0", appToken, responseString);
+        cmd.execute(200);
+        sleep(5000);
+        List<Map<String, Object>> afterTableData = getTableData("FKC-74counter");
+        Assert.assertEquals("Unexpected new row count in FKC-74counter after adding single response.",1, getNewRowCount(beforeTableData, afterTableData));
+        Assert.assertTrue("Expected field 'duration' not found", afterTableData.get(0).containsKey("duration"));
+        Assert.assertTrue("Expected field 'count' not found", afterTableData.get(0).containsKey("count"));
+    }
+
+    @Test
+    public void testTowersOfHanoiActiveTask()
+    {
+        String tableName = "TOH-75towers";
+        List<Map<String, Object>> beforeTableData;
+        if (!mobileAppTableExists(tableName, LIST_SCHEMA))
+            beforeTableData = new ArrayList<>();
+        else
+            beforeTableData = getTableData(tableName);
+
+        log("Submitting response with towerOfHanoi active task (TOH-75)");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_TOH-75_1.0--RESPONSE.json");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "TOH-75", "1.0", appToken, responseString);
+        cmd.execute(200);
+        sleep(5000);
+        List<Map<String, Object>> afterTableData = getTableData(tableName);
+        Assert.assertEquals("Unexpected new row count in " + tableName + " after adding single response.",1, getNewRowCount(beforeTableData, afterTableData));
+        Assert.assertTrue("Expected field 'puzzleWasSolved' not found", afterTableData.get(0).containsKey("puzzleWasSolved"));
+        Assert.assertTrue("Expected field 'numberOfMoves' not found", afterTableData.get(0).containsKey("numberOfMoves"));
+    }
+
+    @Test
+    public void testSpatialSpanMemoryActiveTask()
+    {
+        String tableName = "SSM-76spatialSpan";
+        List<Map<String, Object>> beforeTableData;
+        if (!mobileAppTableExists(tableName, LIST_SCHEMA))
+            beforeTableData = new ArrayList<>();
+        else
+            beforeTableData = getTableData(tableName);
+
+        log("Submitting response with spatialSpanMemory active task (SSM-76)");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_SSM-76_1.0--RESPONSE.json");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "SSM-76", "1.0", appToken, responseString);
+        cmd.execute(200);
+        sleep(5000);
+        List<Map<String, Object>> afterTableData = getTableData(tableName);
+        Assert.assertEquals("Unexpected new row count in " + tableName + " after adding single response.",1, getNewRowCount(beforeTableData, afterTableData));
+        Assert.assertTrue("Expected field 'score' not found", afterTableData.get(0).containsKey("score"));
+        Assert.assertTrue("Expected field 'numberOfGames' not found", afterTableData.get(0).containsKey("numberOfGames"));
+        Assert.assertTrue("Expected field 'numberOfFailures' not found", afterTableData.get(0).containsKey("numberOfFailures"));
     }
 
     private List<Map<String,Object>> getTableData(String table)

@@ -3,6 +3,7 @@ package org.labkey.mobileappstudy.surveydesign;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
+import org.labkey.mobileappstudy.data.ActivityMetadataResponse;
 
 import java.io.IOException;
 
@@ -23,6 +24,7 @@ public abstract class AbstractSurveyDesignProviderImpl implements SurveyDesignPr
     protected SurveyDesign getSurveyDesign(String contents) throws IOException
     {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(contents, SurveyDesign.class);
+        ActivityMetadataResponse response = mapper.readValue(contents, ActivityMetadataResponse.class);
+        return response == null ? null : response.getActivity();
     }
 }
