@@ -55,7 +55,7 @@ public class SurveyDesign
     public boolean isValid()
     {
         return _metadata != null && !StringUtils.isEmpty(getSurveyName())
-                && steps != null && !steps.isEmpty();
+                && steps != null;
     }
 
 }
