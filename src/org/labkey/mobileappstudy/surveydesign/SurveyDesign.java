@@ -2,6 +2,7 @@ package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 
 import java.util.List;
@@ -48,6 +49,13 @@ public class SurveyDesign
     public String getSurveyName()
     {
         return _metadata.getActivityId();
+    }
+
+    @JsonIgnore
+    public boolean isValid()
+    {
+        return _metadata != null && !StringUtils.isEmpty(getSurveyName())
+                && steps != null && !steps.isEmpty();
     }
 
 }
