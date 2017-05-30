@@ -7,6 +7,7 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
+import org.labkey.test.pages.mobileappstudy.ResponseQueryPage;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.util.PortalHelper;
 
@@ -327,6 +328,23 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         checkExpectedErrors(1);
     }
 
+
+    @Test
+    public void testEmptySchema()
+    {
+        resetListState();
+        checkErrors();
+        log("Submitting response with empty schema object. Response text 11");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_empty_1.0--RESPONSE.json");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "empty", "1.0", appToken, responseString);
+        cmd.execute(200);
+        sleep(5000);
+        ResponseQueryPage responses = new ResponseQueryPage(this);
+        responses.assertResponseErrorCounts(appToken, 1);
+        checkExpectedErrors(1);
+    }
+
     @Test
     public void testFetalKickCountActiveTask()
     {
@@ -399,7 +417,6 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         {
             goToProjectHome();
         }
-        //sleep(000);
         log("retrieving table "+table);
         return getMobileAppDataWithRetry(table,LIST_SCHEMA).getRows();
     }
@@ -475,11 +492,6 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         List<String> added = new ArrayList<>();
         afterCols.forEach(c -> added.add(c.toString()));
         return added;
-    }
-
-    private int getNewColumCount(List<Map<String,Object>> tableBefore,List<Map<String,Object>> tableAfter)
-    {
-        return getAddedColumns(tableBefore,tableAfter).size();
     }
 
     private List<String> extractKeys(List<Map<String,Object>> table)
