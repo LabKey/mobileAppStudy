@@ -1,19 +1,22 @@
 package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.JdbcType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Created by iansigmon on 2/2/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyStep
 {
     private static final int VARCHAR_TEXT_BOUNDARY = 4000;
@@ -96,36 +99,130 @@ public class SurveyStep
      */
     public enum StepResultType
     {
-        //TODO: This should be unified with SurveyResult.ValueType
-        Scale("scale", (step) -> JdbcType.DOUBLE),
-        ContinuousScale("continuousScale", (step) -> JdbcType.DOUBLE),
-        TextScale("textScale", (step) -> JdbcType.VARCHAR),
-        ValuePicker ("valuePicker", (step) -> JdbcType.VARCHAR),
-        ImageChoice ("imageChoice", (step) -> JdbcType.VARCHAR),
-        TextChoice ("textChoice", (step) -> JdbcType.VARCHAR),       //Keep type for value field in Choice list
-        GroupedResult("grouped", (step) -> null),
-        Boolean ("boolean", (step) -> JdbcType.BOOLEAN),
-        Numeric ("numeric", (step) -> step.getStyle().getPropertyType()),           //TODO: Per result schema value should always be a double
-        TimeOfDay("timeOfDay", (step) -> JdbcType.TIMESTAMP),
-        Date("date", (step) -> step.getStyle().getPropertyType()),               //TODO: Per result schema value should always be the same date format
-        Text("text", (step) -> JdbcType.VARCHAR),
-        Email ("email", (step) -> JdbcType.VARCHAR),
-        TimeInterval ("timeInterval", (step) -> JdbcType.DOUBLE),
-        Height("height", (step) -> JdbcType.DOUBLE),
-        Location("location", (step) -> JdbcType.VARCHAR),
+        Scale("scale", true, JdbcType.DOUBLE),
+        ContinuousScale("continuousScale", true, JdbcType.DOUBLE),
+        TextScale("textScale", true, JdbcType.VARCHAR),
+        ValuePicker ("valuePicker", true, JdbcType.VARCHAR),
+        ImageChoice ("imageChoice", true, JdbcType.VARCHAR),
+        TextChoice ("textChoice", false, JdbcType.VARCHAR),    // Null in ValueType   //Keep type for value field in Choice list
+        GroupedResult("grouped", false, null),
+        Boolean ("boolean", true, JdbcType.BOOLEAN),
+        Numeric ("numeric", true, JdbcType.DOUBLE) {
+            @Override
+            public @Nullable JdbcType getPropertyType(SurveyStep step)
+            {
+                return step.getStyle().getPropertyType();
+            }
+        },   //  Double in ValueType      //TODO: Per result schema value should always be a double
+        TimeOfDay("timeOfDay", true, JdbcType.TIMESTAMP),
+        Date("date", true, JdbcType.TIMESTAMP) {
+            @Override
+            public @Nullable JdbcType getPropertyType(SurveyStep step)
+            {
+                return step.getStyle().getPropertyType();
+            }
+        },     // Timestamp in ValueType          //TODO: Per result schema value should always be the same date format
+        Text("text", true, JdbcType.VARCHAR),
+        Email ("email", true, JdbcType.VARCHAR),
+        TimeInterval ("timeInterval", true, JdbcType.DOUBLE),
+        Height("height", true, JdbcType.DOUBLE),
+        Location("location", true, JdbcType.VARCHAR),
+        FetalKickCounter("fetalKickCounter", false, null) {
+            @Override
+            public List<SurveyStep> getDataValues()
+            {
+                Map<String, Object> intFormat = new HashMap<>();
+                intFormat.put("style", "Integer");
 
-        UNKNOWN("Unknown", (step) -> null);
+                List<SurveyStep> dataValues = new ArrayList<>();
+
+                SurveyStep duration = new SurveyStep();
+                duration.setKey("duration");
+                duration.setResultType(Numeric.resultTypeString);
+                duration.setType("taskData");
+                duration.setFormat(intFormat);
+                dataValues.add(duration);
+
+                SurveyStep count = new SurveyStep();
+                count.setKey("count");
+                count.setResultType(Numeric.resultTypeString);
+                count.setFormat(intFormat);
+                count.setType("taskData");
+                dataValues.add(count);
+                return dataValues;
+            }
+        },
+        SpatialSpanMemory("spatialSpanMemory", false, null) {
+            @Override
+            public List<SurveyStep> getDataValues()
+            {
+                Map<String, Object> intFormat = new HashMap<>();
+                intFormat.put("style", "Integer");
+
+                List<SurveyStep> dataValues = new ArrayList<>();
+
+                SurveyStep score = new SurveyStep();
+                score.setKey("score");
+                score.setType("taskData");
+                score.setResultType(Numeric.resultTypeString);
+                score.setFormat(intFormat);
+                dataValues.add(score);
+
+                SurveyStep numGames = new SurveyStep();
+                numGames.setKey("numberOfGames");
+                numGames.setType("taskData");
+                numGames.setResultType(Numeric.resultTypeString);
+                numGames.setFormat(intFormat);
+                dataValues.add(numGames);
+
+                SurveyStep numFailures = new SurveyStep();
+                numFailures.setKey("numberOfFailures");
+                numFailures.setType("taskData");
+                numFailures.setResultType(Numeric.resultTypeString);
+                numFailures.setFormat(intFormat);
+                dataValues.add(numFailures);
+
+                return dataValues;
+            }
+        },
+        TowerOfHanoi("towerOfHanoi", false, null) {
+            @Override
+            public List<SurveyStep> getDataValues()
+            {
+                Map<String, Object> intFormat = new HashMap<>();
+                intFormat.put("style", "Integer");
+
+                List<SurveyStep> dataValues = new ArrayList<>();
+
+                SurveyStep solved = new SurveyStep();
+                solved.setKey("puzzleWasSolved");
+                solved.setResultType(Boolean.resultTypeString);
+                solved.setType("taskData");
+                dataValues.add(solved);
+
+                SurveyStep numMoves = new SurveyStep();
+                numMoves.setKey("numberOfMoves");
+                numMoves.setResultType(Numeric.resultTypeString);
+                numMoves.setFormat(intFormat);
+                numMoves.setType("taskData");
+                dataValues.add(numMoves);
+
+                return dataValues;
+            }
+        }
+        ,
+
+        UNKNOWN("Unknown", true, JdbcType.VARCHAR);
 
         private static final Map<String, StepResultType> resultTypeMap;
 
         //String representing this in the design json
         private String resultTypeString;
-
-        //Corresponding backing property type
-        private Function<SurveyStep, JdbcType> resultTypeDelegate;
+        private Boolean isSingleValued;
+        private JdbcType defaultJdbcType;
 
         static {
-            Map<String, StepResultType> map = new HashMap<>();
+            Map<String, StepResultType> map = new CaseInsensitiveHashMap<>();
             for (StepResultType resultType : values())
                 map.put(resultType.resultTypeString, resultType);
 
@@ -133,10 +230,21 @@ public class SurveyStep
         }
 
 
-        StepResultType(String key, Function<SurveyStep, JdbcType> interpretFormat)
+        StepResultType(String key, java.lang.Boolean isSingleValued, JdbcType jdbcType)
         {
+            this.isSingleValued = isSingleValued;
+            this.defaultJdbcType = jdbcType;
             resultTypeString = key;
-            resultTypeDelegate = interpretFormat;
+        }
+
+        public Boolean isSingleValued()
+        {
+            return isSingleValued;
+        }
+
+        public String getResultTypeString()
+        {
+            return resultTypeString;
         }
 
         public static StepResultType getStepResultType(String key)
@@ -145,10 +253,22 @@ public class SurveyStep
         }
 
         @Nullable
+        public List<SurveyStep> getDataValues()
+        {
+            return null;
+        }
+
+        public JdbcType getDefaultJdbcType()
+        {
+            return defaultJdbcType;
+        }
+
+        @Nullable
         public JdbcType getPropertyType(SurveyStep step)
         {
-            return resultTypeDelegate.apply(step);
+            return getDefaultJdbcType();
         }
+
     }
 
     public enum PHIClassification
@@ -272,7 +392,7 @@ public class SurveyStep
         return key;
     }
 
-    void setKey(String key)
+    public void setKey(String key)
     {
         this.key = key;
     }
@@ -282,12 +402,12 @@ public class SurveyStep
         return this.resultType;
     }
 
-    void setResultType(String resultType)
+    public void setResultType(String resultType)
     {
         this.resultType = resultType;
     }
 
-    void setType(String type)
+    public void setType(String type)
     {
         this.type = type;
     }

@@ -35,6 +35,7 @@
         <!--</folderTab>-->
     </folderTabs>
     <modules>
+        <moduleName>List</moduleName>
         <moduleName>MobileAppStudy</moduleName>
     </modules>
     <menubarEnabled>true</menubarEnabled>
