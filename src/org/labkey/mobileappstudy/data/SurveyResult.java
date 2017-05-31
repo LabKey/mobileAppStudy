@@ -20,7 +20,6 @@ public class SurveyResult extends ResponseMetadata
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-    private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
     private String _resultType;
     private String _key;
     private Object _value;
@@ -119,21 +118,6 @@ public class SurveyResult extends ResponseMetadata
                 else
                     throw new IllegalArgumentException("Value type for choice field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
                 break;
-            case TimeOfDay:
-                if (_value instanceof String)
-                {
-                    try
-                    {
-                        this._parsedValue = TIME_FORMAT.parse((String) _value);
-                    }
-                    catch (ParseException e)
-                    {
-                        throw new IllegalArgumentException("Invalid date string format for field '" + getKey() + "' ("+ _value + ")");
-                    }
-                }
-                else
-                    throw new IllegalArgumentException("Value type for Date field '" + getKey() + "' expected to be String but got "+ _value.getClass());
-                break;
             case Numeric:
             case Height:
             case Scale:
@@ -163,6 +147,7 @@ public class SurveyResult extends ResponseMetadata
             case Email:
             case Location:
             case Text:
+            case TimeOfDay:
                 if (_value instanceof String)
                     this._parsedValue = _value;
                 else
