@@ -185,7 +185,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         submitQuestion(qr, valToken, 200);
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(valToken, 0);
+        responses.assertResponseErrorCounts(valToken, 1, 1);
 
         goToManageLists();
         click(Locator.linkWithText(SURVEY_NAME));
