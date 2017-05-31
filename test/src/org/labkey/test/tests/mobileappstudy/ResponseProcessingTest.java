@@ -172,9 +172,6 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     @Test
     public void testTimeOfDayResultType()
     {
-        int submissionCount = 0;
-        int errorCount = 0;
-
         SupportedResultType type = SupportedResultType.TIME_OF_DAY;
         String fieldName = InitialSurvey.BREAKFAST_TIME;
         String fieldHeader = "Breakfast Time";
@@ -186,15 +183,14 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         qr.setFormatString("\"%1$s\"");
         log("Testing Question Type [" + type + "] vs value type [String]");
         submitQuestion(qr, valToken, 200);
-        submissionCount++;
 
         ResponseQueryPage responses = new ResponseQueryPage(this);
-        responses.assertResponseErrorCounts(valToken, submissionCount);
+        responses.assertResponseErrorCounts(valToken, 0);
 
         goToManageLists();
         click(Locator.linkWithText(SURVEY_NAME));
         assertSubmittedValue(valToken, fieldHeader, "Submitted value not present", value);
-        checkExpectedErrors(errorCount);
+        checkExpectedErrors(0);
     }
 
 
