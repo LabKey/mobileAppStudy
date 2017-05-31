@@ -19,6 +19,7 @@ public class SurveyResult extends ResponseMetadata
 {
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
     private String _resultType;
     private String _key;
@@ -84,13 +85,21 @@ public class SurveyResult extends ResponseMetadata
             case Date:
                 if (_value instanceof String)
                 {
+                    // first try to parse it as a DateTime value
                     try
                     {
-                        this._parsedValue = DATE_FORMAT.parse((String) _value);
+                        this._parsedValue = DATE_TIME_FORMAT.parse((String) _value);
                     }
-                    catch (ParseException e)
+                    catch (ParseException e1) // then try as a Date value
                     {
-                        throw new IllegalArgumentException("Invalid date string format for field '" + getKey() + "' ("+ _value + ")");
+                        try
+                        {
+                            this._parsedValue = DATE_FORMAT.parse((String) _value);
+                        }
+                        catch (ParseException e2)
+                        {
+                            throw new IllegalArgumentException("Invalid date string format for field '" + getKey() + "' (" + _value + ")");
+                        }
                     }
                 }
                 else
