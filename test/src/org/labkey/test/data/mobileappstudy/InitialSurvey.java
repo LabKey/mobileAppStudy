@@ -15,6 +15,7 @@ public class InitialSurvey extends Survey
     //Question IDs
     public static final String  LAST_PERIOD = "lastPeriod",
                                 DUE_DATE = "dueDate",
+                                BREAKFAST_TIME = "breakfastTime",
                                 DATE_PREGNANCY_LEARNED = "datePregnancyLearned",
                                 PLANNED_PREGNANCY = "plannedPregnancy",
                                 BIRTH_CONTROL_TYPE = "birthControlType",

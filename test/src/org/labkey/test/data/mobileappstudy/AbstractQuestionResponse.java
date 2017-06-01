@@ -13,6 +13,7 @@ public abstract class AbstractQuestionResponse implements QuestionResult
     public enum SupportedResultType
     {
         BOOL("boolean", "%1$s"),
+        TIME_OF_DAY("timeOfDay", "%1$s"),
         CHOICE("textchoice", "[%1$s]"),
         DATE("date", "\"%1$tY-%1$tm-%1$td\""),
         GROUPED_RESULT("grouped", "[%1$s]"),

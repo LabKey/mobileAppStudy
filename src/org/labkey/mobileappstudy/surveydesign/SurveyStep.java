@@ -114,7 +114,7 @@ public class SurveyStep
                 return step.getStyle().getPropertyType();
             }
         },   //  Double in ValueType      //TODO: Per result schema value should always be a double
-        TimeOfDay("timeOfDay", true, JdbcType.TIMESTAMP),
+        TimeOfDay("timeOfDay", true, JdbcType.VARCHAR),
         Date("date", true, JdbcType.TIMESTAMP) {
             @Override
             public @Nullable JdbcType getPropertyType(SurveyStep step)
