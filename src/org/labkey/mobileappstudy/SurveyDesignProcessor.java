@@ -131,17 +131,17 @@ public class SurveyDesignProcessor
             throw new InvalidDesignException(LogMessageFormats.PROVIDER_NULL);
 
         SurveyDesign design = provider.getSurveyDesign(study.getContainer(), study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion());
-        if (design != null)
-        {
-            // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
-            User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
-                    new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
-
-            ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), null);
-            applySurveyUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getSteps(), design.getSurveyName(), "");
-        }
-        else
+        if (design == null)
             throw new InvalidDesignException(LogMessageFormats.DESIGN_NULL);
+        else if (!design.isValid())
+            throw new InvalidDesignException(LogMessageFormats.MISSING_METADATA);
+
+        // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
+        User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
+                new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
+
+        ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), null);
+        applySurveyUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getSteps(), design.getSurveyName(), "");
     }
 
     /**
@@ -190,6 +190,9 @@ public class SurveyDesignProcessor
             Set<String> fieldKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             for (SurveyStep step: steps)
             {
+                if (step.getType().equalsIgnoreCase("instruction"))
+                    continue;
+
                 if (fieldKeys.contains(step.getKey()))
                     throw new InvalidDesignException(String.format(LogMessageFormats.DUPLICATE_FIELD_KEY, step.getKey()));
 
@@ -203,8 +206,14 @@ public class SurveyDesignProcessor
                     case GroupedResult:
                         updateGroupList(container, user, listName, step);
                         break;
+                    case FetalKickCounter:
+                    case TowerOfHanoi:
+                    case SpatialSpanMemory:
+                        step.setSteps(resultType.getDataValues());
+                        updateGroupList(container, user, listName, step);
+                        break;
                     case UNKNOWN:
-                        throw new InvalidDesignException(String.format(LogMessageFormats.INVALID_RESULTTYPE, step.getKey()));
+                        throw new InvalidDesignException(String.format(LogMessageFormats.INVALID_RESULT_TYPE, step.getKey()));
                     default:
                         ensureStepProperty(listDomain, step);
                         break;
@@ -228,9 +237,12 @@ public class SurveyDesignProcessor
         }
     }
 
+
     private void updateGroupList(Container container, User user, String parentListName, SurveyStep step) throws InvalidDesignException
     {
-        if (step == null || step.getSteps() == null)
+        if (step == null)
+            throw new InvalidDesignException(LogMessageFormats.STEP_IS_NULL);
+        if (step.getSteps() == null)
             throw new InvalidDesignException(String.format(LogMessageFormats.NO_GROUP_STEPS, step.getKey()));
 
         String subListName = parentListName + step.getKey();
@@ -245,7 +257,7 @@ public class SurveyDesignProcessor
         {
             //existing property
             if (prop.getPropertyDescriptor().getJdbcType() != step.getPropertyType())
-                throw new InvalidDesignException(String.format(LogMessageFormats.RESULTTYPE_MISMATCH, step.getKey()));
+                throw new InvalidDesignException(String.format(LogMessageFormats.RESULT_TYPE_MISMATCH, step.getKey()));
 
             //Update a string field's size. Increase only.
             if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
@@ -305,10 +317,12 @@ public class SurveyDesignProcessor
     private static class LogMessageFormats
     {
         public static final String UNABLE_TO_APPLY_SURVEY = "Unable to apply survey changes";
-        public static final String RESULTTYPE_MISMATCH = "Can not change question result types. Field: %1$s";
-        public static final String INVALID_RESULTTYPE = "Unknown step result type for key: %1$s";
+        public static final String STEP_IS_NULL = "Step is null";
+        public static final String RESULT_TYPE_MISMATCH = "Can not change question result types. Field: %1$s";
+        public static final String INVALID_RESULT_TYPE = "Unknown step result type for key: %1$s";
         public static final String PROVIDER_NULL = "No SurveyDesignProvider configured.";
-        public static final String DESIGN_NULL = "Design was null";
+        public static final String DESIGN_NULL = "Unable to parse design metadata";
+        public static final String MISSING_METADATA = "Design document does not contain all the required fields (activityId, steps)";
         public static final String START_UPDATE_SURVEY = "Getting new survey version: Study: %1$s, Survey: %2$s, Version: %3$s";
         public static final String END_SURVEY_UPDATE = "Survey update completed";
         public static final String UNABLE_CREATE_LIST = "Unable to create new list. List: %1$s";

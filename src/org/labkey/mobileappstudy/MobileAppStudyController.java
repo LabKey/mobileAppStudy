@@ -19,27 +19,43 @@ package org.labkey.mobileappstudy;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.action.Action;
+import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ApiQueryResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.query.QueryForm;
+import org.labkey.api.query.QuerySettings;
+import org.labkey.api.query.QueryView;
+import org.labkey.api.query.TempQuerySettings;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.HttpView;
 import org.labkey.api.view.NavTree;
+import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
+import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
+import org.springframework.beans.PropertyValues;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
@@ -52,7 +68,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Marshal(Marshaller.Jackson)
 public class MobileAppStudyController extends SpringActionController
 {
+    private static final Logger LOG = Logger.getLogger(MobileAppStudyController.class);
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(MobileAppStudyController.class);
+
     public static final String NAME = "mobileappstudy";
 
     public MobileAppStudyController()
@@ -67,7 +85,7 @@ public class MobileAppStudyController extends SpringActionController
 
     /**
      * This action is used only for testing purposes.  It relies on the configuration of the SurveyMetadataDir module property.
-     * It will read the file corresponding to the given query parameters and server up a JSON response by reading the corresponding
+     * It will read the file corresponding to the given query parameters and serve up a JSON response by reading the corresponding
      * file in the configured directory.
      */
     @RequiresNoPermission
@@ -191,10 +209,10 @@ public class MobileAppStudyController extends SpringActionController
     Ignores container POST-ed from. Pulls container context from the appToken used in request
      */
     @RequiresNoPermission
-    public class ProcessResponseAction extends ApiAction<MobileAppSurveyResponseForm>
+    public class ProcessResponseAction extends ApiAction<ResponseForm>
     {
         @Override
-        public void validateForm(MobileAppSurveyResponseForm form, Errors errors)
+        public void validateForm(ResponseForm form, Errors errors)
         {
             //Check if form is valid
             if (form == null)
@@ -203,53 +221,11 @@ public class MobileAppStudyController extends SpringActionController
                 return;
             }
 
-            //Check if form's required fields are present
-            SurveyMetadata info = form.getMetadata();
-            if (info == null)
-                errors.reject(ERROR_REQUIRED, "Metadata not found.");
-            else
-            {
-                if (isBlank(info.getActivityId()))
-                    errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
-                if (isBlank(info.getVersion()))
-                    errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request.");
-            }
-            if (form.getData() == null)
-                errors.reject(ERROR_REQUIRED, "Response not included in request.");
-            if (StringUtils.isBlank(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
-            if (errors.hasErrors())
-            {
-                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
-                return;
-            }
-
-
-            //Check if there is an associated participant for the appToken
-            Participant participant = MobileAppStudyManager.get().getParticipantFromAppToken(form.getAppToken());
-            if (participant == null)
-                errors.reject(ERROR_MSG, "Unable to identify participant.");
-            else if (Participant.ParticipantStatus.Withdrawn == participant.getStatus())
-                errors.reject(ERROR_MSG, "Participant has withdrawn from study");
-
-            //Check if there is an associated study for the appToken
-            MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(form.getAppToken());
-            if(study == null)
-                errors.reject(ERROR_MSG, "AppToken not associated with study");
-            else
-            {
-                if (!study.getCollectionEnabled())
-                    errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ].", study.getShortName()));
-            }
-
-            if (errors.hasErrors())
-            {
-                logger.error("Problem processing survey response request: " + errors.getAllErrors().toString());
-            }
+            form.validate(errors);
         }
 
         @Override
-        public Object execute(MobileAppSurveyResponseForm form, BindException errors) throws Exception
+        public Object execute(ResponseForm form, BindException errors) throws Exception
         {
             //Record response blob
             MobileAppStudyManager manager = MobileAppStudyManager.get();
@@ -286,11 +262,9 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             if (StringUtils.isBlank(form.getParticipantId()))
-                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request.");
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request");
             else if(!MobileAppStudyManager.get().participantExists(form.getParticipantId()))
                 errors.reject(ERROR_REQUIRED, "Invalid ParticipantId.");
-
-            return;
         }
 
         @Override
@@ -336,8 +310,8 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
-    /**
-     * Execute the validation steps for an enrollment token without enrolling
+    /*
+      Execute the validation steps for an enrollment token without enrolling
      */
     public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
     {
@@ -359,18 +333,6 @@ public class MobileAppStudyController extends SpringActionController
     public class EnrollAction extends BaseEnrollmentAction
     {
         @Override
-        public void validateForm(EnrollmentForm form, Errors errors)
-        {
-            super.validateForm(form, errors);
-
-            //If errors were already found return
-            if (errors.hasErrors())
-                return;
-
-        }
-
-
-        @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
         {
             Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
@@ -381,6 +343,8 @@ public class MobileAppStudyController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class ReprocessResponseAction extends ApiAction<ReprocessResponseForm>
     {
+        private Set<Integer> _ids;
+
         @Override
         public void validateForm(ReprocessResponseForm form, Errors errors)
         {
@@ -391,22 +355,200 @@ public class MobileAppStudyController extends SpringActionController
             }
 
             Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, false);
-            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            if (listIds.size() == 0)
-                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
+            _ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
 
+            if (_ids.isEmpty())
+                errors.reject(ERROR_REQUIRED, "No responses to reprocess");
         }
 
         @Override
         public Object execute(ReprocessResponseForm form, BindException errors) throws Exception
         {
-            Set<String> listIds = DataRegionSelection.getSelected(getViewContext(), form.getKey(), true, true);
-            Set<Integer> ids = listIds.stream().map(Integer::valueOf).collect(Collectors.toSet());
-            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(ids);
-            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(),
-                    ids);
+            Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(_ids);
+            int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(), _ids);
 
             return success(PageFlowUtil.map("countReprocessed", enqueued, "notReprocessed", nonErrorIds));
+        }
+    }
+
+    private abstract class BaseQueryAction<FORM extends SelectRowsForm> extends ApiAction<FORM>
+    {
+        @Override
+        public final BindException defaultBindParameters(FORM form, PropertyValues params)
+        {
+            ParticipantForm participantForm = new ParticipantForm();
+            BindException exception = defaultBindParameters(participantForm, getCommandName(), getPropertyValues());
+
+            if (!exception.hasErrors())
+                exception = super.defaultBindParameters(form, params);
+
+            if (!exception.hasErrors())
+                form.setParticipantForm(participantForm);
+
+            return exception;
+        }
+
+        @Override
+        public void validateForm(FORM form, Errors errors)
+        {
+            super.validateForm(form, errors);
+            form.getParticipantForm().validateForm(errors);
+
+            if (!errors.hasErrors())
+            {
+                // Set our special, filtered schema on the form so getQuerySettings() works right
+                UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
+                form.setSchema(schema);
+            }
+        }
+
+        @Override
+        public final Object execute(FORM form, BindException errors) throws Exception
+        {
+            Participant participant = form.getParticipant();
+
+            // ApiQueryResponse constructs a DataView that initializes its ViewContext from the root context, so we need
+            // to modify the root with a read-everywhere user and the study container.
+            ViewContext root = HttpView.getRootContext();
+
+            // Shouldn't be null, but just in case
+            if (null != root)
+            {
+                // Setting a ContextualRole would be cleaner, but HttpView.initViewContext() doesn't copy it over
+                root.setUser(User.getSearchUser());
+                root.setContainer(participant.getContainer());
+            }
+
+            return getResponse(form, errors);
+        }
+
+        @Override
+        protected String getCommandClassMethodName()
+        {
+            return "getResponse";
+        }
+
+        abstract public ApiQueryResponse getResponse(FORM form, BindException errors);
+    }
+
+    @RequiresNoPermission
+    @Action(ActionType.SelectData.class)
+    public class SelectRowsAction extends BaseQueryAction<SelectRowsForm>
+    {
+        @Override
+        public void validateForm(SelectRowsForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            if (!errors.hasErrors())
+            {
+                String queryName = StringUtils.trimToNull(form.getQueryName());
+
+                if (null == queryName)
+                    errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'queryName'");
+                else if (null == form.getSchema().getTable(queryName))
+                    errors.reject(ERROR_MSG, "Query '" + queryName + "' doesn't exist");
+            }
+        }
+
+        @Override
+        public ApiQueryResponse getResponse(SelectRowsForm form, BindException errors)
+        {
+            UserSchema schema = form.getSchema();
+
+            // First parameter (ViewContext) is ignored, so just pass null
+            QueryView view = QueryView.create(null, schema, form.getQuerySettings(), errors);
+
+            return new ApiQueryResponse(view, false, true,
+                    schema.getName(), form.getQueryName(), form.getQuerySettings().getOffset(), null,
+                    false, false, false, false);
+        }
+    }
+
+    @RequiresNoPermission
+    @Action(ActionType.SelectData.class)
+    public class ExecuteSqlAction extends BaseQueryAction<ExecuteSqlForm>
+    {
+        private String _sql;
+
+        @Override
+        public void validateForm(ExecuteSqlForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            _sql = StringUtils.trimToNull(form.getSql());
+            if (null == _sql)
+                errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'sql'");
+        }
+
+        @Override
+        public ApiQueryResponse getResponse(ExecuteSqlForm form, BindException errors)
+        {
+            //create a temp query settings object initialized with the posted LabKey SQL
+            //this will provide a temporary QueryDefinition to Query
+            QuerySettings settings = new TempQuerySettings(getViewContext(), _sql, form.getQuerySettings());
+
+            //need to explicitly turn off various UI options that will try to refer to the
+            //current URL and query string
+            settings.setAllowChooseView(false);
+            settings.setAllowCustomizeView(false);
+
+            //build a query view using the schema and settings
+            QueryView view = new QueryView(form.getSchema(), settings, errors);
+            view.setShowRecordSelectors(false);
+            view.setShowExportButtons(false);
+            view.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
+            view.setShowPagination(false);
+
+            return new ReportingApiQueryResponse(view, false, false, "sql", 0, null, false, false, false);
+        }
+    }
+
+    public static class SelectRowsForm extends QueryForm
+    {
+        private UserSchema _userSchema = null;
+        private ParticipantForm _participantForm = null;
+
+        void setSchema(UserSchema userSchema)
+        {
+            _userSchema = userSchema;
+        }
+
+        @NotNull
+        @Override
+        public UserSchema getSchema()
+        {
+            return _userSchema;
+        }
+
+        Participant getParticipant()
+        {
+            return _participantForm.getParticipant();
+        }
+
+        ParticipantForm getParticipantForm()
+        {
+            return _participantForm;
+        }
+
+        void setParticipantForm(ParticipantForm participantForm)
+        {
+            _participantForm = participantForm;
+        }
+    }
+
+    public static class ExecuteSqlForm extends SelectRowsForm
+    {
+        private String _sql;
+
+        public String getSql()
+        {
+            return _sql;
+        }
+
+        public void setSql(String sql)
+        {
+            _sql = sql;
         }
     }
 
@@ -534,11 +676,81 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    public static class MobileAppSurveyResponseForm
+    public static class ParticipantForm
     {
-        private String _type;
-        private String _participantId;
+        private String _appToken;
 
+        // Filled in by successful validate()
+        protected Participant _participant;
+        protected MobileAppStudy _study;
+
+        //ParticipantId from JSON request is really the apptoken internally
+
+        @JsonIgnore
+        public String getAppToken()
+        {
+            return getParticipantId();
+        }
+
+        //ParticipantId from JSON request is really the apptoken internally
+        public String getParticipantId()
+        {
+            return _appToken;
+        }
+
+        public void setParticipantId(String appToken)
+        {
+            _appToken = appToken;
+        }
+
+        public final void validate(Errors errors)
+        {
+            validateForm(errors);
+
+            if (errors.hasErrors())
+                LOG.error("Problem processing participant request: " + errors.getAllErrors().toString());
+        }
+
+        protected void validateForm(Errors errors)
+        {
+            String appToken = getAppToken();
+
+            if (StringUtils.isBlank(appToken))
+            {
+                errors.reject(ERROR_REQUIRED, "ParticipantId not included in request");
+            }
+            else
+            {
+                //Check if there is an associated participant for the appToken
+                _participant = MobileAppStudyManager.get().getParticipantFromAppToken(appToken);
+
+                if (_participant == null)
+                    errors.reject(ERROR_MSG, "Unable to identify participant");
+                else if (Participant.ParticipantStatus.Withdrawn == _participant.getStatus())
+                    errors.reject(ERROR_MSG, "Participant has withdrawn from study");
+                else
+                {
+                    //Check if there is an associated study for the appToken
+                    _study = MobileAppStudyManager.get().getStudyFromParticipant(_participant);
+                    if (_study == null)
+                        errors.reject(ERROR_MSG, "AppToken not associated with study");
+                }
+            }
+
+            // If we have participant and study then we shouldn't have errors (and vice versa)
+            assert (null != _participant && null != _study) == !errors.hasErrors();
+        }
+
+        @JsonIgnore
+        public Participant getParticipant()
+        {
+            return _participant;
+        }
+    }
+
+    public static class ResponseForm extends ParticipantForm
+    {
+        private String _type; // Unused, but don't delete... Jackson binding against our test responses goes crazy without it
         private JsonNode _data;
         private SurveyMetadata _metadata;
 
@@ -560,30 +772,42 @@ public class MobileAppStudyController extends SpringActionController
             _data = data;
         }
 
-        //ParticipantId from JSON request is really the apptoken internally
-        @JsonIgnore
-        public String getAppToken()
-        {
-            return getParticipantId();
-        }
-
-        //ParticipantId from JSON request is really the apptoken internally
-        public String getParticipantId()
-        {
-            return _participantId;
-        }
-        public void setParticipantId(String participantId)
-        {
-            _participantId = participantId;
-        }
-
         public String getType()
         {
             return _type;
         }
+
         public void setType(String type)
         {
             _type = type;
+        }
+
+        @Override
+        protected void validateForm(Errors errors)
+        {
+            // First, check if form's required fields are present
+            SurveyMetadata info = getMetadata();
+
+            if (info == null)
+            {
+                errors.reject(ERROR_REQUIRED, "Metadata not found");
+            }
+            else
+            {
+                super.validateForm(errors);
+
+                if (!errors.hasErrors())
+                {
+                    if (isBlank(info.getActivityId()))
+                        errors.reject(ERROR_REQUIRED, "ActivityId not included in request");
+                    if (isBlank(info.getVersion()))
+                        errors.reject(ERROR_REQUIRED, "SurveyVersion not included in request");
+                    if (getData() == null)
+                        errors.reject(ERROR_REQUIRED, "Response not included in request");
+                    if (!_study.getCollectionEnabled())
+                        errors.reject(ERROR_MSG, String.format("Response collection is not currently enabled for study [ %1s ]", _study.getShortName()));
+                }
+            }
         }
     }
 

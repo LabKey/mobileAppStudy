@@ -12,15 +12,15 @@ import java.util.function.Consumer;
 
 public class SubmitResponseCommand extends MobileAppCommand
 {
-    public static final String  METADATA_MISSING_MESSAGE = "Metadata not found.",
+    public static final String  METADATA_MISSING_MESSAGE = "Metadata not found",
                                 ACTIVITYID_MISSING_MESSAGE = "ActivityId not included in request",
-                                SURVEYVERSION_MISSING_MESSAGE = "SurveyVersion not included in request.",
-                                RESPONSE_MISSING_MESSAGE = "Response not included in request.",
-                                PARTICIPANTID_MISSING_MESSAGE = "ParticipantId not included in request.",
-                                NO_PARTICIPANT_MESSAGE = "Unable to identify participant.",
+                                SURVEYVERSION_MISSING_MESSAGE = "SurveyVersion not included in request",
+                                RESPONSE_MISSING_MESSAGE = "Response not included in request",
+                                PARTICIPANTID_MISSING_MESSAGE = "ParticipantId not included in request",
+                                NO_PARTICIPANT_MESSAGE = "Unable to identify participant",
                                 NO_STUDY_MESSAGE = "AppToken not associated with study",
-                                SURVEY_NOT_FOUND_MESSAGE = "Survey not found.",
-                                COLLECTION_DISABLED_MESSAGE_FORMAT = "Response collection is not currently enabled for study [ %1$s ].";
+                                SURVEY_NOT_FOUND_MESSAGE = "Survey not found",
+                                COLLECTION_DISABLED_MESSAGE_FORMAT = "Response collection is not currently enabled for study [ %1$s ]";
 
     public static final String ACTION_NAME = "ProcessResponse";
 
