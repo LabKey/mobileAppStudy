@@ -2,10 +2,9 @@ package org.labkey.test.pages.mobileappstudy;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.components.ext4.Window;
+import org.labkey.test.components.ext4.Message;
 import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebDriver;
 
 import java.util.Arrays;
@@ -13,12 +12,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by iansigmon on 12/9/16.
- */
 public class ResponseQueryPage extends LabKeyPage
 {
     private static final String REPROCESS_BUTTON = "Reprocess";
@@ -36,16 +31,16 @@ public class ResponseQueryPage extends LabKeyPage
         Error("Error Message"),
         Status("Status");
 
-        private String _headerText;
+        private String _columnLabel;
 
-        public String getHeaderText()
+        public String getLabel()
         {
-            return _headerText;
+            return _columnLabel;
         }
 
         ColumnNames(String displayText)
         {
-            _headerText = displayText;
+            _columnLabel = displayText;
         }
     }
 
@@ -136,7 +131,7 @@ public class ResponseQueryPage extends LabKeyPage
         return table.getColumnDataAsText(ColumnNames.Status.toString());
     }
 
-    public class SuccessfulReprocessingMessage extends Window
+    public class SuccessfulReprocessingMessage extends Message
     {
         public static final String WARNING_TITLE = "Reprocess Successful";
         private static final String SUCCESS_MESSAGE_FORMAT = "Reprocessed %1$d response%2$s.";
@@ -146,22 +141,11 @@ public class ResponseQueryPage extends LabKeyPage
         public SuccessfulReprocessingMessage(WebDriver wd)
         {
             super(WARNING_TITLE, wd);
-            assertTrue("Dialog's title is not as expected", WARNING_TITLE.equals(this.getTitle()));
         }
 
         public void clickOk()
         {
-            clickButton("OK", 0);
-
-            //TODO: Issue 28463: Ext.Msg reuses the WebElement for the dialog so don't wait for close, as may already be reopened
-            // waitForClose();     //
-            getWrapper().longWait();
-        }
-
-        public class Locators extends org.labkey.test.Locators
-        {
-            public final Locator.XPathLocator okButton = Ext4Helper.Locators.ext4Button("OK");
-
+            clickButton("OK", true);
         }
 
         private String getSuccessfulTextMessage(int count)

@@ -17,10 +17,10 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
+import org.labkey.test.components.ext4.Error;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
@@ -81,9 +81,9 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
 
         log("Remove the web part,bring it back and validate the study name is still there.");
-        setupPage.studySetupWebPart.delete();
-
+        setupPage.studySetupWebPart.remove();
         _portalHelper.addWebPart("Mobile App Study Setup");
+        setupPage = new SetupPage(this);
 
         log("Validate that the Study Short Name field is still set.");
         assertEquals("Study name did not persist after removing the web part.", STUDY_NAME01.toUpperCase(), setupPage.studySetupWebPart.getShortName());
@@ -103,17 +103,10 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Set the study name to a value already saved.");
         setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
 
-        setupPage.studySetupWebPart.clickSubmit();
+        final Error error = setupPage.studySetupWebPart.submitAndExpectError();
 
-        // These all fail to find the alert.
-//        assertAlert(REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02));
-//        acceptAlert();
-//        waitForAlert(REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), 5000);
-
-        // So I did it the hard way.
-        waitForElement(Locator.css("div.x4-message-box"));
-        assertEquals("Error message text does not match", REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), getText(Locator.css("div.x4-message-box div.x4-form-display-field")));
-        clickButton("OK", 0);
+        assertEquals("Error message text does not match", REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), error.getBody());
+        error.clickOk();
 
         log("Reuse the first study name");
 
@@ -154,9 +147,6 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Validate the prompt.");
         assertEquals("The prompt is not as expected.", PROMPT_ASSIGNED.replace("$STUDY_NAME$", STUDY_NAME01.toUpperCase()), setupPage.studySetupWebPart.getPrompt());
         assertFalse("The short name field is visible and it should not be.", setupPage.studySetupWebPart.isShortNameVisible());
-
-        log("Prompt was as expected. Go home.");
-        goToHome();
     }
 
     @Test
@@ -180,6 +170,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         _containerHelper.createProject(PROJECT_NAME02, "Collaboration");
         _containerHelper.createSubfolder(PROJECT_NAME02, STUDY_FOLDER_NAME, "Mobile App Study");
 
+        setupPage = new SetupPage(this);
         setupPage.studySetupWebPart.setShortName(SHORT_NAME);
         setupPage.studySetupWebPart.clickSubmit();
         goToProjectHome(PROJECT_NAME02);
@@ -194,7 +185,6 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         final String PROJECT_NAME01 = getProjectName() + " TestStudyName01";
 
         _containerHelper.deleteProject(PROJECT_NAME01, false);
-
         _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
 
         goToProjectHome(PROJECT_NAME01);
@@ -203,6 +193,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         //Validate collection checkbox behavior
         log("Collection is initially disabled");
         assertFalse("Response collection is enabled at study creation", setupPage.studySetupWebPart.isResponseCollectionChecked());
+        setupPage.validateSubmitButtonDisabled();
 
         log("Enabling response collection doesn't allow submit prior to a valid study name");
         setupPage.studySetupWebPart.checkResponseCollection();
@@ -215,7 +206,10 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Disabling response collection allows study config submission");
         setupPage.studySetupWebPart.uncheckResponseCollection();
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+
+        log("Clearing StudyId disables submit button");
+        setupPage.studySetupWebPart.setShortName("");
+        setupPage.validateSubmitButtonDisabled();
     }
 
     @Test

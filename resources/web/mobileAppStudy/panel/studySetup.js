@@ -34,6 +34,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
+                cls: 'studysetup-prompt',
                 //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName   Issue #28419
                 html: 'Enter the StudyId to be associated with this folder.  The StudyId should be the same as it appears in the study design interface.',
                 border: false
@@ -54,6 +55,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 tag: 'div',
                 padding: '10px 10px 0px 10px',
                 itemId: 'messageEl',
+                cls: 'studysetup-prompt',
                 //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName   Issue #28419
                 html: 'The StudyId associated with this folder is ' + this.shortName + '.',
                 border: false
