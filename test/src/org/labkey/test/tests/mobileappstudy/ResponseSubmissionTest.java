@@ -255,7 +255,6 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         setupPage.studySetupWebPart.setShortName(STUDY_NAME03);
         setupPage.validateSubmitButtonEnabled();
         setupPage.studySetupWebPart.clickSubmit();
-        longWait();
         _listHelper.createList(PROJECT_NAME03, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
         setSurveyMetadataDropDir();
         goToProjectHome(PROJECT_NAME03);
