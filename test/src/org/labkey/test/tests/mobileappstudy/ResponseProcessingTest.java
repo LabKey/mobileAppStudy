@@ -989,7 +989,6 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
     {
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null );
         String field = InitialSurvey.NUM_ALCOHOL_WEEK;
-        String fieldHeader = "Num Alcohol Week";
         double value = 0.5;
 
         int submissionCount = 0;
