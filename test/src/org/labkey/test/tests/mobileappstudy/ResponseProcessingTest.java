@@ -59,10 +59,10 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         _containerHelper.createProject(PROJECT_NAME01, "Mobile App Study");
         goToProjectHome(PROJECT_NAME01);
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME01);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         setupLists();
         setSurveyMetadataDropDir();

@@ -43,9 +43,9 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         log("Set a study name.");
         goToProjectHome(PROJECT_NAME01);
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME01);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
         _listHelper.createList(PROJECT_NAME01, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
         setSurveyMetadataDropDir();
 
@@ -54,10 +54,10 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         _containerHelper.createProject(PROJECT_NAME02, "Mobile App Study");
         goToProjectHome(PROJECT_NAME02);
         setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
+        setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME02);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
         _listHelper.createList(PROJECT_NAME02, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
         setSurveyMetadataDropDir();
     }
@@ -162,11 +162,11 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         goToProjectHome(PROJECT_NAME01);
         String appToken = getNewAppToken(PROJECT_NAME01, STUDY_NAME01, null);
         SetupPage setupPage = new SetupPage(this);
-        if (setupPage.studySetupWebPart.isResponseCollectionChecked())
+        if (setupPage.getStudySetupWebPart().isResponseCollectionChecked())
         {
-            setupPage.studySetupWebPart.uncheckResponseCollection();
+            setupPage.getStudySetupWebPart().uncheckResponseCollection();
             log("Disabling response collection for " + STUDY_NAME01);
-            setupPage.studySetupWebPart.clickSubmit();
+            setupPage.getStudySetupWebPart().clickSubmit();
         }
 
         checkErrors();
@@ -183,8 +183,8 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         log("Enabling response collection for " + STUDY_NAME01);
         goToProjectHome(PROJECT_NAME01);
         setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.getStudySetupWebPart().clickSubmit();
         goToProjectHome(PROJECT_NAME01);
 
         log("Testing Response Submission with Study collection turned on");
@@ -195,8 +195,8 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         goToProjectHome(PROJECT_NAME01);
         log("Disabling response collection for " + STUDY_NAME01);
         setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.uncheckResponseCollection();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().uncheckResponseCollection();
+        setupPage.getStudySetupWebPart().clickSubmit();
         goToProjectHome(PROJECT_NAME01);
 
         //        8. Test submitting to a Study previously collecting, but not currently accepting results
@@ -251,10 +251,10 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
         _containerHelper.createProject(PROJECT_NAME03, "Mobile App Study");
         goToProjectHome(PROJECT_NAME03);
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME03);
+        setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME03);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
         _listHelper.createList(PROJECT_NAME03, SURVEY_NAME, ListHelper.ListColumnType.AutoInteger, "Key" );
         setSurveyMetadataDropDir();
         goToProjectHome(PROJECT_NAME03);

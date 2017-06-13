@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by RyanS on 2/16/2017.
- */
 @Category({Git.class})
 public class DynamicSchemaTest extends BaseMobileAppStudyTest
 {
@@ -47,10 +44,10 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         _containerHelper.createProject(PROJECT_NAME, "Mobile App Study");
         goToProjectHome(PROJECT_NAME);
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME);
+        setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         //setupLists();
         setSurveyMetadataDropDir();

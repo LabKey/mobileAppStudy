@@ -33,9 +33,9 @@ import static org.labkey.test.components.html.Input.Input;
 
 public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCache>
 {
-    public StudySetupWebPart(BaseWebDriverTest test)
+    public StudySetupWebPart(WebDriver driver)
     {
-        super(test.getWrappedDriver(), "Study Setup");
+        super(driver, "Study Setup");
     }
 
     public StudySetupWebPart checkResponseCollection()

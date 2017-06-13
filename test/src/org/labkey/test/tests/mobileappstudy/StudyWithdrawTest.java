@@ -64,9 +64,9 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         _containerHelper.enableModule("MobileAppStudy");
         goToProjectHome();
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME);
-        setupPage.studySetupWebPart.checkResponseCollection();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME);
+        setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.getStudySetupWebPart().clickSubmit();
         HAS_RESPONSES_DELETE = getNewAppToken(PROJECT_NAME, STUDY_NAME, null );
         HAS_RESPONSES_NO_DELETE = getNewAppToken(PROJECT_NAME, STUDY_NAME, null );
         NO_RESPONSES_DELETE = getNewAppToken(PROJECT_NAME, STUDY_NAME, null );
