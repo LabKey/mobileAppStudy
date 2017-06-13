@@ -952,7 +952,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         submitQuestion(qr, appToken, 200);
         qr.setOmitType(false);
         submissionCount++;
-        expectedErrorCount++;
+        successfulProcessingExpected++;
 
         //Test missing Result
         qr.setOmitResult(true);
@@ -978,8 +978,8 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         DataRegionTable table = new DataRegionTable("query", getDriver());
         List<String> values = table.getColumnDataAsText(fieldHeader);
 
-        assertExpectedValueCount(values, String.valueOf(value), successfulProcessingExpected - 2);
-        assertExpectedValueCount(values, " ", 2); //Check missing result requests
+        assertExpectedValueCount(values, String.valueOf(value), successfulProcessingExpected - 3);
+        assertExpectedValueCount(values, " ", 3); //Check missing result requests
 
         checkExpectedErrors(expectedErrorCount);
     }
