@@ -818,10 +818,13 @@ public class MobileAppStudyManager
         List<SurveyResult> singleValuedResults = new ArrayList<>();
         results.stream().filter(result -> result.getStepResultType().isSingleValued()).forEach(result ->
         {
-            result.setListName(list.getName());
-            if (validateListColumn(list, result.getKey(), result.getStepResultType(), errors))
+            if (!StringUtils.isEmpty(result.getResultType())) // instruction steps are represented in the results with an empty string as a resultType
             {
-                singleValuedResults.add(result);
+                result.setListName(list.getName());
+                if (validateListColumn(list, result.getKey(), result.getStepResultType(), errors))
+                {
+                    singleValuedResults.add(result);
+                }
             }
         });
 
