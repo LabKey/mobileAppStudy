@@ -120,11 +120,13 @@ public class SurveyDesignProcessor
         this.logger = logger != null ? logger : Logger.getLogger(MobileAppStudy.class);
     }
 
-    public void updateSurveyDesign(SurveyResponse surveyResponse, User user) throws Exception
+    public void updateSurveyDesign(@NotNull SurveyResponse surveyResponse, User user) throws Exception
     {
         //get study from response
         MobileAppStudy study = MobileAppStudyManager.get().getStudyFromAppToken(surveyResponse.getAppToken());
 
+        if (study == null)
+            throw new Exception("No study associated with app token '" + surveyResponse.getAppToken() + "'");
         logger.info(String.format(LogMessageFormats.START_UPDATE_SURVEY, study.getShortName(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion()));
         SurveyDesignProvider provider = MobileAppStudyManager.get().getSurveyDesignProvider(study.getContainer());
         if (provider == null)
