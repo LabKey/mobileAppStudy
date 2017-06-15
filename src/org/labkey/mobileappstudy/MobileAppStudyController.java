@@ -461,7 +461,7 @@ public class MobileAppStudyController extends SpringActionController
 
             return new ApiQueryResponse(view, false, true,
                     schema.getName(), form.getQueryName(), form.getQuerySettings().getOffset(), null,
-                    false, false, false, false);
+                    false, false, false, false, false);
         }
     }
 
@@ -500,7 +500,7 @@ public class MobileAppStudyController extends SpringActionController
             view.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
             view.setShowPagination(false);
 
-            return new ReportingApiQueryResponse(view, false, false, "sql", 0, null, false, false, false);
+            return new ReportingApiQueryResponse(view, false, false, "sql", 0, null, false, false, false, false);
         }
     }
 
