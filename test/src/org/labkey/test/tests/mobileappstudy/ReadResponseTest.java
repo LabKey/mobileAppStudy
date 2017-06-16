@@ -100,11 +100,11 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         SetupPage setupPage = new SetupPage(this);
 
         log("Set a study name.");
-        setupPage.studySetupWebPart.setShortName(PROJECT_STUDY_NAME)
+        setupPage.getStudySetupWebPart().setShortName(PROJECT_STUDY_NAME)
                 .clickSubmit();
 
         log("Create " + tokenCount + " tokens.");
-        TokenBatchPopup tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        TokenBatchPopup tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         TokenListPage tokenListPage = tokenBatchPopup.createNewBatch(tokenCount);
 
         batchId = tokenListPage.getBatchId();
@@ -157,7 +157,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         long participantId;
         Map<String, String> rowData;
-        String userName = getCurrentUser().substring(0, getCurrentUser().indexOf('@'));
+        String userName = getCurrentUserName();
 
         for(ParticipantInfo participantInfo : participantsInfo)
         {
@@ -973,7 +973,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
     private void confirmBatchInfoCreated(SetupPage setupPage, String batchId, String expectedTokenCount, String expectedUsedCount)
     {
-        Map<String, String> batchData = setupPage.tokenBatchesWebPart.getBatchData(batchId);
+        Map<String, String> batchData = setupPage.getTokenBatchesWebPart().getBatchData(batchId);
 
         assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
         assertEquals("Expected number of tokens not created.", expectedTokenCount, batchData.get("Count"));

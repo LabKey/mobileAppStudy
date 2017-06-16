@@ -18,21 +18,23 @@ package org.labkey.test.components.mobileappstudy;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
+import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.components.WebPart;
 import org.labkey.test.pages.mobileappstudy.TokenBatchPage;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.DataRegionTable;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import java.util.HashMap;
 import java.util.Map;
 
-public class TokenBatchesWebPart extends WebPart<TokenBatchesWebPart.ElementCache>
+import static org.labkey.test.util.DataRegionTable.DataRegion;
+
+public class TokenBatchesWebPart extends BodyWebPart<TokenBatchesWebPart.ElementCache>
 {
-    public TokenBatchesWebPart(BaseWebDriverTest test)
+    public TokenBatchesWebPart(WebDriver driver)
     {
-        super(test.getWrappedDriver(), Locators.dataRegionLocator.findElement(test.getDriver()));
-        waitForReady();
+        super(driver, "Enrollment Token Batches");
     }
 
     public static TokenBatchPage beginAt(BaseWebDriverTest test, String containerPath)
@@ -58,41 +60,25 @@ public class TokenBatchesWebPart extends WebPart<TokenBatchesWebPart.ElementCach
         return new TokenBatchPopup(getWrapper().getDriver());
     }
 
-    public Map<String, String> getBatchData(int batchId)
-    {
-        return getBatchData(String.valueOf(batchId));
-    }
-
     public Map<String, String> getBatchData(String batchId)
     {
-        DataRegionTable dataRegion = new DataRegionTable("enrollmentTokenBatches", getDriver());
-        int rowIndex = dataRegion.getRowIndex("RowId", batchId);
-        Map<String, String> data = new HashMap<>();
-        for (String col : dataRegion.getColumnNames())
-        {
-            data.put(col, dataRegion.getDataAsText(rowIndex, col));
-        }
-        return data;
+        return elementCache().tokenBatchDataRegion.getRowDataAsMap("RowId", batchId);
     }
 
     protected void waitForReady()
     {
-        getWrapper().waitForElement(Locators.dataRegionLocator);
+        elementCache().tokenBatchDataRegion.getComponentElement().isDisplayed();
     }
 
-    protected ElementCache elementCache()
+    @Override
+    protected ElementCache newElementCache()
     {
         return new ElementCache();
     }
 
     public class ElementCache extends WebPart.ElementCache
     {
-        WebElement newBatchButton = new LazyWebElement(Locators.newBatchButton, getDriver());
-    }
-
-    public static class Locators
-    {
-        public static final Locator.XPathLocator newBatchButton = Locator.lkButton().withText("New Batch");
-        protected static final Locator dataRegionLocator = Locator.xpath("//table[tbody/tr/th[@title='Enrollment Token Batches']]");
+        WebElement newBatchButton = new LazyWebElement(Locator.lkButton("New Batch"), this);
+        DataRegionTable tokenBatchDataRegion = DataRegion(getDriver()).withName("enrollmentTokenBatches").findWhenNeeded(this);
     }
 }

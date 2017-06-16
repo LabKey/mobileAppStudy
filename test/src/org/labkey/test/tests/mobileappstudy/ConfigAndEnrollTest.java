@@ -69,30 +69,30 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         setupPage = new SetupPage(this);
 
         log("Validate the prompt.");
-        assertEquals("The prompt is not as expected.", PROMPT_NOT_ASSIGNED, setupPage.studySetupWebPart.getPrompt());
+        assertEquals("The prompt is not as expected.", PROMPT_NOT_ASSIGNED, setupPage.getStudySetupWebPart().getPrompt());
         setupPage.validateSubmitButtonDisabled();
 
         log("Set a study name.");
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME01);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         log("Validate that the submit button is disabled after you click it.");
-        assertFalse("Submit button is showing as enabled, it should not be.", setupPage.studySetupWebPart.isSubmitEnabled());
+        assertFalse("Submit button is showing as enabled, it should not be.", setupPage.getStudySetupWebPart().isSubmitEnabled());
 
         log("Remove the web part,bring it back and validate the study name is still there.");
-        setupPage.studySetupWebPart.remove();
+        setupPage.getStudySetupWebPart().remove();
         _portalHelper.addWebPart("Mobile App Study Setup");
         setupPage = new SetupPage(this);
 
         log("Validate that the Study Short Name field is still set.");
-        assertEquals("Study name did not persist after removing the web part.", STUDY_NAME01.toUpperCase(), setupPage.studySetupWebPart.getShortName());
+        assertEquals("Study name did not persist after removing the web part.", STUDY_NAME01.toUpperCase(), setupPage.getStudySetupWebPart().getShortName());
         setupPage.validateSubmitButtonDisabled();
 
         log("Change the study name and submit.");
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME02);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         log("Create a new project and try to reuse the study name.");
         _containerHelper.createProject(PROJECT_NAME02, "Mobile App Study");
@@ -101,23 +101,23 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         setupPage = new SetupPage(this);
 
         log("Set the study name to a value already saved.");
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME02);
 
-        final Error error = setupPage.studySetupWebPart.submitAndExpectError();
+        final Error error = setupPage.getStudySetupWebPart().submitAndExpectError();
 
         assertEquals("Error message text does not match", REUSED_STUDY_NAME_ERROR.replace("$STUDY_NAME$", STUDY_NAME02), error.getBody());
         error.clickOk();
 
         log("Reuse the first study name");
 
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME01);
 
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         log("Now create some tokens and use them and then validate that the study name cannot be changed.");
 
         log("Create " + expectedTokenCount + " tokens.");
-        TokenBatchPopup tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        TokenBatchPopup tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         TokenListPage tokenListPage = tokenBatchPopup.createNewBatch(expectedTokenCount);
 
         batchId = tokenListPage.getBatchId();
@@ -145,8 +145,8 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         validateGridInfo(setupPage, batchId, expectedTokenCount, Integer.toString(tokensToAssign.size()));
 
         log("Validate the prompt.");
-        assertEquals("The prompt is not as expected.", PROMPT_ASSIGNED.replace("$STUDY_NAME$", STUDY_NAME01.toUpperCase()), setupPage.studySetupWebPart.getPrompt());
-        assertFalse("The short name field is visible and it should not be.", setupPage.studySetupWebPart.isShortNameVisible());
+        assertEquals("The prompt is not as expected.", PROMPT_ASSIGNED.replace("$STUDY_NAME$", STUDY_NAME01.toUpperCase()), setupPage.getStudySetupWebPart().getPrompt());
+        assertFalse("The short name field is visible and it should not be.", setupPage.getStudySetupWebPart().isShortNameVisible());
     }
 
     @Test
@@ -164,18 +164,18 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         _containerHelper.createSubfolder(PROJECT_NAME01, STUDY_FOLDER_NAME,"Mobile App Study");
 
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.setShortName(SHORT_NAME);
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().setShortName(SHORT_NAME);
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         _containerHelper.createProject(PROJECT_NAME02, "Collaboration");
         _containerHelper.createSubfolder(PROJECT_NAME02, STUDY_FOLDER_NAME, "Mobile App Study");
 
         setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.setShortName(SHORT_NAME);
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().setShortName(SHORT_NAME);
+        setupPage.getStudySetupWebPart().clickSubmit();
         goToProjectHome(PROJECT_NAME02);
         clickFolder(STUDY_FOLDER_NAME);
-        assertEquals("Study name not saved for second project", SHORT_NAME.toUpperCase(), setupPage.studySetupWebPart.getShortName());
+        assertEquals("Study name not saved for second project", SHORT_NAME.toUpperCase(), setupPage.getStudySetupWebPart().getShortName());
     }
 
     @Test
@@ -192,23 +192,23 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
 
         //Validate collection checkbox behavior
         log("Collection is initially disabled");
-        assertFalse("Response collection is enabled at study creation", setupPage.studySetupWebPart.isResponseCollectionChecked());
+        assertFalse("Response collection is enabled at study creation", setupPage.getStudySetupWebPart().isResponseCollectionChecked());
         setupPage.validateSubmitButtonDisabled();
 
         log("Enabling response collection doesn't allow submit prior to a valid study name");
-        setupPage.studySetupWebPart.checkResponseCollection();
+        setupPage.getStudySetupWebPart().checkResponseCollection();
         setupPage.validateSubmitButtonDisabled();
 
         log("Set a study name.");
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME01);
         setupPage.validateSubmitButtonEnabled();
 
         log("Disabling response collection allows study config submission");
-        setupPage.studySetupWebPart.uncheckResponseCollection();
+        setupPage.getStudySetupWebPart().uncheckResponseCollection();
         setupPage.validateSubmitButtonEnabled();
 
         log("Clearing StudyId disables submit button");
-        setupPage.studySetupWebPart.setShortName("");
+        setupPage.getStudySetupWebPart().setShortName("");
         setupPage.validateSubmitButtonDisabled();
     }
 
@@ -240,11 +240,11 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         SetupPage setupPage = new SetupPage(this);
 
         log("Set a study name.");
-        setupPage.studySetupWebPart.setShortName(PROJECT01_STUDY_NAME)
+        setupPage.getStudySetupWebPart().setShortName(PROJECT01_STUDY_NAME)
                 .clickSubmit();
 
         log("Create " + proj01_tokenCount01 + " tokens.");
-        TokenBatchPopup tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        TokenBatchPopup tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         TokenListPage tokenListPage = tokenBatchPopup.createNewBatch(proj01_tokenCount01);
 
         proj01_batchId01 = tokenListPage.getBatchId();
@@ -277,7 +277,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Now create a second batch of tokens");
 
         log("Create " + proj01_tokenCount02 + " tokens.");
-        tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         tokenListPage = tokenBatchPopup.createNewBatch(proj01_tokenCount02);
 
         proj01_batchId02 = tokenListPage.getBatchId();
@@ -318,7 +318,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         log("Finally create a third batch of tokens");
 
         log("Create " + proj01_tokenCount03 + " tokens.");
-        tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         tokenBatchPopup.selectOtherBatchSize();
         tokenBatchPopup.setOtherBatchSize(proj01_tokenCount03);
         tokenListPage = tokenBatchPopup.createNewBatch();
@@ -352,11 +352,11 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         setupPage = new SetupPage(this);
 
         log("Set a study name.");
-        setupPage.studySetupWebPart.setShortName(PROJECT02_STUDY_NAME)
+        setupPage.getStudySetupWebPart().setShortName(PROJECT02_STUDY_NAME)
                 .clickSubmit();
 
         log("Create " + proj02_tokenCount01 + " tokens.");
-        tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         tokenListPage = tokenBatchPopup.createNewBatch(proj02_tokenCount01);
 
         proj02_batchId01 = tokenListPage.getBatchId();
@@ -461,7 +461,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
 
     private void validateGridInfo(SetupPage setupPage, String batchId, String expectedTokenCount, String expectedUsedCount)
     {
-        Map<String, String> batchData = setupPage.tokenBatchesWebPart.getBatchData(batchId);
+        Map<String, String> batchData = setupPage.getTokenBatchesWebPart().getBatchData(batchId);
 
         assertEquals("BatchId not as expected.", batchId, batchData.get("RowId"));
         assertEquals("Expected number of tokens not created.", expectedTokenCount, batchData.get("Count"));

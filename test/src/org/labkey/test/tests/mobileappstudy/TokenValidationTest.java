@@ -36,19 +36,19 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
 
         goToProjectHome(PROJECT_NAME01);
         SetupPage setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME01);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME01);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
 
         log("Create tokens.");
-        TokenBatchPopup tokenBatchPopup = setupPage.tokenBatchesWebPart.openNewBatchPopup();
+        TokenBatchPopup tokenBatchPopup = setupPage.getTokenBatchesWebPart().openNewBatchPopup();
         tokenBatchPopup.createNewBatch("100");
 
         goToProjectHome(PROJECT_NAME02);
         setupPage = new SetupPage(this);
-        setupPage.studySetupWebPart.setShortName(STUDY_NAME02);
+        setupPage.getStudySetupWebPart().setShortName(STUDY_NAME02);
         setupPage.validateSubmitButtonEnabled();
-        setupPage.studySetupWebPart.clickSubmit();
+        setupPage.getStudySetupWebPart().clickSubmit();
     }
 
     @Nullable
