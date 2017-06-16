@@ -157,7 +157,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         long participantId;
         Map<String, String> rowData;
-        String userName = getCurrentUser().substring(0, getCurrentUser().indexOf('@'));
+        String userName = getCurrentUserName();
 
         for(ParticipantInfo participantInfo : participantsInfo)
         {
