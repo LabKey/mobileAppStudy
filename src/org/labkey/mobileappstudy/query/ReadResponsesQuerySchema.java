@@ -6,13 +6,12 @@ import org.labkey.api.collections.Sets;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.list.ListService;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySchema;
-import org.labkey.api.query.QueryService;
-import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
@@ -35,12 +34,17 @@ public class ReadResponsesQuerySchema extends UserSchema
     private final UserSchema _listSchema;
     private final @Nullable Participant _participant;
 
-    private ReadResponsesQuerySchema(User user, Container container, UserSchema listSchema, @Nullable Participant participant)
+    private ReadResponsesQuerySchema(User user, Container container, @Nullable Participant participant)
     {
-        super(NAME, "Special query schema that allows the mobile application to read responses submitted by the participant using that device", user, container, listSchema.getDbSchema());
-        _listSchema = listSchema;
+        super(NAME, "Special query schema that allows the mobile application to read responses submitted by the participant using that device", user, container, getListSchema(user, container).getDbSchema());
+        _listSchema = getListSchema(user, container);
         _participant = participant;
         setRestricted(true);
+    }
+
+    private static UserSchema getListSchema(User user, Container container)
+    {
+        return ListService.get().getUserSchema(user, container);
     }
 
     public static void register(Module module)
@@ -55,19 +59,14 @@ public class ReadResponsesQuerySchema extends UserSchema
 
             public QuerySchema createSchema(DefaultSchema schema, Module module)
             {
-                UserSchema list = schema.getUserSchema("lists");
-
-                return new ReadResponsesQuerySchema(schema.getUser(), schema.getContainer(), list, null);
+                return new ReadResponsesQuerySchema(schema.getUser(), schema.getContainer(), null);
             }
         });
     }
 
     public static ReadResponsesQuerySchema get(Participant participant)
     {
-        Container c = participant.getContainer();
-        UserSchema list = QueryService.get().getUserSchema(User.guest, c, SchemaKey.fromParts("lists"));
-
-        return new ReadResponsesQuerySchema(User.guest, c, list, participant);
+        return new ReadResponsesQuerySchema(User.guest, participant.getContainer(), participant);
     }
 
     @Override
