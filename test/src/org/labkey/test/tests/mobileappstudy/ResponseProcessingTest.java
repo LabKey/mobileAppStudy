@@ -44,13 +44,11 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by iansigmon on 11/28/16.
- */
-
 @Category({Git.class})
 public class ResponseProcessingTest extends BaseMobileAppStudyTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     //Create study
     private final static String BASE_PROJECT_NAME = "Response Processing Project";
     private final static String STUDY_NAME01 = "ResponseProcessing";  // Study names are case insensitive

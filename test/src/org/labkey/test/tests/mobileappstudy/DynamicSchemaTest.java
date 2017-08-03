@@ -34,6 +34,8 @@ import java.util.Set;
 @Category({Git.class})
 public class DynamicSchemaTest extends BaseMobileAppStudyTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String PROJECT_NAME = "DynamicSchemaTestProject";
     private static final String STUDY_NAME = "DYNAMICSCHEMASTUDY";
     private static final String SURVEY_NAME = "NewSurvey";

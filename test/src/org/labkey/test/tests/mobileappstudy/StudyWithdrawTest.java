@@ -40,12 +40,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by RyanS on 1/23/2017.
- */
 @Category({Git.class})
 public class StudyWithdrawTest extends BaseMobileAppStudyTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String PROJECT_NAME = "StudyWithdrawTestProject";
     private static final String STUDY_NAME = "StudyWithdrawTestStudy";
     private final static String BASE_RESULTS = "{\n" +

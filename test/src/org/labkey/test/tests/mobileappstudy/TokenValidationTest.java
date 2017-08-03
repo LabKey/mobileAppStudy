@@ -34,6 +34,8 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class TokenValidationTest extends BaseMobileAppStudyTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     static final String PROJECT_NAME01 = "TokenValidationTest Project 1";
     static final String STUDY_NAME01 = "TOKENVALIDATION";
 
