@@ -37,6 +37,7 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
         super(QueryService.get().getUserSchema(viewContext.getUser(), viewContext.getContainer(), MobileAppStudySchema.NAME));
         setTitle("Enrollment Token Batches");
         setSettings(createQuerySettings(viewContext));
+        addClientDependency(ClientDependency.fromPath("Ext4"));
         addClientDependency(ClientDependency.fromPath("mobileAppStudy/panel/enrollmentTokenBatchFormPanel.js"));
         setShowInsertNewButton(false);
         setShowImportDataButton(false);
