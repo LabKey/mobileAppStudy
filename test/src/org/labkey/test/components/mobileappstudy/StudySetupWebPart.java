@@ -110,7 +110,8 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
 
     private void submit()
     {
-        WebDriverWrapper.sleep(500);
+        if (!isSubmitEnabled())
+            throw new IllegalStateException("Submit button not enabled");
 
         boolean collectionEnabled = isResponseCollectionChecked();
         elementCache().submitButton.click();
