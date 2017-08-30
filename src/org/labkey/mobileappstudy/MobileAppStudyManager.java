@@ -431,7 +431,7 @@ public class MobileAppStudyManager
         Container parent = container.getParent();
         for (Container otherContainer : getContainers(shortName))
         {
-            if (!otherContainer.equals(container) && otherContainer.getParent() == parent)
+            if (!otherContainer.equals(container) && otherContainer.getParent().equals(parent))
                 return true;
         }
         return false;
