@@ -37,6 +37,7 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
 {
+    {setIsBootstrapWhitelisted(true);}
     protected final PortalHelper _portalHelper = new PortalHelper(this);
 
     @Override
@@ -128,7 +129,8 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         tokensToAssign.add(tokenListPage.getToken(2));
 
         log("Go back to the setup page.");
-        clickTab("Setup");
+        goToProjectHome(PROJECT_NAME02);
+
 
         log("Validate that the correct info for the tokens is shown in the grid.");
         validateGridInfo(setupPage, batchId, expectedTokenCount, "0");
@@ -269,7 +271,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         proj01_tokensToAssignBatch01.remove(4);
 
         log("Go back to the setup page.");
-        clickTab("Setup");
+        goToProjectHome(PROJECT_NAME01);
 
         log("Validate that the correct info for the tokens is shown in the grid.");
         validateGridInfo(setupPage, proj01_batchId01, proj01_tokenCount01, "0");
@@ -288,7 +290,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         proj01_tokensToAssignBatch02.add(tokenListPage.getToken(2));
 
         log("Go back to the setup page.");
-        clickTab("Setup");
+        goToProjectHome(PROJECT_NAME01);
 
         log("Validate that the correct info for the tokens is shown in the grid.");
         validateGridInfo(setupPage, proj01_batchId02, proj01_tokenCount02, "0");
@@ -329,7 +331,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         proj01_tokensToAssignBatch03.add(tokenListPage.getToken(0));
 
         log("Go back to the setup page.");
-        clickTab("Setup");
+        goToProjectHome(PROJECT_NAME01);
 
         log("Validate that the correct info for the tokens is shown in the grid.");
         validateGridInfo(setupPage, proj01_batchId03, proj01_tokenCount03, "0");
@@ -369,7 +371,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         proj02_tokensToAssignBatch01.add(tokenListPage.getToken(4));
 
         log("Go back to the setup page.");
-        clickTab("Setup");
+        goToProjectHome(PROJECT_NAME02);
 
         log("Validate that the correct info for the tokens is shown in the grid.");
         validateGridInfo(setupPage, proj02_batchId01, proj02_tokenCount01, "0");
