@@ -30,6 +30,7 @@ import java.util.Map;
 @Category({Git.class})
 public class EnrollmentTokensTest extends BaseMobileAppStudyTest
 {
+    {setIsBootstrapWhitelisted(true);}
     @Override
     void setupProjects()
     {
