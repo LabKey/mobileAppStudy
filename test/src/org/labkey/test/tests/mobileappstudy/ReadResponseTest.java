@@ -50,6 +50,7 @@ import static org.junit.Assert.fail;
 public class ReadResponseTest extends BaseMobileAppStudyTest
 {
 
+    {setIsBootstrapWhitelisted(true);}
     final String PROJECT_NAME = getProjectName();
     final String PROJECT_STUDY_NAME = "TEST_READRESPONSE_STUDY";
     final String LIST_DIFF_DATATYPES = "TestListDiffDataTypes";
@@ -135,7 +136,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         tokensToAssign.add(tokenListPage.getToken(6));
 
         log("Validate that the correct info for the tokens is shown in the grid.");
-        clickTab("Setup");
+        goToProjectHome();
         confirmBatchInfoCreated(setupPage, batchId, tokenCount, "0");
 
         log("Now assign some of the tokens from the batch.");
