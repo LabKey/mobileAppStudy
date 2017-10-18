@@ -311,6 +311,7 @@ public class MobileAppStudyManager
             ContainerUtil.purgeTable(schema.getTableInfoParticipant(), c, null); //Has a FK to study table
             ContainerUtil.purgeTable(schema.getTableInfoEnrollmentTokenBatch(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoResponseMetadata(), c, null);
 
             transaction.commit();
         }
