@@ -49,8 +49,6 @@ import static org.junit.Assert.fail;
 @Category({Git.class})
 public class ReadResponseTest extends BaseMobileAppStudyTest
 {
-
-    {setIsBootstrapWhitelisted(true);}
     final String PROJECT_NAME = getProjectName();
     final String PROJECT_STUDY_NAME = "TEST_READRESPONSE_STUDY";
     final String LIST_DIFF_DATATYPES = "TestListDiffDataTypes";

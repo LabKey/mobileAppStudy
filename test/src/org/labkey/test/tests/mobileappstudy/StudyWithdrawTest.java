@@ -43,8 +43,6 @@ import java.util.Map;
 @Category({Git.class})
 public class StudyWithdrawTest extends BaseMobileAppStudyTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String PROJECT_NAME = "StudyWithdrawTestProject";
     private static final String STUDY_NAME = "StudyWithdrawTestStudy";
     private final static String BASE_RESULTS = "{\n" +

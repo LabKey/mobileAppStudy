@@ -37,7 +37,6 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
 {
-    {setIsBootstrapWhitelisted(true);}
     protected final PortalHelper _portalHelper = new PortalHelper(this);
 
     @Override

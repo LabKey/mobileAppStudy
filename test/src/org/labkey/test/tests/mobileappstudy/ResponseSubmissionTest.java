@@ -29,8 +29,6 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class ResponseSubmissionTest extends BaseMobileAppStudyTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     //Create study
     private final static String STUDY_NAME01 = "Study01";  // Study names are case insensitive
     private final static String STUDY_NAME02 = "Study02";
