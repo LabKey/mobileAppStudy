@@ -533,7 +533,6 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         return colNameString;
     }
 
-    //@After
     public void resetListState()
     {
         sleep(2000); //give the server a second to process the results and insert
