@@ -176,8 +176,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         table.openCustomizeGrid();
         table.getCustomizeView().clearFilters();
         table.getCustomizeView().addFilter("ParticipantId/AppToken", "Equals", appToken);
-        table.getCustomizeView().clickViewGrid();
-        refresh();
+        table.getCustomizeView().applyCustomView();
     }
 
     @Test
@@ -832,7 +831,7 @@ public class ResponseProcessingTest extends BaseMobileAppStudyTest
         table.getCustomizeView().clearFilters();
         //Leaving this reference to SurveyId instead of altering the lists archive. //TODO: Change SurveyId to ActivityId
         table.getCustomizeView().addFilter("ParticipantId/AppToken", "Equals", appToken);
-        doAndWaitForPageToLoad(() -> table.getCustomizeView().clickViewGrid());
+        table.getCustomizeView().applyCustomView(WAIT_FOR_PAGE);
 
 
         List values = table.getColumnDataAsText("MedName");

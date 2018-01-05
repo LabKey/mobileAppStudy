@@ -80,7 +80,7 @@ public class TokenListPage extends LabKeyPage<TokenListPage.ElementCache>
         {
             cv.addColumn(column);
         }
-        cv.clickViewGrid();
+        cv.applyCustomView();
     }
 
     public List<List<String>> getRows(String ... columnNames)
