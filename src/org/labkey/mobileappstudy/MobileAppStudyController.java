@@ -37,6 +37,7 @@ import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.TempQuerySettings;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
@@ -205,10 +206,11 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    /*
-    Ignores container POST-ed from. Pulls container context from the appToken used in request
+    /**
+     * Ignores container POST-ed from. Pulls container context from the appToken used in request
      */
     @RequiresNoPermission
+    @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the app token). Plus, mobile app has no ability to provide CSRF token.
     public class ProcessResponseAction extends ApiAction<ResponseForm>
     {
         @Override
@@ -246,10 +248,11 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    /*
-    Ignores container POST-ed from. Pulls container context from the appToken used in request
-    */
+    /**
+     * Ignores container POST-ed from. Pulls container context from the appToken used in request
+     */
     @RequiresNoPermission
+    @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the app token). Plus, mobile app has no ability to provide CSRF token.
     public class WithdrawFromStudy extends ApiAction<WithdrawFromStudyForm>
     {
         public void validateForm(WithdrawFromStudyForm form, Errors errors)
@@ -309,10 +312,11 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    @RequiresNoPermission
-    /*
-      Execute the validation steps for an enrollment token without enrolling
+    /**
+     * Execute the validation steps for an enrollment token without enrolling
      */
+    @RequiresNoPermission
+    @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the enrollment token). Plus, mobile app has no ability to provide CSRF token.
     public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
     {
         @Override
@@ -330,6 +334,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresNoPermission
+    @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the enrollment token). Plus, mobile app has no ability to provide CSRF token.
     public class EnrollAction extends BaseEnrollmentAction
     {
         @Override
