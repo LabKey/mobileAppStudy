@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2016-2017 LabKey Corporation
- *
- * Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+ * Copyright (c) 2016-2018 LabKey Corporation. All rights reserved. No portion of this work may be reproduced in
+ * any form or by any electronic or mechanical means without written permission from LabKey Corporation.
  */
 Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
 
