@@ -296,6 +296,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         sleep(5000);
 
         goToProjectHome(PROJECT_NAME);  //refresh Project page
+        refresh();
 
         log("Check mismatch lists created in addition to existing lists");
         assertTextPresentInThisOrder("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
