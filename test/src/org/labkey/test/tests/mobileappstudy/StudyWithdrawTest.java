@@ -320,14 +320,20 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
     private List<String> tablesWithParticipantData(String participantId)
     {
         List<String> tablesWithData = new ArrayList<>();
-        for(String table : TABLES)
+        for (String table : TABLES)
         {
-            if(isParticipantIdPresent(table, participantId,MOBILEAPP_SCHEMA))
-            { tablesWithData.add(table);}
+            if (isParticipantIdPresent(table, participantId,MOBILEAPP_SCHEMA))
+            {
+                log(String.format("Found data for participant %s in table %s", participantId, table));
+                tablesWithData.add(table);
+            }
         }
-        for(String table : LISTS)
-            if(isParticipantIdPresent(table, participantId,LIST_SCHEMA))
-            { tablesWithData.add(table);}
+        for (String table : LISTS)
+            if (isParticipantIdPresent(table, participantId,LIST_SCHEMA))
+            {
+                log(String.format("Found data for participant %s in list %s", participantId, table));
+                tablesWithData.add(table);
+            }
         return tablesWithData;
     }
 }

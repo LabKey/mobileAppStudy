@@ -36,7 +36,7 @@ public class WithdrawParticipantCommand extends MobileAppCommand
     private String _participantId;
     private Boolean _delete;
 
-    public WithdrawParticipantCommand(String participantId,Boolean delete, Consumer<String> logger)
+    public WithdrawParticipantCommand(String participantId, Boolean delete, Consumer<String> logger)
     {
         _participantId = participantId;
         _delete = delete;
