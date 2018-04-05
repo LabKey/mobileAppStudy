@@ -39,11 +39,11 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
     private static final String SURVEY_NAME = "NewSurvey";
     private static final String LIST_SCHEMA = "lists";
 
-    private static List<Map<String,Object>> newSurveyMap;
-    private static List<Map<String,Object>> newSurveyGroupedMap;
-    private static List<Map<String,Object>> newSurveyGroupedSubGroupedMap;
-    private static List<Map<String,Object>> newSurveyGroupedTextChoiceField;
-    private static List<Map<String,Object>> newSurveyTextChoiceField;
+    private List<Map<String,Object>> newSurveyMap;
+    private List<Map<String,Object>> newSurveyGroupedMap;
+    private List<Map<String,Object>> newSurveyGroupedSubGroupedMap;
+    private List<Map<String,Object>> newSurveyGroupedTextChoiceField;
+    private List<Map<String,Object>> newSurveyTextChoiceField;
 
     protected
     @Nullable String getProjectName()
