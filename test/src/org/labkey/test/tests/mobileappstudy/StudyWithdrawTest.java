@@ -92,6 +92,43 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
         setupLists();
         submitResponses(Arrays.asList(HAS_RESPONSES_DELETE,HAS_RESPONSES_NO_DELETE,WITHDRAWS_TWICE,STAYS_IN));
 
+        log("Check that the calls to appTokenToParticipantId produced unique ids.");
+        List<String> participantIds = new ArrayList<>();
+        participantIds.add(HRD_KEY);
+        log("HRD_KEY = " + HRD_KEY);
+
+        log("HRND_KEY = " + HRND_KEY);
+        if(participantIds.contains(HRND_KEY))
+        {
+            HRND_KEY = appTokenToParticipantId(HAS_RESPONSES_NO_DELETE);
+            log("Value for HRND_KEY already used.generating a new one: " + HRND_KEY);
+            participantIds.add(HRND_KEY);
+        }
+
+        log("NRD_KEY = " + NRD_KEY);
+        if(participantIds.contains(NRD_KEY))
+        {
+            NRD_KEY = appTokenToParticipantId(NO_RESPONSES_DELETE);
+            log("Value for NRD_KEY already used.generating a new one: " + NRD_KEY);
+            participantIds.add(NRD_KEY);
+        }
+
+        log("WT_KEY = " + WT_KEY);
+        if(participantIds.contains(WT_KEY))
+        {
+            WT_KEY = appTokenToParticipantId(WITHDRAWS_TWICE);
+            log("Value for WT_KEY already used.generating a new one: " + WT_KEY);
+            participantIds.add(WT_KEY);
+        }
+
+        log("SI_KEY = " + SI_KEY);
+        if(participantIds.contains(SI_KEY))
+        {
+            SI_KEY = appTokenToParticipantId(STAYS_IN);
+            log("Value for SI_KEY already used.generating a new one: " + SI_KEY);
+            participantIds.add(SI_KEY);
+        }
+
     }
 
     private void setupLists()

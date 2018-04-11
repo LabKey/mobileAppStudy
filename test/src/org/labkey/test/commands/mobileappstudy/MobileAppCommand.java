@@ -107,6 +107,7 @@ public abstract class MobileAppCommand
             response = client.execute(request);
             isExecuted = true;
             log("Post completed.");
+            log("Response body: " + getBody());
 
             int statusCode = response.getStatusLine().getStatusCode();
             String body = EntityUtils.toString(response.getEntity());
@@ -114,9 +115,6 @@ public abstract class MobileAppCommand
 
             if (expectedStatusCode < 400 && StringUtils.isNotBlank(getExceptionMessage()))
                 log("Unexpected error message: " + getExceptionMessage());
-
-            if (expectedStatusCode != statusCode)
-                log(getBody());
 
             assertEquals("Unexpected response status", expectedStatusCode, statusCode);
             return response;

@@ -270,6 +270,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         log("Submitting response with group removed. Response text 13");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_13--RESPONSE.json");
+        log("getResponseFromFile(\"DYNAMICSCHEMASTUDY_NewSurvey_13--RESPONSE.json\"): " + responseString);
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "13", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
@@ -288,9 +289,11 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
     {
         //We do not currently confirm if the survey metadata contained in schema file matches the filename (Response survey metadata)
         resetListState();
+        log("Current body text: " + getBodyText());
         log("Submitting response with mismatched schema. Response text 10");
         String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_10--RESPONSE.json");
+        log("getResponseFromFile(\"DYNAMICSCHEMASTUDY_NewSurvey_10--RESPONSE.json\"): " + responseString);
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "10", appToken, responseString); //Schema name in the metadata is: "NewSurvey_Mismatch"
         cmd.execute(200);
         sleep(5000);
