@@ -181,27 +181,63 @@ public class StudyWithdrawTest extends BaseMobileAppStudyTest
 
         //all users except STAYS_IN should no longer be enrolled
         log("verify participant status");
-        Assert.assertFalse("User " + HRD_KEY + " still shown as enrolled in Participant after withdrawing", isUserEnrolled(HRD_KEY));
-        Assert.assertFalse("User " + HRND_KEY + " still shown as enrolled in Participant after withdrawing", isUserEnrolled(HRND_KEY));
-        Assert.assertFalse("User " + NRD_KEY + " still shown as enrolled in Participant after withdrawing", isUserEnrolled(NRD_KEY));
-        Assert.assertFalse("User " + WT_KEY + " still shown as enrolled in Participant after withdrawing", isUserEnrolled(WT_KEY));
+
+        // Review all of the expected scenarios, before failing. Want to see if it is just one record
+        // failed or if several of them did.
+        StringBuilder errorMsg = new StringBuilder();
+
+        if(isUserEnrolled(HRD_KEY))
+            errorMsg.append("User " + HRD_KEY + " still shown as enrolled in Participant after withdrawing.\n");
+
+        if(isUserEnrolled(HRND_KEY))
+            errorMsg.append("User " + HRND_KEY + " still shown as enrolled in Participant after withdrawing.\n");
+
+        if(isUserEnrolled(NRD_KEY))
+            errorMsg.append("User " + NRD_KEY + " still shown as enrolled in Participant after withdrawing.\n");
+
+        if(isUserEnrolled(WT_KEY))
+            errorMsg.append("User " + WT_KEY + " still shown as enrolled in Participant after withdrawing.\n");
+
         //User who did not withdraw should be enrolled
-        Assert.assertTrue("User " + SI_KEY + " still shown as enrolled in Participant after withdrawing", isUserEnrolled(SI_KEY));
+        if(!isUserEnrolled(SI_KEY))
+            errorMsg.append("User " + SI_KEY + " still shown as enrolled in Participant after withdrawing.\n");
+
         log("verify participant data deletion");
         //Users who have elected to have data deleted should have responses deleted
-        Assert.assertTrue("Data found for user " + HRD_KEY + " that should have been deleted",tablesWithParticipantData(HRD_KEY).size()==0);
-        Assert.assertTrue("Data found for user " + NRD_KEY + " that should have been deleted", tablesWithParticipantData(NRD_KEY).size()==0);
+        if(tablesWithParticipantData(HRD_KEY).size()!=0)
+            errorMsg.append("Data found for user " + HRD_KEY + " that should have been deleted.\n");
+
+        if(tablesWithParticipantData(NRD_KEY).size()!=0)
+            errorMsg.append("Data found for user " + NRD_KEY + " that should have been deleted.\n");
+
         //Users who have elected not to have data deleted should retain data
-        Assert.assertTrue("Data should have been retained for user " + HRND_KEY + " but was not",tablesWithParticipantData(HRND_KEY).size()>0);
-        Assert.assertTrue("Data should have been retained for user " + SI_KEY + " but was not",tablesWithParticipantData(SI_KEY).size()>0);
-        Assert.assertTrue("Data should have been retained for user " + WT_KEY + " but was not",tablesWithParticipantData(WT_KEY).size()>0);
+        if(tablesWithParticipantData(HRND_KEY).size()<=0)
+            errorMsg.append("Data should have been retained for user " + HRND_KEY + " but was not.\n");
+
+        if(tablesWithParticipantData(SI_KEY).size()<=0)
+            errorMsg.append("Data should have been retained for user " + SI_KEY + " but was not.\n");
+
+        if(tablesWithParticipantData(WT_KEY).size()<=0)
+            errorMsg.append("Data should have been retained for user " + WT_KEY + " but was not.\n");
+
         //check tokens are null for withdrawn participants
-        Assert.assertTrue("User " + HRD_KEY + " did not have appToken null after withdrawal", isAppTokenNull(HAS_RESPONSES_DELETE));
-        Assert.assertTrue("User " + HRND_KEY + " did not have appToken null after withdrawal", isAppTokenNull(HAS_RESPONSES_NO_DELETE));
-        Assert.assertTrue("User " + NRD_KEY + " did not have appToken null after withdrawal", isAppTokenNull(NO_RESPONSES_DELETE));
-        Assert.assertTrue("User " + WT_KEY + " did not have appToken null after withdrawal", isAppTokenNull(WITHDRAWS_TWICE));
+        if(!isAppTokenNull(HAS_RESPONSES_DELETE))
+            errorMsg.append("User " + HRD_KEY + " did not have appToken null after withdrawal.\n");
+
+        if(!isAppTokenNull(HAS_RESPONSES_NO_DELETE))
+            errorMsg.append("User " + HRND_KEY + " did not have appToken null after withdrawal.\n");
+
+        if(!isAppTokenNull(NO_RESPONSES_DELETE))
+            errorMsg.append("User " + NRD_KEY + " did not have appToken null after withdrawal.\n");
+
+        if(!isAppTokenNull(WITHDRAWS_TWICE))
+            errorMsg.append("User " + WT_KEY + " did not have appToken null after withdrawal.\n");
+
         //check tokens retained for remaining users
-        Assert.assertFalse("User " + SI_KEY + " did not withdraw but did not retain appToken ", isAppTokenNull(STAYS_IN));
+        if(isAppTokenNull(STAYS_IN))
+            errorMsg.append("User " + SI_KEY + " did not withdraw but did not retain appToken.\n");
+
+        Assert.assertTrue(errorMsg.toString(), errorMsg.length() == 0);
     }
 
     private SelectRowsResponse getMobileAppData(String table)

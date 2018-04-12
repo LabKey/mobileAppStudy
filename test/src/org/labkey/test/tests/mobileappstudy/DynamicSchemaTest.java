@@ -274,19 +274,42 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "13", appToken, responseString);
         cmd.execute(200);
         sleep(5000);
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListAdded after adding single response with group and subgroup added. Response text 13",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListAdded with group and subgroup added. Response text 13",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListAddedSubGroupedList after adding single response with group and subgroup added. Response text 13",1,getTableData("NewSurveyGroupedListAddedSubGroupedList").size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListAddedSubGroupedList with group and subgroup added. Response text 13",1, getTableData("NewSurveyGroupedListAddedSubGroupedList").size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyAddedTextChoiceField after adding single response with group and subgroup added. Response text 13",2,getTableData("NewSurveyGroupedListAddedTextChoiceField").size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyAddedTextChoiceField with group and subgroup added. Response text 13",2, getTableData("NewSurveyGroupedListAddedTextChoiceField").size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyAddedGroupedListTextChoiceField after adding single response with group and subgroup added. Response text 13",2,getTableData("NewSurveyGroupedListAddedTextChoiceField").size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyAddedGroupedListTextChoiceField with group and subgroup added. Response text 13",2, getTableData("NewSurveyGroupedListAddedTextChoiceField").size());
+
+        StringBuilder errorMsg = new StringBuilder();
+
+        if(getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")) != 1)
+            errorMsg.append("Unexpected new row count in NewSurveyGroupedListAdded after adding single response with group and subgroup added. Response text 13. Expected 1 found " + getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")) + "\n");
+
+        if(getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() != 0)
+            errorMsg.append("Unexpected number of new columns in NewSurveyGroupedListAdded with group and subgroup added. Response text 13. Expected 0 Found " + getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() + "\n");
+
+        if(getTableData("NewSurveyGroupedListAddedSubGroupedList").size() != 1)
+            errorMsg.append("Unexpected new row count in NewSurveyGroupedListAddedSubGroupedList after adding single response with group and subgroup added. Response text 13. Expected 1 Found " + getTableData("NewSurveyGroupedListAddedSubGroupedList").size() + "\n");
+
+        if(getTableData("NewSurveyGroupedListAddedSubGroupedList").size() != 1)
+            errorMsg.append("Unexpected number of new columns in NewSurveyGroupedListAddedSubGroupedList with group and subgroup added. Response text 13. Expected 1 Found " + getTableData("NewSurveyGroupedListAddedSubGroupedList").size() + "\n");
+
+        if(getTableData("NewSurveyGroupedListAddedTextChoiceField").size() != 2)
+            errorMsg.append("Unexpected new row count in NewSurveyAddedTextChoiceField after adding single response with group and subgroup added. Response text 13. Expected 2 Found " + getTableData("NewSurveyGroupedListAddedTextChoiceField").size() + "\n");
+
+        if(getTableData("NewSurveyGroupedListAddedTextChoiceField").size() != 2)
+            errorMsg.append("Unexpected number of new columns in NewSurveyAddedTextChoiceField with group and subgroup added. Response text 13. Expected 2 Found " + getTableData("NewSurveyGroupedListAddedTextChoiceField").size() + "\n");
+
+        if(getTableData("NewSurveyGroupedListAddedTextChoiceField").size() != 2)
+            errorMsg.append("Unexpected new row count in NewSurveyAddedGroupedListTextChoiceField after adding single response with group and subgroup added. Response text 13. Expected 2 Found " + getTableData("NewSurveyGroupedListAddedTextChoiceField").size() + "\n");
+
+        if(getTableData("NewSurveyGroupedListAddedTextChoiceField").size() != 2)
+            errorMsg.append("Unexpected number of new columns in NewSurveyAddedGroupedListTextChoiceField with group and subgroup added. Response text 13. Expected 2 Found "+ getTableData("NewSurveyGroupedListAddedTextChoiceField").size() + "\n");
+
+        Assert.assertTrue(errorMsg.toString(), errorMsg.length() == 0);
     }
 
     @Test
     public void testMismatchedResponseAndSchema()
     {
+
+        goToProjectHome(PROJECT_NAME);
+
         //We do not currently confirm if the survey metadata contained in schema file matches the filename (Response survey metadata)
         resetListState();
         log("Current body text: " + getBodyText());
@@ -301,22 +324,46 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         goToProjectHome(PROJECT_NAME);  //refresh Project page
         refresh();
 
+        StringBuilder errorMsg = new StringBuilder();
+
+        if(getNewRows(newSurveyMap,getTableData("NewSurvey")).size() != 1)
+            errorMsg.append("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10. Expected 1 found " + getNewRows(newSurveyMap,getTableData("NewSurvey")).size() + "\n");
+
+        if(getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() > 1);
+            errorMsg.append("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() + "\n");
+
+        if(getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() != 1)
+            errorMsg.append("Unexpected new row count in NewSurveyGroupedList after adding single response with mismatched schema. Response text 10. Expected 1 Found " + getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() + "\n");
+
+        if(getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() != 0)
+            errorMsg.append("Unexpected number of new columns in NewSurveyGroupedList with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() + "\n");
+
+        if(getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size() != 1)
+            errorMsg.append("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with mismatched schema. Response text 10. Expected 1 Found " + getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size() + "\n");
+
+        if(getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size() != 0)
+            errorMsg.append("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size() + "\n");
+
+        if(getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size() != 2)
+            errorMsg.append("Unexpected new row count in NewSurveyTextChoiceField after adding single response with mismatched schema. Response text 10. Expected 2 Found " + getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size() + "\n");
+
+        if(getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size() != 0)
+            errorMsg.append("Unexpected number of new columns in NewSurveyTextChoiceField with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size() + "\n");
+
+        if(getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size() != 2)
+            errorMsg.append("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10. Expected 2 Found " + getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size() + "\n");
+
+        if(getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size() != 0)
+            errorMsg.append("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size() + "\n");
+
+        Assert.assertTrue(errorMsg.toString(), errorMsg.length() == 0);
+
         log("Check mismatch lists created in addition to existing lists");
         assertTextPresentInThisOrder("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
                 "NewSurvey_MismatchGroupedListSubGroupedList", "NewSurvey_MismatchGroupedListTextChoiceField",
                 "NewSurvey_MismatchTextChoiceField", "NewSurveyGroupedList", "NewSurveyGroupedListSubGroupedList",
                 "NewSurveyGroupedListTextChoiceField", "NewSurveyTextChoiceField");
 
-        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10", 1, getNewRows(newSurveyMap,getTableData("NewSurvey")).size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with mismatched schema. Response text 10", 1,getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with mismatched schema. Response text 10",1,getNewRows(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedSubGroupedMap,getTableData("NewSurveyGroupedListSubGroupedList")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with mismatched schema. Response text 10",2,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField with mismatched schema. Response text 10",0, getAddedColumns(newSurveyTextChoiceField,getTableData("NewSurveyTextChoiceField")).size());
-        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10",2,getNewRows(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
-        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10",0, getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size());
     }
 
 
