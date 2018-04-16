@@ -330,7 +330,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
             errorMsg.append("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10. Expected 1 found " + getNewRows(newSurveyMap,getTableData("NewSurvey")).size() + "\n");
 
         if(getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() > 1);
-            errorMsg.append("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() + "\n");
+            errorMsg.append("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10. Expected 0 or 1 Found " + getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() + "\n");
 
         if(getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() != 1)
             errorMsg.append("Unexpected new row count in NewSurveyGroupedList after adding single response with mismatched schema. Response text 10. Expected 1 Found " + getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() + "\n");
@@ -356,13 +356,20 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         if(getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size() != 0)
             errorMsg.append("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with mismatched schema. Response text 10. Expected 0 Found " + getAddedColumns(newSurveyGroupedTextChoiceField,getTableData("NewSurveyGroupedListTextChoiceField")).size() + "\n");
 
-        Assert.assertTrue(errorMsg.toString(), errorMsg.length() == 0);
-
         log("Check mismatch lists created in addition to existing lists");
-        assertTextPresentInThisOrder("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
-                "NewSurvey_MismatchGroupedListSubGroupedList", "NewSurvey_MismatchGroupedListTextChoiceField",
-                "NewSurvey_MismatchTextChoiceField", "NewSurveyGroupedList", "NewSurveyGroupedListSubGroupedList",
-                "NewSurveyGroupedListTextChoiceField", "NewSurveyTextChoiceField");
+        try
+        {
+            assertTextPresentInThisOrder("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
+                    "NewSurvey_MismatchGroupedListSubGroupedList", "NewSurvey_MismatchGroupedListTextChoiceField",
+                    "NewSurvey_MismatchTextChoiceField", "NewSurveyGroupedList", "NewSurveyGroupedListSubGroupedList",
+                    "NewSurveyGroupedListTextChoiceField", "NewSurveyTextChoiceField");
+        }
+        catch(AssertionError ae)
+        {
+            errorMsg.append(ae.getMessage());
+        }
+
+        Assert.assertTrue(errorMsg.toString(), errorMsg.length() == 0);
 
     }
 

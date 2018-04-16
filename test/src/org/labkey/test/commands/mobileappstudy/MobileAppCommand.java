@@ -106,8 +106,7 @@ public abstract class MobileAppCommand
         {
             response = client.execute(request);
             isExecuted = true;
-            log("Post completed.");
-            log("Response body: " + getBody());
+            log("Post completed. Response body: " + getBody());
 
             int statusCode = response.getStatusLine().getStatusCode();
             String body = EntityUtils.toString(response.getEntity());
