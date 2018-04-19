@@ -397,13 +397,18 @@ public class MobileAppStudyController extends SpringActionController
         public void validateForm(FORM form, Errors errors)
         {
             super.validateForm(form, errors);
-            form.getParticipantForm().validateForm(errors);
 
+            // Error when binding means null ParticipantForm, #33486
             if (!errors.hasErrors())
             {
-                // Set our special, filtered schema on the form so getQuerySettings() works right
-                UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
-                form.setSchema(schema);
+                form.getParticipantForm().validateForm(errors);
+
+                if (!errors.hasErrors())
+                {
+                    // Set our special, filtered schema on the form so getQuerySettings() works right
+                    UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
+                    form.setSchema(schema);
+                }
             }
         }
 
