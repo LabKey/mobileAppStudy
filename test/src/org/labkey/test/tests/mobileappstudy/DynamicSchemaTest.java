@@ -318,7 +318,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         if(getNewRows(newSurveyMap,getTableData("NewSurvey")).size() != 1)
             errorMsg.append("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10. Expected 1 found " + getNewRows(newSurveyMap,getTableData("NewSurvey")).size() + "\n");
 
-        if(getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() > 1);
+        if(getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() > 1)
             errorMsg.append("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10. Expected 0 or 1 Found " + getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size() + "\n");
 
         if(getNewRows(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size() != 1)
