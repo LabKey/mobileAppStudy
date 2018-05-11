@@ -36,7 +36,7 @@ public class ResponseSubmissionTest extends BaseMobileAppStudyTest
     @Override
     protected String getProjectName()
     {
-        return BASE_PROJECT_NAME;
+        return null;
     }
 
     @Override
