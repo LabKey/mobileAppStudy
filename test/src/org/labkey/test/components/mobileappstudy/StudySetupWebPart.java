@@ -4,11 +4,9 @@
  */
 package org.labkey.test.components.mobileappstudy;
 
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.BodyWebPart;
-import org.labkey.test.components.WebPart;
 import org.labkey.test.components.ext4.Checkbox;
 import org.labkey.test.components.ext4.Error;
 import org.labkey.test.components.ext4.Message;
@@ -122,7 +120,7 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
         return new ElementCache();
     }
 
-    public class ElementCache extends WebPart.ElementCache
+    public class ElementCache extends BodyWebPart.ElementCache
     {
         final WebElement submitButton = Ext4Helper.Locators.ext4Button("Submit").findWhenNeeded(this);
         final WebElement shortNamePrompt = Locator.tagWithClass("div", "studysetup-prompt").findWhenNeeded(this);

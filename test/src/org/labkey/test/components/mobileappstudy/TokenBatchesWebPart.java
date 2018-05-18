@@ -8,7 +8,6 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.components.BodyWebPart;
-import org.labkey.test.components.WebPart;
 import org.labkey.test.pages.mobileappstudy.TokenBatchPage;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.DataRegionTable;
@@ -65,7 +64,7 @@ public class TokenBatchesWebPart extends BodyWebPart<TokenBatchesWebPart.Element
         return new ElementCache();
     }
 
-    public class ElementCache extends WebPart.ElementCache
+    public class ElementCache extends BodyWebPart.ElementCache
     {
         WebElement newBatchButton = new LazyWebElement(Locator.lkButton("New Batch"), this);
         DataRegionTable tokenBatchDataRegion = DataRegion(getDriver()).withName("enrollmentTokenBatches").findWhenNeeded(this);
