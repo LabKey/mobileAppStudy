@@ -74,16 +74,19 @@ public class MobileAppStudyModule extends DefaultModule
         ModuleProperty designDropDirectory = new ModuleProperty(this, SURVEY_METADATA_DIRECTORY);
         designDropDirectory.setCanSetPerContainer(true);
         designDropDirectory.setDescription("Directory in which to find survey design metadata files (for use when metadata service is not available).");
+        designDropDirectory.setInputFieldWidth(500);
         this.addModuleProperty(designDropDirectory);
 
         ModuleProperty metadataServiceBaseURL = new ModuleProperty(this, METADATA_SERVICE_BASE_URL);
         metadataServiceBaseURL.setCanSetPerContainer(true);
         metadataServiceBaseURL.setDescription("Base URL for the Activity Metadata Service");
+        metadataServiceBaseURL.setInputFieldWidth(500);
         this.addModuleProperty(metadataServiceBaseURL);
 
         ModuleProperty metadataServiceAccessToken = new ModuleProperty(this, METADATA_SERVICE_ACCESS_TOKEN);
         metadataServiceAccessToken.setCanSetPerContainer(true);
         metadataServiceAccessToken.setDescription("Token to be passed in the header of requests to the Activity Metadata Service to identify this client of that service.");
+        metadataServiceAccessToken.setInputFieldWidth(500);
         this.addModuleProperty(metadataServiceAccessToken);
     }
 
