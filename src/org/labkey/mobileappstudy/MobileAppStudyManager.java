@@ -65,6 +65,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -140,11 +141,12 @@ public class MobileAppStudyManager
      */
     public boolean isValidStudyToken(@NotNull String token, @NotNull String shortName)
     {
-        Container container = getStudyContainer(shortName);
-        if (container == null)
+        List<Container> containers = getStudyContainers(shortName);
+        if (containers.isEmpty())
             return false;
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("Container"), containers.stream().map(Container::getId).collect(Collectors.toList()), CompareType.IN);
         filter.addCondition(FieldKey.fromString("Token"), token.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
         return selector.exists();
@@ -159,11 +161,12 @@ public class MobileAppStudyManager
      */
     public boolean enrollmentTokenRequired(@NotNull String shortName)
     {
-        Container container = getStudyContainer(shortName);
-        if (container == null)
+        List<Container> containers = getStudyContainers(shortName);
+        if (containers.isEmpty())
             return false;
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("Container"), containers.stream().map(Container::getId).collect(Collectors.toList()), CompareType.IN);
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentTokenBatch(), filter, null);
         return selector.exists();
     }
@@ -206,7 +209,22 @@ public class MobileAppStudyManager
         {
             MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
             Participant participant = new Participant();
-            MobileAppStudy study = getStudy(shortName);
+            List<MobileAppStudy> studies = getStudies(shortName);
+            MobileAppStudy study;
+            if (tokenValue != null)
+            {
+                Optional<MobileAppStudy> studyOpt = studies.stream().filter(s -> getEnrollmentToken(s.getContainer(), tokenValue) != null).findFirst();
+                if (!studyOpt.isPresent())
+                    throw new RuntimeValidationException("Invalid token '" + tokenValue + "' for study id '" + shortName + "'. Participant cannot be enrolled.");
+                else
+                    study = studyOpt.get();
+            }
+            else if (studies.size() == 0)
+                throw new RuntimeValidationException("Invalid study id '" + shortName + "'.  Participant cannot be enrolled.");
+            else if (studies.size() > 1)
+                throw new RuntimeValidationException("Study id '" + shortName + "' cannot be associated with more than one container when not using enrollment tokens.  Participant cannot be enrolled.");
+            else
+                study = studies.get(0);
             participant.setStudyId(study.getRowId());
             participant.setAppToken(GUID.makeHash());
             participant.setContainer(study.getContainer());
@@ -215,9 +233,6 @@ public class MobileAppStudyManager
             if (tokenValue != null)
             {
                 EnrollmentToken eToken = getEnrollmentToken(study.getContainer(), tokenValue);
-                if (eToken == null)
-                    throw new RuntimeValidationException("Invalid token '" + tokenValue + "' in this container. Participant cannot be enrolled.");
-
                 eToken.setParticipantId(participant.getRowId());
                 Table.update(null, schema.getTableInfoEnrollmentToken(), eToken, eToken.getRowId());
             }
@@ -312,16 +327,17 @@ public class MobileAppStudyManager
 
 
     /**
-     * Get the study associated with a given identifier
+     * Get the studies associated with a given identifier
      * @param shortName identifier for the study
-     * @return the associated study, or null if these is no such study
+     * @return the associated studies, or an empty list if these are no such studies
      */
-    public MobileAppStudy getStudy(@NotNull String shortName)
+    @NotNull
+    public List<MobileAppStudy> getStudies(@NotNull String shortName)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ShortName"), shortName.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoStudy(), filter, null);
-        return selector.getObject(MobileAppStudy.class);
+        return selector.getArrayList(MobileAppStudy.class);
     }
 
 
@@ -340,18 +356,16 @@ public class MobileAppStudyManager
 
 
     /**
-     * Get the container associated with a particular study short name
+     * Get the containers associated with a particular study short name
      * @param shortName identifier for the study
-     * @return the associated container, or null if there is no such container.
+     * @return the associated containers, or an empty list if there is no such container.
      */
-    public Container getStudyContainer(@NotNull String shortName)
+    @NotNull
+    public List<Container> getStudyContainers(@NotNull String shortName)
     {
-        MobileAppStudy study = getStudy(shortName);
-
-        if (study == null)
-            return null;
-
-        return study.getContainer();
+        return getStudies(shortName).stream()
+                .map(MobileAppStudy::getContainer)
+                .collect(Collectors.toList());
     }
 
 
