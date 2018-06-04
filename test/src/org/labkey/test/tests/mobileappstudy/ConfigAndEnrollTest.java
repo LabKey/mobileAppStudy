@@ -140,35 +140,6 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void testStudyNameShared()
-    {
-        final String PROJECT_NAME01 = getProjectName() + " DataPartner1";
-        final String PROJECT_NAME02 = getProjectName() + " DataPartner2";
-        final String STUDY_FOLDER_NAME = "StudyFolder";
-        final String SHORT_NAME = "Shared";
-
-        _containerHelper.deleteProject(PROJECT_NAME01, false);
-        _containerHelper.deleteProject(PROJECT_NAME02, false);
-
-        _containerHelper.createProject(PROJECT_NAME01, "Collaboration");
-        _containerHelper.createSubfolder(PROJECT_NAME01, STUDY_FOLDER_NAME,"Mobile App Study");
-
-        SetupPage setupPage = new SetupPage(this);
-        setupPage.getStudySetupWebPart().setShortName(SHORT_NAME);
-        setupPage.getStudySetupWebPart().clickSubmit();
-
-        _containerHelper.createProject(PROJECT_NAME02, "Collaboration");
-        _containerHelper.createSubfolder(PROJECT_NAME02, STUDY_FOLDER_NAME, "Mobile App Study");
-
-        setupPage = new SetupPage(this);
-        setupPage.getStudySetupWebPart().setShortName(SHORT_NAME);
-        setupPage.getStudySetupWebPart().clickSubmit();
-        goToProjectHome(PROJECT_NAME02);
-        clickFolder(STUDY_FOLDER_NAME);
-        assertEquals("Study name not saved for second project", SHORT_NAME.toUpperCase(), setupPage.getStudySetupWebPart().getShortName());
-    }
-
-    @Test
     public void testCollectionToggling()
     {
         final String STUDY_NAME01 = "STUDYNAME01";
