@@ -103,7 +103,7 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         log("Testing enrollment, which should fail without any tokens.");
         EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", SHORT_NAME, null, this::log);
         enrollCmd.execute(400);
-        assertFalse("Enrollment should fail when two projects share a study id but have no enrollment tokenas", enrollCmd.getSuccess());
+        assertFalse("Enrollment should fail when two projects share a study id but have no enrollment tokens", enrollCmd.getSuccess());
     }
 
 
