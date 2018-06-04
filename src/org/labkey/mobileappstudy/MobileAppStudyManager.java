@@ -146,7 +146,7 @@ public class MobileAppStudyManager
             return false;
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         SimpleFilter filter = new SimpleFilter();
-        filter.addCondition(FieldKey.fromParts("Container"), containers.stream().map(Container::getId).collect(Collectors.toList()), CompareType.IN);
+        filter.addCondition(FieldKey.fromParts("Container"), containers, CompareType.IN);
         filter.addCondition(FieldKey.fromString("Token"), token.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
         return selector.exists();
@@ -166,7 +166,7 @@ public class MobileAppStudyManager
             return false;
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         SimpleFilter filter = new SimpleFilter();
-        filter.addCondition(FieldKey.fromParts("Container"), containers.stream().map(Container::getId).collect(Collectors.toList()), CompareType.IN);
+        filter.addCondition(FieldKey.fromParts("Container"), containers, CompareType.IN);
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentTokenBatch(), filter, null);
         return selector.exists();
     }
@@ -219,7 +219,7 @@ public class MobileAppStudyManager
                 else
                     study = studyOpt.get();
             }
-            else if (studies.size() == 0)
+            else if (studies.isEmpty())
                 throw new RuntimeValidationException("Invalid study id '" + shortName + "'.  Participant cannot be enrolled.");
             else if (studies.size() > 1)
                 throw new RuntimeValidationException("Study id '" + shortName + "' cannot be associated with more than one container when not using enrollment tokens.  Participant cannot be enrolled.");
