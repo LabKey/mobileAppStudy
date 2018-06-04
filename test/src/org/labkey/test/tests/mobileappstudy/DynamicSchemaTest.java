@@ -11,6 +11,7 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
+import org.labkey.test.pages.list.BeginPage;
 import org.labkey.test.pages.mobileappstudy.ResponseQueryPage;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.util.PortalHelper;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Category({Git.class})
 public class DynamicSchemaTest extends BaseMobileAppStudyTest
@@ -79,7 +82,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_2--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "2", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single question added. Response text 2",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Did not find new expected column DoubleField2 in NewSurvey after adding single response with single question added. Response text 2","DoubleField2", getAddedColumns(newSurveyMap,getTableData("NewSurvey")).get(0));
         Assert.assertEquals("Unexpected number of new columns in NewSurvey after adding single response with single question added. Response text 2", 1, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
@@ -102,7 +105,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_3--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "3", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding response with single question removed. Response text 3",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected number of new columns NewSurvey after adding response with single question removed. Response text 3", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after response with single question removed. Response text 3",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
@@ -124,7 +127,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_4--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "4", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with a single question added to group. Response text 4",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected additional column in NewSurvey after adding single response with a single question added to group. Response text 4", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with a single question added to group. Response text 4",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
@@ -146,7 +149,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_5--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "5", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single question removed from group. Response text 5",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected additional column in NewSurvey after adding single response with single question removed from group. Response text 5 ", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single question removed from group. Response text 5",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
@@ -168,7 +171,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_6--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "6", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single question added to sub subgroup. Response text 6",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected additional column in NewSurvey after adding single response with single question added to sub subgroup. Response text 6", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single question added to sub subgroup. Response text 6",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
@@ -192,7 +195,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_7--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "7", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single question removed from sub. Response text 7",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected number of new columns in NewSurvey after adding single response with single question removed from sub. Response text 7", 1, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single question removed from sub. Response text 7",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
@@ -214,7 +217,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_8--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "8", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyMap, getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected number of new columns in NewSurvey after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyGroupedMap, getTableData("NewSurveyGroupedList")));
@@ -239,7 +242,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_9--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "9", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(newSurveyMap, "NewSurvey");
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with group removed. Response text 9",1,getNewRowCount(newSurveyMap,getTableData("NewSurvey")));
         Assert.assertEquals("Unexpected number of new columns in NewSurvey with group removed. Response text 9", 1, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with group removed. Response text 9",0,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
@@ -261,7 +264,8 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_13--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "13", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+
+        waitForResults(newSurveyGroupedMap, "NewSurveyGroupedList");
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListAdded after adding single response with group and subgroup added. Response text 13",1,getNewRowCount(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")));
         Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListAdded with group and subgroup added. Response text 13",0, getAddedColumns(newSurveyGroupedMap,getTableData("NewSurveyGroupedList")).size());
         Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListAddedSubGroupedList after adding single response with group and subgroup added. Response text 13",1,getTableData("NewSurveyGroupedListAddedSubGroupedList").size());
@@ -282,15 +286,28 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_10--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "10", appToken, responseString); //Schema name in the metadata is: "NewSurvey_Mismatch"
         cmd.execute(200);
-        sleep(5000);
+        sleep(5000); // wait for response shredder to have time to do its work
 
         goToProjectHome(PROJECT_NAME);  //refresh Project page
 
+
         log("Check mismatch lists created in addition to existing lists");
-        assertTextPresentInThisOrder("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
+        final BeginPage beginPage = goToManageLists();
+        List<String> lists = beginPage.getGrid().getColumnDataAsText("Name");
+        if (lists.size() < 10)
+        {
+            log("Not all lists present. Napping again to see if they show up.");
+            sleep(5000);
+            lists = beginPage.getGrid().getColumnDataAsText("Name");
+        }
+        List<String> finalLists = lists;
+        Set<String> missingLists = Stream.of("NewSurvey", "NewSurvey_Mismatch", "NewSurvey_MismatchGroupedList",
                 "NewSurvey_MismatchGroupedListSubGroupedList", "NewSurvey_MismatchGroupedListTextChoiceField",
                 "NewSurvey_MismatchTextChoiceField", "NewSurveyGroupedList", "NewSurveyGroupedListSubGroupedList",
-                "NewSurveyGroupedListTextChoiceField", "NewSurveyTextChoiceField");
+                "NewSurveyGroupedListTextChoiceField", "NewSurveyTextChoiceField")
+                .filter( name -> !finalLists.contains(name))
+                .collect(Collectors.toSet());
+        Assert.assertEquals("Lists that should have been created are missing: " + String.join(",", missingLists), 0, missingLists.size());
 
         Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with mismatched schema. Response text 10", 1, getNewRows(newSurveyMap,getTableData("NewSurvey")).size());
         Assert.assertEquals("Unexpected number of new columns in NewSurvey with mismatched schema. Response text 10", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
@@ -382,7 +399,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_TOH-75_1.0--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "TOH-75", "1.0", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(beforeTableData, tableName);
         List<Map<String, Object>> afterTableData = getTableData(tableName);
         Assert.assertEquals("Unexpected new row count in " + tableName + " after adding single response.",1, getNewRowCount(beforeTableData, afterTableData));
         Assert.assertTrue("Expected field 'puzzleWasSolved' not found", afterTableData.get(0).containsKey("puzzleWasSolved"));
@@ -404,7 +421,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_SSM-76_1.0--RESPONSE.json");
         SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "SSM-76", "1.0", appToken, responseString);
         cmd.execute(200);
-        sleep(5000);
+        waitForResults(beforeTableData, tableName);
         List<Map<String, Object>> afterTableData = getTableData(tableName);
         Assert.assertEquals("Unexpected new row count in " + tableName + " after adding single response.",1, getNewRowCount(beforeTableData, afterTableData));
         Assert.assertTrue("Expected field 'score' not found", afterTableData.get(0).containsKey("score"));
@@ -536,5 +553,19 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         log("NewSurveyGroupedTextChoiceList now has " + String.valueOf(newSurveyGroupedTextChoiceField.size()) + " rows");
         newSurveyTextChoiceField = new ArrayList(getTableData("NewSurveyTextChoiceField"));
         log("NewSurveyTextChoiceList now has " + String.valueOf(newSurveyTextChoiceField.size()) + " rows");
+    }
+
+    private void waitForResults(List<Map<String, Object>> oldData, String newDataTableName )
+    {
+        log("Napping to wait for results to be shredded");
+        long napTime = 0;
+        long napInterval = 1000;
+        long maxNapTime = 10000;
+        while (napTime < maxNapTime && getNewRowCount(oldData, getTableData(newDataTableName)) == 0)
+        {
+            sleep(napInterval);
+            napTime += napInterval;
+            log("Total nap time: " + napTime);
+        }
     }
 }
