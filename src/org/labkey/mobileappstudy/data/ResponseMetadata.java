@@ -32,7 +32,7 @@ public class ResponseMetadata
 
     public void setRowId(Integer rowId)
     {
-        this._rowId = rowId;
+        _rowId = rowId;
     }
 
     @JsonIgnore
@@ -44,7 +44,7 @@ public class ResponseMetadata
     @JsonIgnore
     public void setContainer(Container container)
     {
-        this._container = container;
+        _container = container;
     }
 
     public String getListName()
@@ -54,7 +54,7 @@ public class ResponseMetadata
 
     public void setListName(String listName)
     {
-        this._listName = listName;
+        _listName = listName;
     }
 
     public Integer getActivityId()
@@ -64,7 +64,7 @@ public class ResponseMetadata
 
     public void setActivityId(Integer activityId)
     {
-        this._activityId = activityId;
+        _activityId = activityId;
     }
 
     public String getFieldName()
@@ -74,7 +74,7 @@ public class ResponseMetadata
 
     public void setFieldName(String fieldName)
     {
-        this._fieldName = fieldName;
+        _fieldName = fieldName;
     }
 
     public Date getStartTime()
@@ -84,12 +84,12 @@ public class ResponseMetadata
 
     public void setStart(Date startTime)
     {
-        this._startTime = startTime;
+        _startTime = startTime;
     }
 
     public void setStartTime(Date startTime)
     {
-        this._startTime = startTime;
+        _startTime = startTime;
     }
 
     public Date getEndTime()
@@ -99,12 +99,12 @@ public class ResponseMetadata
 
     public void setEnd(Date endTime)
     {
-        this._endTime = endTime;
+        _endTime = endTime;
     }
 
     public void setEndTime(Date endTime)
     {
-        this._endTime = endTime;
+        _endTime = endTime;
     }
 
     public Boolean getSkipped()
@@ -114,7 +114,7 @@ public class ResponseMetadata
 
     public void setSkipped(Boolean skipped)
     {
-        this._skipped = skipped;
+        _skipped = skipped;
     }
 
     public Date getCreated()
@@ -124,7 +124,7 @@ public class ResponseMetadata
 
     public void setCreated(Date created)
     {
-        this._created = created;
+        _created = created;
     }
 
     public Integer getParticipantId()

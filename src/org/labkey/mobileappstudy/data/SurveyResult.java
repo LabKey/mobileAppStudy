@@ -39,7 +39,7 @@ public class SurveyResult extends ResponseMetadata
 
     public void setResultType(String resultType)
     {
-        this._resultType = resultType;
+        _resultType = resultType;
     }
 
     public String getKey()
@@ -49,7 +49,7 @@ public class SurveyResult extends ResponseMetadata
 
     public void setKey(String key)
     {
-        this._key = key;
+        _key = key;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class SurveyResult extends ResponseMetadata
     @Override
     public void setListName(String listName)
     {
-        this._listName = listName;
+        _listName = listName;
     }
 
     public Object getValue()
@@ -91,13 +91,13 @@ public class SurveyResult extends ResponseMetadata
                     // first try to parse it as a DateTime value
                     try
                     {
-                        this._parsedValue = DATE_TIME_FORMAT.parse((String) _value);
+                        _parsedValue = DATE_TIME_FORMAT.parse((String) _value);
                     }
                     catch (ParseException e1) // then try as a Date value
                     {
                         try
                         {
-                            this._parsedValue = DATE_FORMAT.parse((String) _value);
+                            _parsedValue = DATE_FORMAT.parse((String) _value);
                         }
                         catch (ParseException e2)
                         {
@@ -110,14 +110,14 @@ public class SurveyResult extends ResponseMetadata
                 break;
             case Boolean:
                 if (_value instanceof Boolean)
-                    this._parsedValue = _value;
+                    _parsedValue = _value;
                 else
                     throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Boolean but got " + _value.getClass());
                 break;
             case TextChoice:
                 if (_value instanceof List)
                 {
-                    this._parsedValue = _value;
+                    _parsedValue = _value;
                 }
                 else
                     throw new IllegalArgumentException("Value type for choice field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
@@ -129,7 +129,7 @@ public class SurveyResult extends ResponseMetadata
             case TimeInterval:
                 if (_value instanceof Double || _value instanceof Float || _value instanceof Integer)
                 {
-                    this._parsedValue = _value;
+                    _parsedValue = _value;
                 }
                 else
                     throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be Integer or Float but got " + _value.getClass());
@@ -140,7 +140,7 @@ public class SurveyResult extends ResponseMetadata
             case SpatialSpanMemory:
                 if (_value instanceof List)
                 {
-                    this._parsedValue = convertSurveyResults((List) _value);
+                    _parsedValue = convertSurveyResults((List) _value);
                 }
                 else
                     throw new IllegalArgumentException("Value type for grouped result field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
@@ -153,7 +153,7 @@ public class SurveyResult extends ResponseMetadata
             case Text:
             case TimeOfDay:
                 if (_value instanceof String)
-                    this._parsedValue = _value;
+                    _parsedValue = _value;
                 else
                     throw new IllegalArgumentException("Value type for field '" + getKey() + "' expected to be String but got " + _value.getClass());
                 break;

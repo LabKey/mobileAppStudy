@@ -36,7 +36,7 @@ public class Response
 
     public void setStartTime(Date startTime)
     {
-        this._startTime = startTime;
+        _startTime = startTime;
     }
 
     public Date getEndTime()
@@ -46,17 +46,17 @@ public class Response
 
     public void setEndTime(Date endTime)
     {
-        this._endTime = endTime;
+        _endTime = endTime;
     }
 
     public void setStart(Date start)
     {
-        this._startTime = start;
+        _startTime = start;
     }
 
     public void setEnd(Date end)
     {
-        this._endTime = end;
+        _endTime = end;
     }
 
     public List<SurveyResult> getResults()
@@ -66,6 +66,6 @@ public class Response
 
     public void setResults(List<SurveyResult> results)
     {
-        this._results = results;
+        _results = results;
     }
 }
