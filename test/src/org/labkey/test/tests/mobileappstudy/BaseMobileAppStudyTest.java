@@ -5,8 +5,11 @@
 package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.BeforeClass;
+import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.PostCommand;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
@@ -19,14 +22,19 @@ import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.InitialSurvey;
 import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
+import org.labkey.test.util.Maps;
 import org.labkey.test.util.PostgresOnlyTest;
+import org.labkey.test.util.SimpleHttpResponse;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -132,16 +140,23 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
     {
-        final String API_STRING = WebTestHelper.getBaseURL() + "/mobileappstudy/$PROJECT_NAME$/enroll.api?shortName=$STUDY_NAME$&token=";
-        String apiUrl;
-
+        Connection connection = createDefaultConnection(false);
         for(String token : tokensToAssign)
         {
-            apiUrl = API_STRING.replace("$PROJECT_NAME$", projectName).replace("$STUDY_NAME$", studyName) + token;
-            log("Assigning token: " + token + " using url: " + apiUrl);
-            beginAt(apiUrl);
-            waitForText("\"success\" : true");
-            log("Token assigned.");
+            Command command = new Command("mobileappstudy", "enroll");
+            HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token));
+            command.setParameters(params);
+            log("Assigning token: " + token);
+            try
+            {
+                CommandResponse response = command.execute(connection, projectName);
+                assertEquals(true, response.getProperty("success"));
+                log("Token assigned.");
+            }
+            catch (IOException | CommandException e)
+            {
+                throw new RuntimeException("Failed to assign token");
+            }
         }
     }
 
