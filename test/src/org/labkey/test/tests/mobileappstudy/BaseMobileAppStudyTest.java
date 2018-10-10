@@ -9,22 +9,21 @@ import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.PostCommand;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
-import org.labkey.test.WebTestHelper;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.InitialSurvey;
 import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
+import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.Maps;
 import org.labkey.test.util.PostgresOnlyTest;
-import org.labkey.test.util.SimpleHttpResponse;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -138,26 +136,33 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         return null;
     }
 
+    @LogMethod
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
     {
         Connection connection = createDefaultConnection(false);
         for(String token : tokensToAssign)
         {
-            Command command = new Command("mobileappstudy", "enroll");
-            HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token));
-            command.setParameters(params);
-            log("Assigning token: " + token);
             try
             {
-                CommandResponse response = command.execute(connection, projectName);
+                CommandResponse response = assignToken(connection, token, projectName, studyName);
                 assertEquals(true, response.getProperty("success"));
                 log("Token assigned.");
             }
             catch (IOException | CommandException e)
             {
-                throw new RuntimeException("Failed to assign token");
+                throw new RuntimeException("Failed to assign token", e);
             }
         }
+    }
+
+    @LogMethod
+    protected CommandResponse assignToken(Connection connection, @LoggedParam String token, @LoggedParam String projectName, @LoggedParam String studyName) throws IOException, CommandException
+    {
+        Command command = new Command("mobileappstudy", "enroll");
+        HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token));
+        command.setParameters(params);
+        log("Assigning token: " + token);
+        return command.execute(connection, projectName);
     }
 
     @BeforeClass

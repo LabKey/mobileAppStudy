@@ -6,22 +6,26 @@ package org.labkey.test.tests.mobileappstudy;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.WebTestHelper;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.CommandResponse;
+import org.labkey.remoteapi.Connection;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
 import org.labkey.test.components.ext4.Error;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
+import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.PortalHelper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 @Category({Git.class})
 public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
@@ -347,37 +351,32 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         validateGridInfo(setupPage, proj02_batchId01, proj02_tokenCount01, Integer.toString(proj02_tokensToAssignBatch01.size()));
 
         log("Now the real fun begins....");
-        String failurePage;
+        String failureMessage;
 
         log("Give data that can not be parsed.");
         String invalidToken = proj01_tokensNotAssignBatch01.get(1) + 1;
-        failurePage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        assertTrue("Json result did not contain error message: \"Invalid token: '" + invalidToken + "'\"", failurePage.contains("Invalid token: '" + invalidToken + "'"));
+        failureMessage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
+        assertEquals("Wrong enrollment error.", "Invalid token: '" + invalidToken + "'", failureMessage);
 
         log("Do not provide a study name (but have a valid token).");
-        failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error msg \"" + EnrollmentTokenValidationCommand.BLANK_STUDYID +"\".", failurePage.contains(EnrollmentTokenValidationCommand.BLANK_STUDYID));
+        failureMessage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "");
+        assertEquals("Wrong enrollment error.", EnrollmentTokenValidationCommand.BLANK_STUDYID, failureMessage);
 
         log("Provide a study name that doesn't exists (but have a valid token).");
-        failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "THIS_STUDY_IS_NOT_HERE");
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error message: \"Study with StudyId 'THIS_STUDY_IS_NOT_HERE' does not exist\"", failurePage.contains("StudyId 'THIS_STUDY_IS_NOT_HERE' does not exist"));
+        failureMessage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME01, "THIS_STUDY_IS_NOT_HERE");
+        assertEquals("Wrong enrollment error.", "Study with StudyId 'THIS_STUDY_IS_NOT_HERE' does not exist", failureMessage);
 
         log("Try to assign a token that has already been assigned.");
-        failurePage = assignTokenAndFail(proj01_tokensToAssignBatch03.get(0), PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json did not contain error message: \"Token already in use\"", failurePage.contains("Token already in use"));
+        failureMessage = assignTokenAndFail(proj01_tokensToAssignBatch03.get(0), PROJECT_NAME01, PROJECT01_STUDY_NAME);
+        assertEquals("Wrong enrollment error.", "Token already in use", failureMessage);
 
         log("Try to assign tokens from Project01 to a study in Project02.");
-        failurePage = assignTokenAndFail(proj01_tokensToAssignBatch01.get(0), PROJECT_NAME02, PROJECT02_STUDY_NAME);
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not which token was in error.", failurePage.contains("Unknown token: '" + proj01_tokensToAssignBatch01.get(0) + "'"));
+        failureMessage = assignTokenAndFail(proj01_tokensToAssignBatch01.get(0), PROJECT_NAME02, PROJECT02_STUDY_NAME);
+        assertEquals("Wrong enrollment error.", "Unknown token: '" + proj01_tokensToAssignBatch01.get(0) + "'", failureMessage);
 
         log("Try to assign tokens from Project02 to a study in Project01.");
-        failurePage = assignTokenAndFail(proj02_tokensToAssignBatch01.get(3), PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not which token was in error.", failurePage.contains("Unknown token: '" + proj02_tokensToAssignBatch01.get(3) + "'"));
+        failureMessage = assignTokenAndFail(proj02_tokensToAssignBatch01.get(3), PROJECT_NAME01, PROJECT01_STUDY_NAME);
+        assertEquals("Wrong enrollment error.", "Unknown token: '" + proj02_tokensToAssignBatch01.get(3) + "'", failureMessage);
 
         log("Invalidate the checksum of a valid token.");
         invalidToken = proj01_tokensNotAssignBatch01.get(1);
@@ -391,33 +390,37 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
         checkSum = (char)intVal;
         invalidToken = invalidToken.substring(0, invalidToken.length()-1) + checkSum;
         log("Token after changing checksum: " + invalidToken);
-        failurePage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error message: \"Invalid token: '" + invalidToken + "'\".", failurePage.contains("Invalid token: '" + invalidToken + "'"));
+        failureMessage = assignTokenAndFail(invalidToken, PROJECT_NAME01, PROJECT01_STUDY_NAME);
+        assertEquals("Wrong enrollment error.", "Invalid token: '" + invalidToken + "'", failureMessage);
 
         log("Provide a token but the wrong (valid) study name.");
-        failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME02, PROJECT02_STUDY_NAME);
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error: \"Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'", failurePage.contains("Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'"));
+        failureMessage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(0), PROJECT_NAME02, PROJECT02_STUDY_NAME);
+        assertEquals("Wrong enrollment error.", "Unknown token: '" + proj01_tokensNotAssignBatch01.get(0) + "'", failureMessage);
 
         log("Provide a valid token but no study name.");
-        failurePage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(2), PROJECT_NAME01, "");
-        assertTrue("Json result did not contain \"success\" : false", failurePage.contains("\"success\" : false"));
-        assertTrue("Json result did not contain error: \"" + EnrollmentTokenValidationCommand.BLANK_STUDYID + "\".", failurePage.contains(EnrollmentTokenValidationCommand.BLANK_STUDYID));
-
-        log("Looks good. Go home.");
-        goToHome();
+        failureMessage = assignTokenAndFail(proj01_tokensNotAssignBatch01.get(2), PROJECT_NAME01, "");
+        assertEquals("Wrong enrollment error.", EnrollmentTokenValidationCommand.BLANK_STUDYID, failureMessage);
     }
 
-    private String assignTokenAndFail(String tokenToAssign, String projectName, String studyName)
+    @LogMethod
+    private String assignTokenAndFail(@LoggedParam String token, @LoggedParam String projectName, @LoggedParam String studyName)
     {
-        final String API_STRING = WebTestHelper.getBaseURL() + "/mobileappstudy/$PROJECT_NAME$/enroll.api?shortName=$STUDY_NAME$&token=";
-        String apiUrl;
-
-        apiUrl = API_STRING.replace("$PROJECT_NAME$", projectName).replace("$STUDY_NAME$", studyName) + tokenToAssign;
-        log("Failure url is: " + apiUrl);
-        beginAt(apiUrl);
-        return getDriver().getPageSource();
+        Connection connection = createDefaultConnection(false);
+        try
+        {
+            CommandResponse response = assignToken(connection, token, projectName, studyName);
+            throw new AssertionError("Token assignment should have failed: " + response.getText());
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Failed to assign token", e);
+        }
+        catch (CommandException e)
+        {
+            String errorMessage = (String) e.getProperties().get("exception");
+            log("Expected error: " + errorMessage);
+            return errorMessage;
+        }
     }
 
     private void validateGridInfo(SetupPage setupPage, String batchId, String expectedTokenCount, String expectedUsedCount)
