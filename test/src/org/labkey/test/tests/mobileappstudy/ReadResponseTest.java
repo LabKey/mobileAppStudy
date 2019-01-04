@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.api.collections.ArrayListMap;
 import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
@@ -348,7 +347,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + ReadResponseTest.participantWithMultipleRow.getId() + " (" + ReadResponseTest.participantWithMultipleRow.getAppToken() + ") not as expected.", 3, jsonArray.size());
 
         log("Validate the first item returned in the json.");
-        Map<String, Object> expectedValues = new ArrayListMap<>();
+        Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithMultipleRow.getId());
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + ReadResponseTest.participantWithMultipleRow.getId());
         expectedValues.put("multiLineField", FIRST_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithMultipleRow.getId())));
@@ -368,7 +367,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         checkJsonObjectAgainstExpectedValues(expectedValues, jsonObject);
 
         log("Validate the second item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithMultipleRow.getId());
         expectedValues.put("stringField", SECOND_STRING_FIELD_VALUE + ReadResponseTest.participantWithMultipleRow.getId());
         expectedValues.put("multiLineField", SECOND_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithMultipleRow.getId())));
@@ -382,7 +381,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         checkJsonObjectAgainstExpectedValues(expectedValues, jsonObject);
 
         log("Validate the third item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithMultipleRow.getId());
         expectedValues.put("stringField", THIRD_STRING_FIELD_VALUE + ReadResponseTest.participantWithMultipleRow.getId());
         expectedValues.put("multiLineField", THIRD_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithMultipleRow.getId())));
@@ -423,7 +422,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + ReadResponseTest.participantWithOneRow.getId() + " (" + ReadResponseTest.participantWithOneRow.getAppToken() + ") not as expected.", 1, jsonArray.size());
 
         log("Validate the row returned.");
-        Map<String, Object> expectedValues = new ArrayListMap<>();
+        Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("multiLineField", FIRST_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithOneRow.getId())));
@@ -500,7 +499,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Validate row returned. Verify that only the expected columns are returned.");
 
-        Map<String, Object> expectedValues = new ArrayListMap<>();
+        Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("multiLineField", FIRST_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithOneRow.getId())));
@@ -529,7 +528,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Validate that the row returned has all of the columns.");
 
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("multiLineField", FIRST_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithOneRow.getId())));
@@ -570,7 +569,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Since only invalid column names were passed no columns should be returned (other than the 'Key' column).");
 
         // If only invalid columns were provided no columns should be returned.
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
 
         jsonObject = (JSONObject)jsonArray.get(0);
         checkJsonObjectAgainstExpectedValues(expectedValues, jsonObject);
@@ -592,7 +591,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + ReadResponseTest.participantWithOneRow.getId() + " (" + ReadResponseTest.participantWithOneRow.getAppToken() + ") not as expected.", 1, jsonArray.size());
 
         log("Validate row returned.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("multiLineField", FIRST_MULTILINE_STRING_FIELD.replace("$", Long.toString(ReadResponseTest.participantWithOneRow.getId())));
@@ -625,7 +624,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + ReadResponseTest.participantWithOneRow.getId() + " (" + ReadResponseTest.participantWithOneRow.getAppToken() + ") not as expected.", 1, jsonArray.size());
 
         log("Validate that the columns have the expected values.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", ReadResponseTest.participantWithOneRow.getId());
         expectedValues.put("CreatedBy", userId);
         expectedValues.put("ModifiedBy", userId);
@@ -689,7 +688,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + participantId + " (" + participantAppToken + ") not as expected.", 3, jsonArray.size());
 
         log("Validate the first item returned in the json.");
-        Map<String, Object> expectedValues = new ArrayListMap<>();
+        Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + participantId);
         expectedValues.put("multiLineField", FIRST_MULTILINE_STRING_FIELD.replace("$", Long.toString(participantId)));
@@ -775,7 +774,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + participantId + " (" + participantAppToken + ") not as expected.", 2, jsonArray.size());
 
         log("Validate the first item returned in the json.");
-        Map<String, Object> expectedValues = new ArrayListMap<>();
+        Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
@@ -786,7 +785,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         checkJsonObjectAgainstExpectedValues(expectedValues, jsonData);
 
         log("Validate the second item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + SECOND_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
@@ -818,7 +817,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + participantId + " (" + participantAppToken + ") not as expected.", 2, jsonArray.size());
 
         log("Validate the first item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("stringField", DESCRIPTION_VALUE_THIRD_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
@@ -829,7 +828,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         checkJsonObjectAgainstExpectedValues(expectedValues, jsonData);
 
         log("Validate the second item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("stringField", FIRST_STRING_FIELD_VALUE + participantId);
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
@@ -861,7 +860,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         Assert.assertEquals("Number of rows returned for participant " + participantId + " (" + participantAppToken + ") not as expected.", 2, jsonArray.size());
 
         log("Validate the first item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
@@ -872,7 +871,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         checkJsonObjectAgainstExpectedValues(expectedValues, jsonData);
 
         log("Validate the second item returned in the json.");
-        expectedValues = new ArrayListMap<>();
+        expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
         expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + SECOND_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
