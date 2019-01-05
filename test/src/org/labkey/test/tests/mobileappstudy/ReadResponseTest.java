@@ -59,9 +59,9 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     final String SECOND_MANTISSA = ".22222";
     final String THIRD_MANTISSA = ".3333";
 
-    final String FIRST_DATE = "2017/03/17 11:11:11";
-    final String SECOND_DATE = "2017/01/15 08:02:00";
-    final String THIRD_DATE = "2016/11/20 14:25:00";
+    final String FIRST_DATE = "2017-03-17 11:11:11.000";
+    final String SECOND_DATE = "2017-01-15 08:02:00.000";
+    final String THIRD_DATE = "2016-11-20 14:25:00.000";
 
     final int FIRST_INT_OFFSET = 5;
     final int SECOND_INT_OFFSET = 7;
