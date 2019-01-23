@@ -12,10 +12,11 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiQueryResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
@@ -43,6 +44,7 @@ import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
+import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.EnrollmentTokensWebPart;
 import org.springframework.beans.PropertyValues;
@@ -79,7 +81,7 @@ public class MobileAppStudyController extends SpringActionController
      * file in the configured directory.
      */
     @RequiresNoPermission
-    public class ActivityMetadataAction extends ApiAction<ActivityMetadataForm>
+    public class ActivityMetadataAction extends ReadOnlyApiAction<ActivityMetadataForm>
     {
         @Override
         public void validateForm(ActivityMetadataForm form, Errors errors)
@@ -99,7 +101,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public Object execute(ActivityMetadataForm form, BindException errors) throws Exception
+        public Object execute(ActivityMetadataForm form, BindException errors) throws InvalidDesignException
         {
             logger.info("Processing request with Authorization header: " + getViewContext().getRequest().getHeader("Authorization"));
             FileSurveyDesignProvider provider = new FileSurveyDesignProvider(getContainer(), logger);
@@ -117,7 +119,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(Object o, BindException errors)
         {
             setTitle("Enrollment Token Batches");
             return new EnrollmentTokenBatchesWebPart(getViewContext());
@@ -134,7 +136,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(Object o, BindException errors)
         {
             setTitle("Enrollment Tokens");
             return new EnrollmentTokensWebPart(getViewContext());
@@ -142,7 +144,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GenerateTokensAction extends ApiAction<GenerateTokensForm>
+    public class GenerateTokensAction extends MutatingApiAction<GenerateTokensForm>
     {
         @Override
         public void validateForm(GenerateTokensForm form, Errors errors)
@@ -152,8 +154,9 @@ public class MobileAppStudyController extends SpringActionController
             else if (form.getCount() == null || form.getCount() <= 0)
                 errors.reject(ERROR_MSG, "Count must be provided and greater than 0.");
         }
+
         @Override
-        public Object execute(GenerateTokensForm form, BindException errors) throws Exception
+        public Object execute(GenerateTokensForm form, BindException errors)
         {
             EnrollmentTokenBatch batch = MobileAppStudyManager.get().createTokenBatch(form.getCount(), getUser(), getContainer());
 
@@ -162,7 +165,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class StudyConfigAction extends ApiAction<StudyConfigForm>
+    public class StudyConfigAction extends MutatingApiAction<StudyConfigForm>
     {
         @Override
         public void validateForm(StudyConfigForm form, Errors errors)
@@ -180,7 +183,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public Object execute(StudyConfigForm form, BindException errors) throws Exception
+        public Object execute(StudyConfigForm form, BindException errors)
         {
             // if submitting again with the same id in the same container, return the existing study object
             MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
@@ -200,7 +203,7 @@ public class MobileAppStudyController extends SpringActionController
      */
     @RequiresNoPermission
     @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the app token). Plus, mobile app has no ability to provide CSRF token.
-    public class ProcessResponseAction extends ApiAction<ResponseForm>
+    public class ProcessResponseAction extends MutatingApiAction<ResponseForm>
     {
         @Override
         public void validateForm(ResponseForm form, Errors errors)
@@ -216,7 +219,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public Object execute(ResponseForm form, BindException errors) throws Exception
+        public Object execute(ResponseForm form, BindException errors)
         {
             //Record response blob
             MobileAppStudyManager manager = MobileAppStudyManager.get();
@@ -242,7 +245,7 @@ public class MobileAppStudyController extends SpringActionController
      */
     @RequiresNoPermission
     @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the app token). Plus, mobile app has no ability to provide CSRF token.
-    public class WithdrawFromStudy extends ApiAction<WithdrawFromStudyForm>
+    public class WithdrawFromStudy extends MutatingApiAction<WithdrawFromStudyForm>
     {
         public void validateForm(WithdrawFromStudyForm form, Errors errors)
         {
@@ -267,8 +270,7 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    @RequiresNoPermission
-    private abstract class BaseEnrollmentAction extends ApiAction<EnrollmentForm>
+    private abstract class BaseEnrollmentAction extends MutatingApiAction<EnrollmentForm>
     {
         public void validateForm(EnrollmentForm form, Errors errors)
         {
@@ -315,7 +317,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors)
         {
             //If action passes validation then it was successful
             return success();
@@ -327,7 +329,7 @@ public class MobileAppStudyController extends SpringActionController
     public class EnrollAction extends BaseEnrollmentAction
     {
         @Override
-        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws Exception
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors)
         {
             Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
             return success(PageFlowUtil.map("appToken", participant.getAppToken()));
@@ -335,7 +337,7 @@ public class MobileAppStudyController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ReprocessResponseAction extends ApiAction<ReprocessResponseForm>
+    public class ReprocessResponseAction extends MutatingApiAction<ReprocessResponseForm>
     {
         private Set<Integer> _ids;
 
@@ -356,7 +358,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public Object execute(ReprocessResponseForm form, BindException errors) throws Exception
+        public Object execute(ReprocessResponseForm form, BindException errors)
         {
             Set<Integer> nonErrorIds = MobileAppStudyManager.get().getNonErrorResponses(_ids);
             int enqueued = MobileAppStudyManager.get().reprocessResponses(getUser(), _ids);
@@ -365,10 +367,10 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    private abstract class BaseQueryAction<FORM extends SelectRowsForm> extends ApiAction<FORM>
+    private abstract class BaseQueryAction<FORM extends SelectRowsForm> extends ReadOnlyApiAction<FORM>
     {
         @Override
-        public final BindException defaultBindParameters(FORM form, PropertyValues params)
+        public final @NotNull BindException defaultBindParameters(FORM form, PropertyValues params)
         {
             ParticipantForm participantForm = new ParticipantForm();
             BindException exception = defaultBindParameters(participantForm, getCommandName(), getPropertyValues());
@@ -402,7 +404,7 @@ public class MobileAppStudyController extends SpringActionController
         }
 
         @Override
-        public final Object execute(FORM form, BindException errors) throws Exception
+        public final Object execute(FORM form, BindException errors)
         {
             Participant participant = form.getParticipant();
 
