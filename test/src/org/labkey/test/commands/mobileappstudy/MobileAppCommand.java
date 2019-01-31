@@ -21,7 +21,9 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -66,15 +68,23 @@ public abstract class MobileAppCommand
     public abstract HttpResponse execute(int expectedStatusCode);
     public abstract String getTargetURL();
 
-    protected void parseResponse(JSONObject response)
+    protected void parseResponse(String response)
     {
-        _jsonResponse = response;
-        setSuccess(response.getBoolean(SUCCESS_TAG));
+        JSONParser parser = new JSONParser();
+        try
+        {
+            _jsonResponse = (JSONObject) parser.parse(response);
+        }
+        catch (ParseException e)
+        {
+            throw new RuntimeException(e);
+        }
+        setSuccess((Boolean) _jsonResponse.get(SUCCESS_TAG));
 
         if (getSuccess())
-            parseSuccessfulResponse(response);
+            parseSuccessfulResponse(_jsonResponse);
         else
-            parseErrorResponse(response);
+            parseErrorResponse(_jsonResponse);
     }
 
     protected void parseSuccessfulResponse(JSONObject response)
@@ -84,7 +94,7 @@ public abstract class MobileAppCommand
 
     protected void parseErrorResponse(JSONObject response)
     {
-        setExceptionMessage(response.getString(EXCEPTION_MESSAGE_TAG));
+        setExceptionMessage((String) response.get(EXCEPTION_MESSAGE_TAG));
     }
 
     public void log(String text)
@@ -110,7 +120,7 @@ public abstract class MobileAppCommand
 
             int statusCode = response.getStatusLine().getStatusCode();
             String body = EntityUtils.toString(response.getEntity());
-            parseResponse(new JSONObject(body));
+            parseResponse(body);
 
             if (expectedStatusCode < 400 && StringUtils.isNotBlank(getExceptionMessage()))
                 log("Unexpected error message: " + getExceptionMessage());

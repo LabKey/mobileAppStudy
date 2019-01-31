@@ -18,7 +18,7 @@ package org.labkey.test.commands.mobileappstudy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 import org.labkey.test.WebTestHelper;
 
 import java.util.HashMap;
@@ -101,7 +101,7 @@ public class EnrollParticipantCommand extends MobileAppCommand
     @Override
     protected void parseSuccessfulResponse(JSONObject response)
     {
-        _appToken = response.getJSONObject("data").getString(APP_TOKEN_JSON_FIELD);
+        _appToken = (String) ((JSONObject) response.get("data")).get(APP_TOKEN_JSON_FIELD);
     }
 
     @Override
