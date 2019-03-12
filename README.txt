@@ -7,8 +7,4 @@ Underneath this line, you'll need a line with this text:
 (And if you haven't already included it, you'll also need a line with this text: include ":server:optionalModules:mobileAppStudy" )
 2. On the command line (again, in the root of your SVN source), run this line:
     ./gradlew :server:optionalModules:mobileAppStudy:distributions:fda:dist
-3. Look in the directory "dist/mobileAppStudy" for a filename ending in "mobileAppStudy-bin.tar.gz". Copy this tar.gz file up one directory to "dist".
-4. On the command line, run this line:
-    ./gradlew :server:deployDist
-
-Your server should now be ready to run in IntelliJ.
+3. Look in the directory "dist/mobileAppStudy" for a filename ending in "mobileAppStudy-bin.tar.gz". Install this distribution using the instructions here: https://www.labkey.org/Documentation/wiki-page.view?name=manualInstall
