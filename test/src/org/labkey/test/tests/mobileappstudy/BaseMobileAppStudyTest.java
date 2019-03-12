@@ -20,6 +20,7 @@ import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.PostCommand;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
@@ -169,7 +170,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     @LogMethod
     protected CommandResponse assignToken(Connection connection, @LoggedParam String token, @LoggedParam String projectName, @LoggedParam String studyName) throws IOException, CommandException
     {
-        Command command = new Command("mobileappstudy", "enroll");
+        Command command = new PostCommand("mobileappstudy", "enroll");
         HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token));
         command.setParameters(params);
         log("Assigning token: " + token);
@@ -177,7 +178,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     }
 
     @BeforeClass
-    public static void doSetup() throws Exception
+    public static void doSetup()
     {
         BaseMobileAppStudyTest initTest = (BaseMobileAppStudyTest) getCurrentTest();
         initTest.setupProjects();
