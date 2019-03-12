@@ -256,9 +256,7 @@ public class MobileAppStudyController extends SpringActionController
      */
     @RequiresNoPermission
     @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the app token). Plus, mobile app has no ability to provide CSRF token.
-    // This should extend MutatingApiAction, but we think the mobile app currently invokes via GET.
-    // TODO: Get mobile app to change to POST and switch this (and our tests)
-    public class WithdrawFromStudyAction extends ReadOnlyApiAction<WithdrawFromStudyForm>
+    public class WithdrawFromStudyAction extends MutatingApiAction<WithdrawFromStudyForm>
     {
         @Override
         public void validateForm(WithdrawFromStudyForm form, Errors errors)
@@ -284,11 +282,7 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    // This should extend MutatingApiAction, but we think the mobile app currently invokes via GET.
-    // TODO: Get mobile app to change to POST and switch this (and our tests)
-    // Note: ReadOnlyAction is fine for ValidateEnrollmentTokenAction; we could move validation into the form and
-    // eliminate BaseEnrollmentAction.
-    private abstract class BaseEnrollmentAction extends ReadOnlyApiAction<EnrollmentForm>
+    private abstract class BaseEnrollmentAction extends MutatingApiAction<EnrollmentForm>
     {
         @Override
         public void validateForm(EnrollmentForm form, Errors errors)
