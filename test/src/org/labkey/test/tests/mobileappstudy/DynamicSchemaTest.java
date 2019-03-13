@@ -491,6 +491,69 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         Assert.assertTrue("Expected field 'numberOfFailures' not found", afterTableData.get(0).containsKey("numberOfFailures"));
     }
 
+    private List<Map<String, Object>> getInitialTableData(String tableName)
+    {
+        return mobileAppTableExists(tableName, LIST_SCHEMA) ?
+                getTableData(tableName):
+                new ArrayList<>();
+    }
+
+    @Test
+    public void testOtherOption()
+    {
+        String baseTableName = "OtherOption";
+        String noOtherOptionTableName = baseTableName + "NoOption";
+        String optionRequiredTableName = baseTableName + "OptionRequired";
+        //TODO add optionRequiredNoSelections
+        String optionNotRequiredTableName = baseTableName + "OptionNotRequired";
+        String multipleNoOptionTableName = baseTableName + "MultipleNoOption";
+        String multipleRequiredTableName = baseTableName + "MultipleRequiredOptions";
+        String mixedMultipleTableName = baseTableName + "MixedMultiple";
+
+        List<Map<String, Object>> baseTableData = getInitialTableData(baseTableName);
+
+        log("Submitting response with OtherOption active task (OtherOption)");
+        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_OtherOption_1--RESPONSE.json");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, "OtherOption", "1", appToken, responseString);
+        cmd.execute(200);
+        waitForResults(baseTableData, baseTableName);
+
+        // Verify no other block parses and gets expected responses and columns
+        List<Map<String, Object>> afterTable = getTableData(noOtherOptionTableName);
+        Assert.assertEquals("Unexpected number of rows in  for no `other` option.", 2, afterTable.size());
+        Assert.assertEquals("Unexpected number of columns for no `other` option.", 17, afterTable.get(0).keySet().size());
+
+        // Verify no other block parses and gets expected responses and columns
+        afterTable = getTableData(optionRequiredTableName);
+        Assert.assertEquals("Unexpected number of rows in  for no `other` option.", 2, afterTable.size());
+        Assert.assertEquals("Unexpected number of columns for no `other` option.", 18, afterTable.get(0).keySet().size());
+
+        //        resetListState();
+//        log("Submitting response with other option added. Response text 14");
+//        String appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);
+//        String responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_NewSurvey_14--RESPONSE.json");
+//        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_NAME, "14", appToken, responseString);
+//        cmd.execute(200);
+//        waitForResults(newSurveyMap, "NewSurvey");
+//        Assert.assertEquals("Unexpected new row count in NewSurvey after adding single response with single group added. Response text 14", 1, getNewRowCount(newSurveyMap, getTableData("NewSurvey")));
+//        Assert.assertEquals("Unexpected number of new columns in NewSurvey after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyMap, getTableData("NewSurvey")).size(),1);
+//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedList after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyGroupedMap, getTableData("NewSurveyGroupedList")));
+//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedList after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyGroupedMap, getTableData("NewSurveyGroupedList")).size());
+//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListSubGroupedList after adding single response with single group added. Response text 8", 1, getNewRowCount(newSurveyGroupedSubGroupedMap, getTableData("NewSurveyGroupedListSubGroupedList")));
+//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListSubGroupedList after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyGroupedSubGroupedMap, getTableData("NewSurveyGroupedListSubGroupedList")).size());
+//        Assert.assertEquals("Unexpected new row count in NewSurveyTextChoiceField after adding single response with single group added. Response text 8", 2, getNewRowCount(newSurveyTextChoiceField, getTableData("NewSurveyTextChoiceField")));
+//        Assert.assertEquals("Unexpected number of new columns in NewSurveyTextChoiceField after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyTextChoiceField, getTableData("NewSurveyTextChoiceField")).size());
+//        Assert.assertEquals("Unexpected new row count in NewSurveyGroupedListTextChoiceField after adding single response with single group added. Response text 8", 2, getNewRowCount(newSurveyGroupedTextChoiceField, getTableData("NewSurveyGroupedListTextChoiceField")));
+//        Assert.assertEquals("Unexpected number of new columns in NewSurveyGroupedListTextChoiceField after adding single response with single group added. Response text 8", 0, getAddedColumns(newSurveyGroupedTextChoiceField, getTableData("NewSurveyGroupedListTextChoiceField")).size());
+//
+//        Assert.assertEquals("Unexpected new row count in NewSurveyNoOtherChoiceField after adding single response with other.textfieldReq = false. Response text 14", 3, getTableData("NewSurveyNoOtherChoiceField").size());
+//        Assert.assertEquals("Unexpected number of new columns in NewSurveyNoOtherChoiceField with with other.textfieldReq = false. Response text 14", 2, getTableData("NewSurveyNoOtherChoiceField").size());
+//        Assert.assertEquals("Unexpected new row count in NewSurveyOtherChoiceField after adding single response with other.textfieldReq = true. Response text 14", 3, getTableData("NewSurveyOtherChoiceField").size());
+//        Assert.assertEquals("Unexpected number of new columns in NewSurveyOtherChoiceField with with other.textfieldReq = true. Response text 14", 3, getTableData("NewSurveyOtherChoiceField").size());
+    }
+
+
     private List<Map<String,Object>> getTableData(String table)
     {
         if(! getCurrentRelativeURL().contains(getProjectName()))
@@ -563,7 +626,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         return ret;
     }
 
-    private List<String> getAddedColumns (List<Map<String,Object>> tableBefore,List<Map<String,Object>> tableAfter)
+    private List<String> getAddedColumns (List<Map<String,Object>> tableBefore, List<Map<String,Object>> tableAfter)
     {
         Set beforeCols = tableBefore.get(0).keySet();
         Set afterCols = tableAfter.get(0).keySet();
