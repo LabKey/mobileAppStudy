@@ -17,6 +17,7 @@ package org.labkey.mobileappstudy.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.labkey.mobileappstudy.MobileAppStudyManager;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 
 import java.text.DateFormat;
@@ -32,7 +33,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyResult extends ResponseMetadata
 {
-
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     private String _resultType;
@@ -61,6 +61,11 @@ public class SurveyResult extends ResponseMetadata
     public void setKey(String key)
     {
         _key = key;
+    }
+
+    public String getOtherKey()
+    {
+        return getKey() + MobileAppStudyManager.OTHER_OPTION_TITLE;
     }
 
     @Override
@@ -128,7 +133,13 @@ public class SurveyResult extends ResponseMetadata
             case TextChoice:
                 if (_value instanceof List)
                 {
-                    _parsedValue = _value;
+                    List<TextChoiceResult> tcrList = new ArrayList<TextChoiceResult>();
+                    for(Object val : (List)_value)
+                    {
+                        tcrList.add(new TextChoiceResult(val));
+                    }
+
+                    _parsedValue = tcrList;
                 }
                 else
                     throw new IllegalArgumentException("Value type for choice field '" + getKey() + "' expected to be ArrayList but got " + _value.getClass());
