@@ -588,6 +588,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         assertInitialOtherOptionTableState(baseTableName + groupedList + otherOption, otherOption, 0, "otherOption");
         assertInitialOtherOptionTableState(baseTableName + groupedList + subgroup + otherOption, otherOption, 0, "Version10");
 
+        baseTableData = getInitialTableData(baseTableName);
         log("Submitting OtherOption v2 update");
         responseString = getResponseFromFile("DYNAMICSCHEMASTUDY_OtherOptionUpdate_2--RESPONSE.json");
         appToken = getNewAppToken(PROJECT_NAME,STUDY_NAME,null);

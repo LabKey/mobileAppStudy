@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class TextChoiceResult
 {
-    private String value;
-    public String getValue()
+    private Object value;
+    public Object getValue()
     {
         return value;
     }
@@ -17,21 +17,13 @@ public class TextChoiceResult
 
     public TextChoiceResult(Object val)
     {
-        if (val instanceof String)
-            value = (String)val;
-        else if (val instanceof Map)
+        if (val instanceof Map)
         {
-            Map<String, String> valMap = (Map<String, String>) val;
+            Map<String, Object> valMap = (Map<String, Object>) val;
             value = valMap.getOrDefault("other", "");
-            otherText = valMap.getOrDefault("text", "");
+            otherText = valMap.getOrDefault("text", "").toString();
         }
+        else
+            value = val;
     }
-
-//        public TextChoiceResult(String val)
-//        {
-//            value = val;
-//        }
-//        public TextChoiceResult(Map<String,String> val)
-//        {
-//        }
 }
