@@ -488,4 +488,22 @@ public class SurveyStep
     {
         return StepResultType.getStepResultType(getResultType()).getPropertyType(this);
     }
+
+    private List<TextChoice> _textChoices = null;
+    public List<TextChoice> getTextChoices()
+    {
+        return _textChoices;
+    }
+    public void setTextChoices(List<TextChoice> textChoices)
+    {
+        _textChoices = textChoices;
+    }
+
+    public boolean hasOtherOption()
+    {
+        if (getTextChoices() == null)
+            return false;
+
+        return getTextChoices().stream().anyMatch(TextChoice::hasOtherOption);
+    }
 }

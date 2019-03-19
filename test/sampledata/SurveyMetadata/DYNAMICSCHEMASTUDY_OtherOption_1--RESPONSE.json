@@ -40,6 +40,54 @@
           "text": "The other text value"
         }
       ]
+    },
+    {
+      "resultType": "textChoice",
+      "key": "MultipleNoOption",
+      "startTime": "2016-09-06T15:54:21.123+0000",
+      "endTime": "2016-09-06T15:54:22.123+0000",
+      "skipped": false,
+      "value": [
+        "I has other",
+        "other choice name",
+        "other choice B"
+      ]
+    },
+    {
+      "resultType": "textChoice",
+      "key": "MultipleRequiredOptions",
+      "startTime": "2016-09-06T15:54:21.123+0000",
+      "endTime": "2016-09-06T15:54:22.123+0000",
+      "skipped": false,
+      "value": [
+        "I has other",
+        {
+          "other": "other A",
+          "text": "other text value"
+        },
+        {
+          "other": "B",
+          "text": "text value B"
+        }
+      ]
+    },
+    {
+      "resultType": "textChoice",
+      "key": "MixedMultiple",
+      "startTime": "2016-09-06T15:54:21.123+0000",
+      "endTime": "2016-09-06T15:54:22.123+0000",
+      "skipped": false,
+      "value": [
+        "choice A",
+        {
+          "other": "other B",
+          "text": "other text value"
+        },
+        {
+          "other": "C",
+          "text": "C$(*&%^)@_!<>"
+        }
+      ]
     }
   ]
 }
