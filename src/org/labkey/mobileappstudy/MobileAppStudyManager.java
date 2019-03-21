@@ -1073,13 +1073,12 @@ public class MobileAppStudyManager
                 {
                     for (TextChoiceResult value : (List<TextChoiceResult>) result.getParsedValue())
                     {
-//                        TextChoiceResult tcResult = new TextChoiceResult(value);
                         Map<String, Object> data = new ArrayListMap<>();
                         data.put(parentKey.getKey(), parentKey.getValue());
                         data.put("participantId", participantId);
                         data.put(result.getKey(), value.getValue());
                         if (StringUtils.isNotBlank(value.getOtherText()))
-                            data.put(result.getOtherKey(), value.getOtherText());
+                            data.put(getOtherOptionKey(result.getKey()), value.getOtherText());
 
                         storeListData(table, data, container, user);
                     }
@@ -1320,6 +1319,11 @@ public class MobileAppStudyManager
             logger.error("No SurveyDesignProvider configured.  Please set the appropriate Module Properties.");
             return null;
         }
+    }
+
+    public static String getOtherOptionKey(String optionFieldKey)
+    {
+        return optionFieldKey + OTHER_OPTION_TITLE;
     }
 
 }

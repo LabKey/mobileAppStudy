@@ -63,11 +63,6 @@ public class SurveyResult extends ResponseMetadata
         _key = key;
     }
 
-    public String getOtherKey()
-    {
-        return getKey() + MobileAppStudyManager.OTHER_OPTION_TITLE;
-    }
-
     @Override
     public String getListName()
     {
