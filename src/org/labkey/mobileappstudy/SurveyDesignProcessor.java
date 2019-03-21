@@ -323,7 +323,7 @@ public class SurveyDesignProcessor
 
     private void ensureOtherOption(Domain listDomain, SurveyStep step) throws InvalidDesignException
     {
-        String otherTextKey = step.getKey() + MobileAppStudyManager.OTHER_OPTION_TITLE;
+        String otherTextKey = MobileAppStudyManager.getOtherOptionKey(step.getKey());
         JdbcType propType = JdbcType.VARCHAR;
         DomainProperty prop = listDomain.getPropertyByName(otherTextKey);
         if (prop == null)
