@@ -97,13 +97,18 @@ public class MobileAppStudyManager
 
     public static final String OTHER_OPTION_TITLE = "_Other_Text";
 
+    private static SurveyResponseForwardingJob forwarder;
+
     private MobileAppStudyManager()
     {
         if (_shredder == null)
             _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
 
+        if (forwarder == null)
+            forwarder = new SurveyResponseForwardingJob();
+
         //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
-        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING);
+        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING, null);
         if (pendingResponses != null)
         {
             pendingResponses.forEach(response ->
@@ -554,6 +559,7 @@ public class MobileAppStudyManager
                 this.store(surveyResponse, rowId, user);
                 this.updateProcessingStatus(user, rowId, ResponseStatus.PROCESSED);
                 logger.info(String.format("Processed response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
+                enqueueForwardingJob(user, surveyResponse.getContainer());
             }
             catch (InvalidDesignException e)
             {
@@ -607,10 +613,18 @@ public class MobileAppStudyManager
                 .getObject(SurveyResponse.class);
     }
 
-    Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status)
+    Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status, Container container)
     {
         FieldKey fkey = FieldKey.fromParts("Status");
-        SimpleFilter filter = new SimpleFilter(fkey, status.getPkId());
+        SimpleFilter filter;
+
+        if (null != container)
+        {
+            filter = SimpleFilter.createContainerFilter(container);
+            filter.addCondition(fkey, status.getPkId());
+        }
+        else
+            filter = new SimpleFilter(fkey, status.getPkId());
 
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
                 .getCollection(SurveyResponse.class);
@@ -1325,5 +1339,68 @@ public class MobileAppStudyManager
     {
         return optionFieldKey + OTHER_OPTION_TITLE;
     }
+
+    private void enqueueForwardingJob(final User user,final Container container)
+    {
+        try
+        {
+            forwarder.call(user, container);
+        }
+        catch (Exception e)
+        {
+            forwarder.setUnsuccessful(container);
+        }
+
+//  TODO: Clean-up
+//        ForwarderProperties forwarder = new ForwarderProperties();
+//        if (!forwarder.isForwardingEnabled(user, container))
+//        {
+//            logger.debug(String.format("Forwarding not enabled for study container: %1$s", container));
+//            return;
+//        }
+//
+//        SurveyResponseForwardingJob forwardingJob = forwarders.get(container);
+//        if (forwardingJob == null)
+//        {
+//            forwardingJob = new SurveyResponseForwardingJob(user, container);
+//            forwarders.put(container, forwardingJob);
+//        }
+//
+//
+//        try
+//        {
+//            forwardingJob.call();
+////            PipelineService.get().queueJob(new SurveyResponseForwardingJob(user, container));
+//        }
+////        catch (PipelineValidationException e)
+//        catch (Exception e)
+//        {
+//            forwardingJob.setSuccessful(false);
+//            logger.error("Forwarding job failed with an error: " + e.getMessage());
+//            //TODO: should maybe throw a MinorConfigurationException?
+//        }
+    }
+
+    public Collection<Container> getContainersWithProcessedResponses()
+    {
+        //TODO: Not sure if there is a better way to get the forwarding enabled containers
+
+        FieldKey fkey = FieldKey.fromParts("Status");
+        SimpleFilter filter = new SimpleFilter(fkey, ResponseStatus.PROCESSED);
+
+        ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoResponse().getColumn("Container");
+        return new TableSelector(column, filter, null).getCollection(Container.class);
+    }
+
+    public Map<String, String> getForwardingProperties(Container container)
+    {
+        return new ForwarderProperties().getForwarderConnection(container);
+    }
+
+//  TODO: Clean-up
+//    void forwardResponses(User user, Container container)
+//    {
+//        logger.debug(String.format("Forwarding responses for study container: %1$s", container));
+//    }
 
 }

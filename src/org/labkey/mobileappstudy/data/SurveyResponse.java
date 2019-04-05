@@ -29,7 +29,8 @@ public class SurveyResponse
         /** list order doesn't matter, but don't change id's unless you also update mobileappstudy.response.status **/
         PENDING(0, "Pending"),
         PROCESSED(1, "Processed"),
-        ERROR(2, "Error");
+        ERROR(2, "Error"),
+        FORWARDED(3, "Forwarded");
 
         private final int pkId;
         private final String displayText;

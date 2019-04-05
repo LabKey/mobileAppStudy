@@ -19,6 +19,9 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.mobileappstudy.data.MobileAppStudy" %>
+<%@ page import="org.labkey.mobileappstudy.MobileAppStudyManager" %>
+<%@ page import="org.labkey.mobileappstudy.ForwarderProperties" %>
+<%@ page import="java.util.Map" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 
@@ -27,6 +30,7 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
+        dependencies.add("mobileAppStudy/panel/forwardingPanel.js");
         dependencies.add("mobileAppStudy/panel/studySetup.js");
     }
 %>
@@ -39,6 +43,13 @@
     Boolean isEditable = bean.getEditable();
     Boolean canChangeCollection = bean.getCanChangeCollection();
     boolean collectionEnabled = bean.getCollectionEnabled();
+
+    Map<String, String> forwardingProperties = MobileAppStudyManager.get().getForwardingProperties(getContainer());
+    boolean forwardingEnabled = Boolean.valueOf(forwardingProperties.get(ForwarderProperties.ENABLED_PROPERTY_NAME));
+    String forwardingURL = forwardingProperties.get(ForwarderProperties.URL_PROPERTY_NAME);
+    String forwardingUser = forwardingProperties.get(ForwarderProperties.USER_PROPERTY_NAME);
+    String forwardingPassword = forwardingProperties.get(ForwarderProperties.PASSWORD_PROPERTY_NAME); //TODO not sure about this
+
 %>
 <style type="text/css">
     .labkey-warning  { color: red; }
@@ -56,7 +67,11 @@
                     shortName           : <%= qh(shortName) %>,
                     isEditable          : <%= isEditable %>,
                     canChangeCollection : <%= canChangeCollection %>,
-                    collectionEnabled   : <%= collectionEnabled %>
+                    collectionEnabled   : <%= collectionEnabled %>,
+                    forwardingEnabled   : <%= forwardingEnabled %>,
+                    forwardingURL       : <%= q(forwardingURL) %>,
+                    forwardingUsername  : <%= q(forwardingUser) %>,
+                    forwardingPassword  : <%= q(forwardingPassword) %> //TODO not sure about this
                 }
         );
     });

@@ -17,6 +17,14 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
 
     collectionEnabled: null,
 
+    forwardingEnabled: null,
+
+    forwardingUrl: null,
+
+    forwardingUsername: null,
+
+    forwardingPassword: null,
+
     trackResetOnLoad: true,
 
     initComponent: function()
@@ -64,6 +72,8 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
 
         this.add(this.getFormFields());
         this.add(this.getEnableCollectionControl());
+        this.add(this.getForwardingEnabledControl());
+        this.add(this.getForwardingConfigurationPanel());
     },
 
     getSubmitButton: function() {
@@ -205,6 +215,47 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             });
         }
         return this.collectionCheckbox;
+    },
+    getForwardingEnabledControl: function() {
+        if (!this.forwardingCheckbox) {
+            this.forwardingCheckbox = Ext4.create("Ext.form.field.Checkbox",{
+                name: 'forwardingEnabled',
+                boxLabel: 'Enable Response Forwarding',
+                padding: '0 0 0 10',
+                id: 'forwardingEnabled',
+                checked: this.forwardingEnabled,
+                width: 200,
+                value: this.forwardingEnabled,
+                disabled: !this.canChangeCollection,
+                listeners: {
+                    change: this.forwardingChanged,
+                    scope: this
+                }
+            });
+        }
+        return this.forwardingCheckbox;
+    },
+    forwardingChanged: function(field){
+
+        let forwardingPanel = this.getForwardingConfigurationPanel();
+        field.checked ?
+            forwardingPanel.show():
+            forwardingPanel.hide();
+
+        this.validateForm(field);
+    },
+    getForwardingConfigurationPanel: function(){
+        if (!this.forwardingControls) {
+            this.forwardingControls = Ext4.create("LABKEY.MobileAppStudy.ForwardingConfigurationPanel", {
+                hidden: !this.forwardingEnabled,
+                isEditable: this.isEditable,
+                url: this.forwardingUrl,
+                username: this.forwardingUsername,
+                password: this.forwardingPassword,
+                validateForm: this.validateForm
+            });
+        }
+        return this.forwardingControls;
     },
     validateForm: function(field){
         var form = field.up('form');
