@@ -46,7 +46,7 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
 
     public String call(User user, Container c) throws Exception
     {
-        if (!new ForwarderProperties().isForwardingEnabled(user, c))
+        if (!new ForwarderProperties().isForwardingEnabled(c))
         {
             logger.debug(String.format("Forwarding not enabled for container [%1$s].", c.getId()));
             return null;
