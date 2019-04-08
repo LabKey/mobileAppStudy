@@ -1392,9 +1392,21 @@ public class MobileAppStudyManager
         return new TableSelector(column, filter, null).getCollection(Container.class);
     }
 
-    public Map<String, String> getForwardingProperties(Container container)
+    public Map<String, String> getForwardingProperties(Container container, User user)
     {
         return new ForwarderProperties().getForwarderConnection(container);
+    }
+
+    public void setForwarderConfiguration(Container container, String url, String username, String password, boolean forwardingEnabled)
+    {
+        //TODO this should only do save if there is a change to make.
+        //TODO need logging.
+        new ForwarderProperties().setForwardingProperties(container, url, username, password, forwardingEnabled);
+    }
+
+    public void ensureForwardingDisabled(Container container)
+    {
+        new ForwarderProperties().setForwarding(container, false);
     }
 
 //  TODO: Clean-up
@@ -1402,5 +1414,4 @@ public class MobileAppStudyManager
 //    {
 //        logger.debug(String.format("Forwarding responses for study container: %1$s", container));
 //    }
-
 }

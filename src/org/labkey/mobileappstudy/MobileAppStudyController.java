@@ -63,6 +63,8 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -191,6 +193,24 @@ public class MobileAppStudyController extends SpringActionController
             //Check if study exists, name has changed, and at least one participant has enrolled
             else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
+            else if (form.isForwardingEnabled())
+            {
+                if (StringUtils.isBlank(form.getUrl()))
+                    errors.rejectValue("url", "Field cannot be blank.");
+                try
+                {
+                    new URL(form.getUrl());
+                }
+                catch (MalformedURLException e)
+                {
+                    errors.rejectValue("url", ERROR_MSG, "Malformed URL");
+                }
+
+                if (StringUtils.isBlank(form.getUsername()))
+                    errors.rejectValue("username", ERROR_MSG, "Field cannot be blank.");
+                if ( StringUtils.isBlank(form.getPassword()))
+                    errors.rejectValue("password", ERROR_MSG, "Field cannot be blank.");
+            }
         }
 
         @Override
@@ -200,6 +220,11 @@ public class MobileAppStudyController extends SpringActionController
             MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
             if (study == null || !study.getShortName().equals(form.getShortName()) || study.getCollectionEnabled() != form.getCollectionEnabled())
                 study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), form.getCollectionEnabled(), getContainer(), getUser());
+
+            if (form.isForwardingEnabled())
+                MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form.getUrl(), form.getUsername(), form.getPassword(), form.isForwardingEnabled());
+            else
+                MobileAppStudyManager.get().ensureForwardingDisabled(getContainer());
 
             return success(PageFlowUtil.map(
                 "rowId", study.getRowId(),
@@ -579,6 +604,10 @@ public class MobileAppStudyController extends SpringActionController
     {
         private String _shortName;
         private boolean _collectionEnabled;
+        private boolean _forwardingEnabled;
+        private String _url;
+        private String _username;
+        private String _password;
 
         public String getShortName()
         {
@@ -607,6 +636,46 @@ public class MobileAppStudyController extends SpringActionController
         public String getStudyId()
         {
             return _shortName;
+        }
+
+        public boolean isForwardingEnabled()
+        {
+            return _forwardingEnabled;
+        }
+
+        public void setForwardingEnabled(Boolean forwardingEnabled)
+        {
+            _forwardingEnabled = forwardingEnabled;
+        }
+
+        public String getUrl()
+        {
+            return _url;
+        }
+
+        public void setUrl(String url)
+        {
+            _url = url;
+        }
+
+        public String getUsername()
+        {
+            return _username;
+        }
+
+        public void setUsername(String username)
+        {
+            _username = username;
+        }
+
+        public String getPassword()
+        {
+            return _password;
+        }
+
+        public void setPassword(String password)
+        {
+            _password = password;
         }
     }
 

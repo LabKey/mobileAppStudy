@@ -44,7 +44,7 @@
     Boolean canChangeCollection = bean.getCanChangeCollection();
     boolean collectionEnabled = bean.getCollectionEnabled();
 
-    Map<String, String> forwardingProperties = MobileAppStudyManager.get().getForwardingProperties(getContainer());
+    Map<String, String> forwardingProperties = MobileAppStudyManager.get().getForwardingProperties(getContainer(), getUser());
     boolean forwardingEnabled = Boolean.valueOf(forwardingProperties.get(ForwarderProperties.ENABLED_PROPERTY_NAME));
     String forwardingURL = forwardingProperties.get(ForwarderProperties.URL_PROPERTY_NAME);
     String forwardingUser = forwardingProperties.get(ForwarderProperties.USER_PROPERTY_NAME);
@@ -69,7 +69,7 @@
                     canChangeCollection : <%= canChangeCollection %>,
                     collectionEnabled   : <%= collectionEnabled %>,
                     forwardingEnabled   : <%= forwardingEnabled %>,
-                    forwardingURL       : <%= q(forwardingURL) %>,
+                    forwardingUrl       : <%= q(forwardingURL) %>,
                     forwardingUsername  : <%= q(forwardingUser) %>,
                     forwardingPassword  : <%= q(forwardingPassword) %> //TODO not sure about this
                 }

@@ -57,7 +57,7 @@ Ext4.define('LABKEY.MobileAppStudy.ForwardingConfigurationPanel', {
         if (!this.userField) {
             this.userField = Ext4.create("Ext.form.field.Text", {
                 width: 250,
-                name: 'user',
+                name: 'username',
                 fieldLabel: 'User',
                 value: this.username,
                 padding: '10px 10px 0px 10px',
