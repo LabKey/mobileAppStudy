@@ -305,6 +305,9 @@ public class SurveyDesignProcessor
         //Add value property
         ensureStepProperty(domain, step);
 
+        if(step.hasOtherOption())
+            ensureOtherOption(domain, step);
+
         try
         {
             domain.save(user);
@@ -315,14 +318,35 @@ public class SurveyDesignProcessor
         }
     }
 
+    private static final String OTHER_OPTION_BASE_DESCRIPTION = "Optional text provided by respondent";
+    private static final int OTHER_OPTION_MAX_LENGTH = 4000;
+
+    private void ensureOtherOption(Domain listDomain, SurveyStep step) throws InvalidDesignException
+    {
+        String otherTextKey = MobileAppStudyManager.getOtherOptionKey(step.getKey());
+        JdbcType propType = JdbcType.VARCHAR;
+        DomainProperty prop = listDomain.getPropertyByName(otherTextKey);
+        if (prop == null)
+        {
+            //New property
+            getNewDomainProperty(listDomain, otherTextKey, propType, OTHER_OPTION_BASE_DESCRIPTION, OTHER_OPTION_MAX_LENGTH );
+        }
+        // Else field already exists, no need to generate it...
+    }
+
     private static DomainProperty getNewDomainProperty(Domain domain, SurveyStep step)
     {
-        DomainProperty prop = domain.addProperty(new PropertyStorageSpec(step.getKey(), step.getPropertyType()));
-        prop.setName(step.getKey());
-        prop.setDescription(step.getTitle());
-        prop.setPropertyURI(domain.getTypeURI() + "#" + step.getKey());
-        if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
-            prop.setScale(step.getMaxLength());
+        return getNewDomainProperty(domain, step.getKey(), step.getPropertyType(), step.getTitle(), step.getMaxLength());
+    }
+
+    private static DomainProperty getNewDomainProperty(Domain domain, String key, JdbcType propertyType, String description, Integer length)
+    {
+        DomainProperty prop = domain.addProperty(new PropertyStorageSpec(key, propertyType));
+        prop.setName(key);
+        prop.setDescription(description);
+        prop.setPropertyURI(domain.getTypeURI() + "#" + key);
+        if (prop.getPropertyType() == PropertyType.STRING && length != null)
+            prop.setScale(length);
 
         prop.setMeasure(false);
         prop.setDimension(false);

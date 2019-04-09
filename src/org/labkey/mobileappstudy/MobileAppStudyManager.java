@@ -63,6 +63,7 @@ import org.labkey.mobileappstudy.data.Response;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
+import org.labkey.mobileappstudy.data.TextChoiceResult;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
@@ -93,6 +94,8 @@ public class MobileAppStudyManager
     private static final int THREAD_COUNT = 10; //TODO: Verify this is an appropriate number
     private static JobRunner _shredder;
     private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
+
+    public static final String OTHER_OPTION_TITLE = "_Other_Text";
 
     private MobileAppStudyManager()
     {
@@ -1068,12 +1071,15 @@ public class MobileAppStudyManager
             {
                 if (result.getParsedValue() != null)
                 {
-                    for (Object value : (ArrayList) result.getParsedValue())
+                    for (TextChoiceResult value : (List<TextChoiceResult>) result.getParsedValue())
                     {
                         Map<String, Object> data = new ArrayListMap<>();
                         data.put(parentKey.getKey(), parentKey.getValue());
-                        data.put(result.getKey(), value);
                         data.put("participantId", participantId);
+                        data.put(result.getKey(), value.getValue());
+                        if (StringUtils.isNotBlank(value.getOtherText()))
+                            data.put(getOtherOptionKey(result.getKey()), value.getOtherText());
+
                         storeListData(table, data, container, user);
                     }
                 }
@@ -1313,6 +1319,11 @@ public class MobileAppStudyManager
             logger.error("No SurveyDesignProvider configured.  Please set the appropriate Module Properties.");
             return null;
         }
+    }
+
+    public static String getOtherOptionKey(String optionFieldKey)
+    {
+        return optionFieldKey + OTHER_OPTION_TITLE;
     }
 
 }
