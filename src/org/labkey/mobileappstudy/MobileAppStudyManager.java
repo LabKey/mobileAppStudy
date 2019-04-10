@@ -113,7 +113,7 @@ public class MobileAppStudyManager
 
     void doStartup()
     {
-        ForwardingScheduler.get().schedule(getStudyContainers());
+        ForwardingScheduler.get().schedule();
 
         //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
         Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING, null);
