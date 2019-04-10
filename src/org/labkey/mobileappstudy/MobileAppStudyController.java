@@ -221,10 +221,7 @@ public class MobileAppStudyController extends SpringActionController
             if (study == null || !study.getShortName().equals(form.getShortName()) || study.getCollectionEnabled() != form.getCollectionEnabled())
                 study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), form.getCollectionEnabled(), getContainer(), getUser());
 
-            if (form.isForwardingEnabled())
-                MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form.getUrl(), form.getUsername(), form.getPassword(), form.isForwardingEnabled());
-            else
-                MobileAppStudyManager.get().ensureForwardingDisabled(getContainer());
+            MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form.getUrl(), form.getUsername(), form.getPassword(), form.isForwardingEnabled());
 
             return success(PageFlowUtil.map(
                 "rowId", study.getRowId(),

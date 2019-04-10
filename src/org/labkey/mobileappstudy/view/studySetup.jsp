@@ -20,7 +20,7 @@
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.mobileappstudy.data.MobileAppStudy" %>
 <%@ page import="org.labkey.mobileappstudy.MobileAppStudyManager" %>
-<%@ page import="org.labkey.mobileappstudy.ForwarderProperties" %>
+<%@ page import="org.labkey.mobileappstudy.forwarder.ForwarderProperties" %>
 <%@ page import="java.util.Map" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>

@@ -99,6 +99,9 @@ public class MobileAppStudyModule extends DefaultModule
         metadataServiceAccessToken.setDescription("Token to be passed in the header of requests to the Activity Metadata Service to identify this client of that service.");
         metadataServiceAccessToken.setInputFieldWidth(500);
         this.addModuleProperty(metadataServiceAccessToken);
+
+        //Startup shredding and forwarder jobs
+        MobileAppStudyManager.get().doStartup();
     }
 
     @Override
