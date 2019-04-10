@@ -1,5 +1,6 @@
 package org.labkey.mobileappstudy.forwarder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -14,6 +15,7 @@ import org.labkey.api.security.roles.ReaderRole;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.mobileappstudy.MobileAppStudyManager;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -54,36 +56,51 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
 
     public void call(User user, Container c)
     {
-        //Since this can be called outside of timer job, check if enabled
-        if (!ForwardingScheduler.get().forwardingIsEnabled(c))
-        {
-            logger.debug(String.format("Forwarding not enabled for container [%1$s].", c.getName()));
+        if (!validateCall(user, c))
             return;
-        }
-
-        //Check if container was unsuccessful recently
-        if (c != null && unsuccessful.contains(c.getId()))
-        {
-            logger.debug("Skipping survey response, because target endpoint is marked as unsuccessful.");
-            return;
-        }
-
-        logger.info(String.format("Adding pipeline job to forward responses for container [%1$s].", c.getName()));
 
         try
         {
+            logger.info(String.format("Adding pipeline job to forward responses for container [%1$s].", c.getName()));
             enqueuePipelineJob(user, c);
-            return;
         }
         catch (ConfigurationException e)
         {
-            logger.info(e.getLocalizedMessage());
+            logger.error(e.getLocalizedMessage());
             setUnsuccessful(c);
-            return;
         }
     }
 
-    private String enqueuePipelineJob(User user, Container c)
+    private boolean validateCall(User user, Container c)
+    {
+        String msg = null;
+
+        //Since this can be called outside of timer job, check if enabled
+        if (!ForwardingScheduler.get().forwardingIsEnabled(c))
+        {
+            msg = String.format("Forwarding not enabled for container [%1$s].", c.getName());
+        }
+        //Check if container was unsuccessful recently
+        else if (c != null && unsuccessful.contains(c.getId()))
+        {
+            msg = String.format("Not forwarding survey responses for container [%1$s] because target endpoint is marked as unsuccessful.", c.getName());
+        }
+        // Check if anything to process
+        else if (!MobileAppStudyManager.get().hasResponsesToForward(c))
+        {
+            msg = String.format("No responses to forward for [%1$s]", c.getName());
+        }
+
+        if (StringUtils.isNotBlank(msg))
+        {
+            logger.debug(msg);
+            return false;
+        }
+        else
+            return true;
+    }
+
+    private void enqueuePipelineJob(User user, Container c)
     {
         ViewBackgroundInfo vbi = new ViewBackgroundInfo(c, user, null);
         PipeRoot root = PipelineService.get().findPipelineRoot(c);
@@ -94,22 +111,18 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
         if (!root.isValid())
             throw new ConfigurationException(String.format("Invalid pipeline root configuration: %1$s", root.getRootPath().getPath()));
 
-        final String jobGuid;
-
         try
         {
             PipelineJob job = new SurveyResponsePipelineJob(vbi, root);
             logger.info(String.format("Queuing forwarder for container %1$s on [thread %2$s to %3$s]",
                     c.getName(), Thread.currentThread().getName(), PipelineService.get().toString()));
             PipelineService.get().queueJob(job);
-            jobGuid = job.getJobGUID();
         }
         catch (PipelineValidationException e)
         {
-            throw new RuntimeException(e);
+            setUnsuccessful(c);
+            logger.error(e.getLocalizedMessage());
         }
-
-        return jobGuid;
     }
 
     @Override

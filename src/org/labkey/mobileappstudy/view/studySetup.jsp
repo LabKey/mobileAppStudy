@@ -22,6 +22,7 @@
 <%@ page import="org.labkey.mobileappstudy.MobileAppStudyManager" %>
 <%@ page import="org.labkey.mobileappstudy.forwarder.ForwarderProperties" %>
 <%@ page import="java.util.Map" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 
@@ -48,7 +49,9 @@
     boolean forwardingEnabled = Boolean.valueOf(forwardingProperties.get(ForwarderProperties.ENABLED_PROPERTY_NAME));
     String forwardingURL = forwardingProperties.get(ForwarderProperties.URL_PROPERTY_NAME);
     String forwardingUser = forwardingProperties.get(ForwarderProperties.USER_PROPERTY_NAME);
-    String forwardingPassword = forwardingProperties.get(ForwarderProperties.PASSWORD_PROPERTY_NAME); //TODO not sure about this
+    String forwardingPassword = StringUtils.isNotBlank(forwardingProperties.get(ForwarderProperties.USER_PROPERTY_NAME)) ?
+            ForwarderProperties.PASSWORD_PLACEHOLDER :
+            "";
 
 %>
 <style type="text/css">
@@ -71,7 +74,7 @@
                     forwardingEnabled   : <%= forwardingEnabled %>,
                     forwardingUrl       : <%= q(forwardingURL) %>,
                     forwardingUsername  : <%= q(forwardingUser) %>,
-                    forwardingPassword  : <%= q(forwardingPassword) %> //TODO not sure about this
+                    forwardingPassword  : <%= q(forwardingPassword) %>
                 }
         );
     });

@@ -1394,4 +1394,13 @@ public class MobileAppStudyManager
         ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken().getColumn("Token");
         return new TableSelector(column, filter, null).getObject(String.class);
     }
+
+    public boolean hasResponsesToForward(@NotNull Container container)
+    {
+        FieldKey fkey = FieldKey.fromParts("Status");
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, ResponseStatus.PROCESSED.getPkId());
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
+                .getRowCount() > 0;
+    }
 }
