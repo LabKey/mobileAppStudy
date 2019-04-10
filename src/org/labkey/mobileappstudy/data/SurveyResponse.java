@@ -123,6 +123,10 @@ public class SurveyResponse
         _processed = processed;
     }
 
+    /**
+     * Use when looking for an explicit state
+     * @return Current processing status of response
+     */
     public ResponseStatus getStatus()
     {
         return _status;
@@ -130,6 +134,15 @@ public class SurveyResponse
     public void setStatus(ResponseStatus status)
     {
         _status = status;
+    }
+
+    /**
+     * Use when checking if response has been shredded yet
+     * @return True if the response status is PROCESSED or FORWARDED, false otherwise.
+     */
+    public boolean isResponseProcessed()
+    {
+        return _status == ResponseStatus.FORWARDED || _status == ResponseStatus.PROCESSED;
     }
 
     public String getActivityId()

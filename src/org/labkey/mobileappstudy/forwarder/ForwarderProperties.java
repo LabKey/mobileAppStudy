@@ -1,9 +1,7 @@
-package org.labkey.mobileappstudy;
+package org.labkey.mobileappstudy.forwarder;
 
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.security.User;
 
 import java.util.Map;
 
