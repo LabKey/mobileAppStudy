@@ -28,6 +28,7 @@ public class ForwardingScheduler
 
     private ForwardingScheduler()
     {
+        enabledContainers = refreshEnabledContainers();
     }
 
     public static ForwardingScheduler get()
@@ -35,9 +36,9 @@ public class ForwardingScheduler
         return instance;
     }
 
-    public synchronized void schedule(Collection<String> containerIds)
+    public synchronized void schedule()
     {
-        enabledContainers = new HashSet<>(containerIds);
+        enabledContainers = refreshEnabledContainers();
 //        refreshEnabledContainers();
 
         if (job == null)
@@ -65,18 +66,18 @@ public class ForwardingScheduler
         }
     }
 
-//    private Set<String> refreshEnabledContainers()
-//    {
-//        Set<String> refreshedContainers = new HashSet<>();
-//        Collection<String> containers = MobileAppStudyManager.get().getStudyContainers();
-//        final ForwarderProperties properties = new ForwarderProperties();
-//        containers.stream().distinct().forEach(c -> {
-//            if (properties.isForwardingEnabled(ContainerManager.getForId(c)))
-//                refreshedContainers.add(c);
-//        });
-//
-//        return refreshedContainers;
-//    }
+    private Set<String> refreshEnabledContainers()
+    {
+        Set<String> refreshedContainers = new HashSet<>();
+        Collection<String> containers = MobileAppStudyManager.get().getStudyContainers();
+        final ForwarderProperties properties = new ForwarderProperties();
+        containers.stream().distinct().forEach(c -> {
+            if (properties.isForwardingEnabled(ContainerManager.getForId(c)))
+                refreshedContainers.add(c);
+        });
+
+        return refreshedContainers;
+    }
 
     public Collection<String> enabledContainers()
     {
