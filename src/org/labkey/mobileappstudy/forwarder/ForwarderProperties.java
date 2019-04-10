@@ -53,16 +53,4 @@ public class ForwarderProperties
     {
         return PropertyManager.getEncryptedStore().getProperties(container, FORWARDER_CATEGORY);
     }
-
-    /**
-     * Set the forwarding enabled property for a container
-     * @param container to set property
-     * @param enable true to enable, false to disable
-     */
-    public void setForwarding(Container container, boolean enable)
-    {
-        PropertyManager.PropertyMap propertyMap = PropertyManager.getEncryptedStore().getWritableProperties(container, FORWARDER_CATEGORY, true);
-        propertyMap.put(ENABLED_PROPERTY_NAME, String.valueOf(enable));
-        propertyMap.save();
-    }
 }
