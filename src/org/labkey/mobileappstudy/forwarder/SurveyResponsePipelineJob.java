@@ -94,10 +94,10 @@ public class SurveyResponsePipelineJob extends PipelineJob
                     MobileAppStudyManager.get().setForwardingJobUnsucessful(getContainer());
                     return;
                 }
-                info("Successfully forwarded response [%1$s].");
+                info(String.format("Successfully forwarded response [%1$s].", response.getRowId()));
                 MobileAppStudyManager.get().updateProcessingStatus(getUser(), response.getRowId(), SurveyResponse.ResponseStatus.FORWARDED);
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
                 this.setStatus(TaskStatus.error);
                 error(String.format("Failed forwarding responseId [%1$s] with: %2$s", response.getRowId(), e.getLocalizedMessage()), e);

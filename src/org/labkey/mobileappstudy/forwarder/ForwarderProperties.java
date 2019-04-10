@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class ForwarderProperties
 {
+    public static final String PASSWORD_PLACEHOLDER = "***REDACTED***";
     private static final String FORWARDER_CATEGORY = "MobileAppForwarder";
     public static final String URL_PROPERTY_NAME = "URL";
     public static final String USER_PROPERTY_NAME = "USER";
@@ -36,7 +37,8 @@ public class ForwarderProperties
         PropertyManager.PropertyMap propertyMap = PropertyManager.getEncryptedStore().getWritableProperties(container, FORWARDER_CATEGORY ,true);
         propertyMap.put(URL_PROPERTY_NAME, url);
         propertyMap.put(USER_PROPERTY_NAME, username);
-        propertyMap.put(PASSWORD_PROPERTY_NAME, password);
+        if (!password.equals(PASSWORD_PLACEHOLDER))
+            propertyMap.put(PASSWORD_PROPERTY_NAME, password);
         propertyMap.put(ENABLED_PROPERTY_NAME, String.valueOf(enable));
 
         propertyMap.save();

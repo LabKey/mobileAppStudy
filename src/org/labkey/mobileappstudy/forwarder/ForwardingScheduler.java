@@ -28,7 +28,6 @@ public class ForwardingScheduler
 
     private ForwardingScheduler()
     {
-        enabledContainers = refreshEnabledContainers();
     }
 
     public static ForwardingScheduler get()
@@ -39,7 +38,6 @@ public class ForwardingScheduler
     public synchronized void schedule()
     {
         enabledContainers = refreshEnabledContainers();
-//        refreshEnabledContainers();
 
         if (job == null)
         {
@@ -96,6 +94,4 @@ public class ForwardingScheduler
     {
         return enabledContainers.contains(c.getId());
     }
-
-
 }

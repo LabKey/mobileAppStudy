@@ -40,7 +40,6 @@ Ext4.define('LABKEY.MobileAppStudy.ForwardingConfigurationPanel', {
                 padding: '10px 10px 0px 10px',
                 emptyText: "Enter URL",
                 submitEmptyText: false,
-                readOnly: !this.isEditable,
                 validateOnChange: true,
                 validator: this.validateField,
                 allowBlank: true,
@@ -63,7 +62,6 @@ Ext4.define('LABKEY.MobileAppStudy.ForwardingConfigurationPanel', {
                 padding: '10px 10px 0px 10px',
                 emptyText: "Enter Username",
                 submitEmptyText: false,
-                readOnly: !this.isEditable,
                 validateOnChange: true,
                 validator: this.validateField,
                 allowBlank: true,
@@ -86,12 +84,11 @@ Ext4.define('LABKEY.MobileAppStudy.ForwardingConfigurationPanel', {
                 padding: '10px 10px 0px 10px',
                 emptyText: "Enter Password",
                 submitEmptyText: false,
-                readOnly: !this.isEditable,
                 validateOnChange: true,
                 allowBlank: true,
                 validator: this.validateField,
                 listeners: {
-                    change: this.validateForm, //TODO:
+                    change: this.validateForm,
                     scope: this
                 }
             });
@@ -104,11 +101,5 @@ Ext4.define('LABKEY.MobileAppStudy.ForwardingConfigurationPanel', {
             return true;
 
         return !!value || "Field required.";
-    },
-    getForwardingControls: function () {
-        if (!this.forwarderControls) {
-            this.forwarderControls = []
-        }
-        return this.forwarderControls;
     }
 });
