@@ -116,15 +116,12 @@ public class MobileAppStudyManager
         ForwardingScheduler.get().schedule();
 
         //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
-        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING, null);
+        Collection<Integer> pendingResponses = getPendingResponseIds();
         if (pendingResponses != null)
         {
-
-            pendingResponses.forEach(response ->
-            {
-                final Integer rowId = response.getRowId();
-                enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null));
-            });
+            pendingResponses.forEach(rowId ->
+                enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null))
+            );
         }
     }
 
@@ -617,18 +614,32 @@ public class MobileAppStudyManager
                 .getObject(SurveyResponse.class);
     }
 
-    public Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status, Container container)
+    /**
+     * Get RowIds for responses that are awaiting processing
+     * @return Set of RowIds for responses that are currently in the pending state
+     */
+    public Collection<Integer> getPendingResponseIds()
+    {
+        FieldKey fkey = FieldKey.fromParts("Status");
+        SimpleFilter filter;
+        filter = new SimpleFilter(fkey, ResponseStatus.PENDING.getPkId());
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), Collections.singleton("RowId"), filter, null)
+                .getCollection(Integer.class);
+    }
+
+    /**
+     * Get the set of responses that are in the specified state
+     * @param status to query
+     * @param container hosting study to be queried
+     * @return Collection of SurveyResponse objects
+     */
+    public Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status, @NotNull Container container)
     {
         FieldKey fkey = FieldKey.fromParts("Status");
         SimpleFilter filter;
 
-        if (null != container)
-        {
-            filter = SimpleFilter.createContainerFilter(container);
-            filter.addCondition(fkey, status.getPkId());
-        }
-        else
-            filter = new SimpleFilter(fkey, status.getPkId());
+        filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, status.getPkId());
 
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
                 .getCollection(SurveyResponse.class);

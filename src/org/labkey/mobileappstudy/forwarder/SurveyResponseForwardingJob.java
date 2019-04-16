@@ -29,10 +29,6 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
     private static final Logger logger = Logger.getLogger(SurveyResponseForwardingJob.class);
     private static volatile Set<String> unsuccessful = new HashSet<>();
 
-    public SurveyResponseForwardingJob()
-    {
-    }
-
     // Private service user
     private static User forwardingUser;
     private static synchronized User getForwardingUser()
@@ -114,9 +110,10 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
         try
         {
             PipelineJob job = new SurveyResponsePipelineJob(vbi, root);
-            logger.info(String.format("Queuing forwarder for container %1$s on [thread %2$s to %3$s]",
+            logger.debug(String.format("Queuing forwarder for container %1$s on [thread %2$s to %3$s]",
                     c.getName(), Thread.currentThread().getName(), PipelineService.get().toString()));
             PipelineService.get().queueJob(job);
+            logger.debug(String.format("Job [%1$s] added", job.getJobGUID()));
         }
         catch (PipelineValidationException e)
         {
