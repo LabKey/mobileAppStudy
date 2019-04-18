@@ -78,16 +78,16 @@ public class SurveyResponsePipelineJob extends PipelineJob
 
         for (SurveyResponse response : responses)
         {
-            HttpRequest req = HttpRequest.newBuilder()
+            try
+            {
+                HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(getRequestBody(response)))
                     .build();
 
-            try
-            {
                 var httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
-                if (httpResponse.statusCode() < 200 && 300 < httpResponse.statusCode())
+                if (httpResponse.statusCode() < 200 || 300 < httpResponse.statusCode())
                 {
                     this.setStatus(TaskStatus.error);
                     error(String.format("Stopping forwarding job. ResponseId [%1$s] received error response %2$s:\n%3$s", response.getRowId(), httpResponse.statusCode(), httpResponse.body()));
@@ -112,7 +112,7 @@ public class SurveyResponsePipelineJob extends PipelineJob
 
     private String getRequestBody(SurveyResponse response)
     {
-        String token = MobileAppStudyManager.get().getEnrollmentToken(response.getParticipantId());
+        String token = MobileAppStudyManager.get().getEnrollmentToken(response.getContainer(), response.getParticipantId());
         return String.format(FORWARD_JSON_FORMAT, token, response.getData());
     }
 

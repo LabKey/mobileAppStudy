@@ -10,6 +10,7 @@ import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 
 import java.util.Collection;
@@ -25,6 +26,7 @@ public class ForwardingScheduler
     private static final int INTERVAL_MINUTES = 5;
     private static final ForwardingScheduler instance = new ForwardingScheduler();
     private static volatile Set<String> enabledContainers = new HashSet<>();
+    private TriggerKey triggerKey;
 
     private ForwardingScheduler()
     {
@@ -49,18 +51,33 @@ public class ForwardingScheduler
 
         Trigger trigger = TriggerBuilder.newTrigger()
                 .withIdentity(ForwardingScheduler.class.getCanonicalName(), ForwardingScheduler.class.getCanonicalName())
-                .withSchedule(DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule().withIntervalInMinutes(INTERVAL_MINUTES))
+                .withSchedule(DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule().withIntervalInMinutes(getIntervalMinutes()))
                 .forJob(job)
                 .build();
+
+        this.triggerKey = trigger.getKey();
 
         try
         {
             StdSchedulerFactory.getDefaultScheduler().scheduleJob(job, trigger);
-            logger.info(String.format("SurveyResponseForwarder scheduled to run every %1$S minutes. Next runtime %2$s", INTERVAL_MINUTES, trigger.getNextFireTime()));
+            logger.info(String.format("SurveyResponseForwarder scheduled to run every %1$S minutes. Next runtime %2$s", getIntervalMinutes(), trigger.getNextFireTime()));
         }
         catch (SchedulerException e)
         {
             logger.error("Failed to schedule SurveryResponseForwarder.", e);
+        }
+    }
+
+    public synchronized void unschedule()
+    {
+        try
+        {
+            StdSchedulerFactory.getDefaultScheduler().unscheduleJob(triggerKey);
+            logger.info(String.format("SurveyResponseForwarder has been unscheduled."));
+        }
+        catch (SchedulerException e)
+        {
+            logger.error("Failed to unschedule SurveryResponseForwarder.", e);
         }
     }
 
@@ -92,6 +109,14 @@ public class ForwardingScheduler
 
     public boolean forwardingIsEnabled(Container c)
     {
+        if (null == c)
+            return false;
+
         return enabledContainers.contains(c.getId());
+    }
+
+    protected int getIntervalMinutes()
+    {
+        return INTERVAL_MINUTES;
     }
 }

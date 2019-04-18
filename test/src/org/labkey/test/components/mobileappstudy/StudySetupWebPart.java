@@ -75,11 +75,7 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
 
     public StudySetupWebPart setShortName(String shortName)
     {
-        elementCache().shortNameField.set(shortName);
-        elementCache().shortNameField.blur();
-        getWrapper().waitForFormElementToEqual(elementCache().shortNameField.getComponentElement(), shortName);
-        WebDriverWrapper.sleep(500);
-        return this;
+        return setField(elementCache().shortNameField, shortName);
     }
 
     public boolean isShortNameVisible()
@@ -125,6 +121,44 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
         warning.clickOk();
     }
 
+    public StudySetupWebPart checkEnableForwarding()
+    {
+        elementCache().forwardingCheckbox.check();
+        getWrapper().shortWait().until(ExpectedConditions.visibilityOf(elementCache().urlField.getComponentElement()));
+        return this;
+    }
+
+    public StudySetupWebPart uncheckEnableForwarding()
+    {
+        elementCache().forwardingCheckbox.uncheck();
+        getWrapper().shortWait().until(ExpectedConditions.invisibilityOf(elementCache().urlField.getComponentElement()));
+        return this;
+    }
+
+    public StudySetupWebPart setUrlField(String url)
+    {
+        return setField(elementCache().urlField, url);
+    }
+
+    public StudySetupWebPart setUserField(String username)
+    {
+        return setField(elementCache().userField, username);
+    }
+
+    public StudySetupWebPart setPasswordField(String password)
+    {
+        return setField(elementCache().passwordField, password);
+    }
+
+    private StudySetupWebPart setField(Input field, String value)
+    {
+        field.set(value);
+        field.blur();
+        getWrapper().waitForFormElementToEqual(field.getComponentElement(), value);
+        WebDriverWrapper.sleep(500);
+        return this;
+    }
+
     @Override
     protected ElementCache newElementCache()
     {
@@ -137,6 +171,11 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
         final WebElement shortNamePrompt = Locator.tagWithClass("div", "studysetup-prompt").findWhenNeeded(this);
         final Input shortNameField = Input(Locator.input("studyId"), getDriver()).findWhenNeeded(this);
         final Checkbox collectionCheckbox = Checkbox.Ext4Checkbox().locatedBy(Locator.id("collectionEnabled-inputEl")).findWhenNeeded(this);
+        final Checkbox forwardingCheckbox = Checkbox.Ext4Checkbox().locatedBy(Locator.id("forwardingEnabled-inputEl")).findWhenNeeded(this);
+        final Input urlField = Input(Locator.input("url"), getDriver()).findWhenNeeded(this);
+        final Input userField = Input(Locator.input("username"), getDriver()).findWhenNeeded(this);
+        final Input passwordField = Input(Locator.input("password"), getDriver()).findWhenNeeded(this);
+
         final WebElement successMessage = Locator.tagWithText("label", "Configuration Saved").findWhenNeeded(this);
     }
 

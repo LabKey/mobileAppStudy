@@ -71,8 +71,13 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
     {
         String msg = null;
 
+        if (null == c)
+        {
+            logger.debug("SurveyResponseForwardingJob, response forwarding job called with a 'null' container");
+            msg = "Forwarding not enabled for null container.";
+        }
         //Since this can be called outside of timer job, check if enabled
-        if (!ForwardingScheduler.get().forwardingIsEnabled(c))
+        else if (!ForwardingScheduler.get().forwardingIsEnabled(c))
         {
             msg = String.format("Forwarding not enabled for container [%1$s].", c.getName());
         }
