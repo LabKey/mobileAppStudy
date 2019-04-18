@@ -1398,10 +1398,11 @@ public class MobileAppStudyManager
         return selector.getArrayList(String.class);
     }
 
-    public String getEnrollmentToken(Integer participantId)
+    public String getEnrollmentToken(Container container, Integer participantId)
     {
         FieldKey fkey = FieldKey.fromParts("ParticipantId");
-        SimpleFilter filter = new SimpleFilter(fkey, participantId);
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, participantId);
         ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken().getColumn("Token");
         return new TableSelector(column, filter, null).getObject(String.class);
     }
