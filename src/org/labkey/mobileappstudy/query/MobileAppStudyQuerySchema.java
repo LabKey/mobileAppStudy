@@ -38,9 +38,9 @@ import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_STATUS_TAB
 public class MobileAppStudyQuerySchema extends SimpleUserSchema
 {
     public static final String NAME = "mobileappstudy";
-    public static final String DESCRIPTION = "Provides data about study enrollment and survey responses";
+    private static final String DESCRIPTION = "Provides data about study enrollment and survey responses";
 
-    public MobileAppStudyQuerySchema(User user, Container container)
+    private MobileAppStudyQuerySchema(User user, Container container)
     {
         super(NAME, DESCRIPTION, user, container, DbSchema.get(NAME, DbSchemaType.Module));
     }
