@@ -16,6 +16,7 @@
 package org.labkey.mobileappstudy.query;
 
 import org.labkey.api.data.BaseColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.query.DetailsURL;
@@ -32,9 +33,9 @@ import java.util.Collections;
  */
 class EnrollmentTokenBatchTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQuerySchema>
 {
-    EnrollmentTokenBatchTable(MobileAppStudyQuerySchema schema)
+    EnrollmentTokenBatchTable(MobileAppStudyQuerySchema schema, ContainerFilter cf)
     {
-        super(schema, schema.getDbSchema().getTable(MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE));
+        super(schema, schema.getDbSchema().getTable(MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE), cf);
 
         // wrap all the existing columns
         wrapAllColumns();

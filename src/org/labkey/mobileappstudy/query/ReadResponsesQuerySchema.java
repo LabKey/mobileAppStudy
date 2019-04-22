@@ -21,6 +21,7 @@ import org.labkey.api.collections.Sets;
 import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ForeignKey;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.list.ListService;
@@ -93,19 +94,18 @@ public class ReadResponsesQuerySchema extends UserSchema
         return null != _participant || super.canReadSchema();
     }
 
-    @Nullable
     @Override
-    public TableInfo createTable(String name)
+    public @Nullable TableInfo createTable(String name, ContainerFilter cf)
     {
-        TableInfo listTable = _listSchema.createTable(name);
-        return listTable == null ? null : new ResponseTable(listTable, _participant, this);
+        TableInfo listTable = _listSchema.createTable(name, cf);
+        return listTable == null ? null : new ResponseTable(listTable, _participant, this, cf);
     }
 
     private static class ResponseTable extends FilteredTable<ReadResponsesQuerySchema>
     {
-        ResponseTable(@NotNull TableInfo table, @Nullable Participant participant, @NotNull ReadResponsesQuerySchema userSchema)
+        ResponseTable(@NotNull TableInfo table, @Nullable Participant participant, @NotNull ReadResponsesQuerySchema userSchema, ContainerFilter cf)
         {
-            super(table, userSchema);
+            super(table, userSchema, cf);
 
             table.getColumns().forEach(this::addWrapColumn);  // Future: Limit to NotPHI columns only
 
