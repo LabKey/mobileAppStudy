@@ -32,6 +32,8 @@ import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.InitialSurvey;
 import org.labkey.test.data.mobileappstudy.QuestionResponse;
 import org.labkey.test.data.mobileappstudy.Survey;
+import org.labkey.test.pages.mobileappstudy.SetupPage;
+import org.labkey.test.util.ListHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.Maps;
@@ -54,6 +56,12 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 {
     protected static final String MOBILEAPP_SCHEMA = "mobileappstudy";
     protected static final String LIST_SCHEMA = "lists";
+    protected final static String BASE_RESULTS = "{\n" +
+            "\t\t\"start\": \"2016-09-06T15:48:13.000+0000\",\n" +
+            "\t\t\"end\": \"2016-09-06T15:48:45.000+0000\",\n" +
+            "\t\t\"results\": []\n" +
+            "}";
+
 
     @Override
     protected BrowserType bestBrowser()
@@ -232,5 +240,20 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     {
         ModulePropertyValue val = new ModulePropertyValue("MobileAppStudy", "/", "SurveyMetadataDirectory", TestFileUtils.getLabKeyRoot() + "/server/optionalModules/mobileAppStudy/test/sampledata/SurveyMetadata/");
         setModuleProperties(Arrays.asList(val));
+    }
+
+    protected void setupProject(String studyName, String projectName, String surveyName, boolean enableResponseCollection)
+    {
+        _containerHelper.deleteProject(projectName, false);
+        _containerHelper.createProject(projectName, "Mobile App Study");
+        log("Set a study name.");
+        goToProjectHome(projectName);
+        SetupPage setupPage = new SetupPage(this);
+        setupPage.getStudySetupWebPart().setShortName(studyName);
+        if (enableResponseCollection)
+            setupPage.getStudySetupWebPart().checkResponseCollection();
+        setupPage.validateSubmitButtonEnabled();
+        setupPage.getStudySetupWebPart().clickSubmit();
+        _listHelper.createList(projectName, surveyName, ListHelper.ListColumnType.AutoInteger, "Key");
     }
 }

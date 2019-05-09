@@ -54,6 +54,9 @@ import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
+import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
+import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
 import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
@@ -101,22 +104,25 @@ public class MobileAppStudyManager
     {
         if (_shredder == null)
             _shredder = new JobRunner("MobileAppResponseShredder", THREAD_COUNT);
-
-        //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
-        Collection<SurveyResponse> pendingResponses = getResponsesByStatus(ResponseStatus.PENDING);
-        if (pendingResponses != null)
-        {
-            pendingResponses.forEach(response ->
-            {
-                final Integer rowId = response.getRowId();
-                enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null));
-            });
-        }
     }
 
     public static MobileAppStudyManager get()
     {
         return _instance;
+    }
+
+    void doStartup()
+    {
+        ForwardingScheduler.get().schedule();
+
+        //Pick up any pending shredder jobs that might have been lost at shutdown/crash/etc
+        Collection<Integer> pendingResponses = getPendingResponseIds();
+        if (pendingResponses != null)
+        {
+            pendingResponses.forEach(rowId ->
+                enqueueSurveyResponse(() -> shredSurveyResponse(rowId, null))
+            );
+        }
     }
 
     /**
@@ -554,6 +560,7 @@ public class MobileAppStudyManager
                 this.store(surveyResponse, rowId, user);
                 this.updateProcessingStatus(user, rowId, ResponseStatus.PROCESSED);
                 logger.info(String.format("Processed response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
+                enqueueForwardingJob(user, surveyResponse.getContainer());
             }
             catch (InvalidDesignException e)
             {
@@ -607,10 +614,32 @@ public class MobileAppStudyManager
                 .getObject(SurveyResponse.class);
     }
 
-    Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status)
+    /**
+     * Get RowIds for responses that are awaiting processing
+     * @return Set of RowIds for responses that are currently in the pending state
+     */
+    public Collection<Integer> getPendingResponseIds()
     {
         FieldKey fkey = FieldKey.fromParts("Status");
-        SimpleFilter filter = new SimpleFilter(fkey, status.getPkId());
+        SimpleFilter filter;
+        filter = new SimpleFilter(fkey, ResponseStatus.PENDING.getPkId());
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), Collections.singleton("RowId"), filter, null)
+                .getCollection(Integer.class);
+    }
+
+    /**
+     * Get the set of responses that are in the specified state
+     * @param status to query
+     * @param container hosting study to be queried
+     * @return Collection of SurveyResponse objects
+     */
+    public Collection<SurveyResponse> getResponsesByStatus(ResponseStatus status, @NotNull Container container)
+    {
+        FieldKey fkey = FieldKey.fromParts("Status");
+        SimpleFilter filter;
+
+        filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, status.getPkId());
 
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
                 .getCollection(SurveyResponse.class);
@@ -1326,4 +1355,64 @@ public class MobileAppStudyManager
         return optionFieldKey + OTHER_OPTION_TITLE;
     }
 
+    private void enqueueForwardingJob(final User user,final Container container)
+    {
+        SurveyResponseForwardingJob forwarder = new SurveyResponseForwardingJob();
+
+        try
+        {
+            forwarder.call(user, container);
+        }
+        catch (Exception e)
+        {
+            forwarder.setUnsuccessful(container);
+        }
+    }
+
+    public void setForwardingJobUnsucessful(Container c)
+    {
+        SurveyResponseForwardingJob forwarder = new SurveyResponseForwardingJob();
+        forwarder.setUnsuccessful(c);
+    }
+
+    public Map<String, String> getForwardingProperties(Container container, User user)
+    {
+        return new ForwarderProperties().getForwarderConnection(container);
+    }
+
+    public void setForwarderConfiguration(Container container, String url, String username, String password, boolean forwardingEnabled)
+    {
+        logger.info( String.format("Updating forwarder configuration for container: %1$s", container.getName()));
+        new ForwarderProperties().setForwardingProperties(container, url, username, password, forwardingEnabled);
+        ForwardingScheduler.get().enableContainer(container, forwardingEnabled);
+    }
+
+    /**
+     * Get set of containers
+     * @return List of container id strings
+     */
+    public List<String> getStudyContainers()
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableSelector selector = new TableSelector(schema.getTableInfoStudy(), Collections.singleton("Container"), null, null);
+        return selector.getArrayList(String.class);
+    }
+
+    public String getEnrollmentToken(Container container, Integer participantId)
+    {
+        FieldKey fkey = FieldKey.fromParts("ParticipantId");
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, participantId);
+        ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken().getColumn("Token");
+        return new TableSelector(column, filter, null).getObject(String.class);
+    }
+
+    public boolean hasResponsesToForward(@NotNull Container container)
+    {
+        FieldKey fkey = FieldKey.fromParts("Status");
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, ResponseStatus.PROCESSED.getPkId());
+        return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
+                .getRowCount() > 0;
+    }
 }
