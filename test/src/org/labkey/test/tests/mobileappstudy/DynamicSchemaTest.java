@@ -536,7 +536,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         // Verify no other block parses and gets expected responses and columns
         List<Map<String, Object>> afterTable = getTableData(noOtherOptionTableName);
         assertEquals("Unexpected number of rows in  for no `other` option.", 2, afterTable.size());
-        assertEquals("Unexpected number of columns for no `other` option.", 17, afterTable.get(0).keySet().size());
+        assertEquals("Unexpected number of columns for no `other` option.", 16, afterTable.get(0).keySet().size());
 
         // Verify other block parses and gets expected responses and columns
         afterTable = getTableData(optionRequiredTableName);
