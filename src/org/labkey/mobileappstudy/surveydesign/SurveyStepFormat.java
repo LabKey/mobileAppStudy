@@ -7,8 +7,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SurveyStepFormat
 {
+    enum SelectionStyle {
+        Single,
+        Multiple
+    }
+
     private List<TextChoice> _textChoices;
-    private Integer _selectionStyle;
+    private SelectionStyle _selectionStyle;
     private Integer _maxLength;
     private String _style;
 
@@ -21,11 +26,12 @@ public class SurveyStepFormat
         _textChoices = textChoices;
     }
 
-    public Integer getSelectionStyle()
+    //Alternatively we could just ignore this field since we don't use it.
+    public SelectionStyle getSelectionStyle()
     {
         return _selectionStyle;
     }
-    public void setSelectionStyle(Integer selectionStyle)
+    public void setSelectionStyle(SelectionStyle selectionStyle)
     {
         _selectionStyle = selectionStyle;
     }
