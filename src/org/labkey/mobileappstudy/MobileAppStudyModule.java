@@ -22,6 +22,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleProperty;
+import org.labkey.api.view.FolderManagement;
 import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.mobileappstudy.query.MobileAppStudyQuerySchema;
@@ -99,6 +100,10 @@ public class MobileAppStudyModule extends DefaultModule
         metadataServiceAccessToken.setDescription("Token to be passed in the header of requests to the Activity Metadata Service to identify this client of that service.");
         metadataServiceAccessToken.setInputFieldWidth(500);
         this.addModuleProperty(metadataServiceAccessToken);
+
+
+        FolderManagement.addTab(FolderManagement.TYPE.FolderManagement, "Response Forwarding", "forwarding",
+                FolderManagement.FOLDERS_AND_PROJECTS, MobileAppStudyController.ForwardingSettingsAction.class);
 
         //Startup shredding and forwarder jobs
         MobileAppStudyManager.get().doStartup();

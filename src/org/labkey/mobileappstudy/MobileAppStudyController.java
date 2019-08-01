@@ -43,9 +43,12 @@ import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.security.roles.FolderAdminRole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.FolderManagement.FolderManagementViewPostAction;
 import org.labkey.api.view.HttpView;
+import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.ViewContext;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
@@ -193,24 +196,6 @@ public class MobileAppStudyController extends SpringActionController
             //Check if study exists, name has changed, and at least one participant has enrolled
             else if (study != null && !study.getShortName().equals(form.getShortName()) && MobileAppStudyManager.get().hasStudyParticipants(getContainer()))
                 errors.rejectValue("shortName", ERROR_MSG, "This container already has a study with participant data associated with it.  Each container can be configured with only one study and cannot be reconfigured once participant data is present.");
-            else if (form.isForwardingEnabled())
-            {
-                if (StringUtils.isBlank(form.getUrl()))
-                    errors.rejectValue("url", "Field cannot be blank.");
-                try
-                {
-                    new URL(form.getUrl());
-                }
-                catch (MalformedURLException e)
-                {
-                    errors.rejectValue("url", ERROR_MSG, "Malformed URL");
-                }
-
-                if (StringUtils.isBlank(form.getUsername()))
-                    errors.rejectValue("username", ERROR_MSG, "Field cannot be blank.");
-                if ( StringUtils.isBlank(form.getPassword()))
-                    errors.rejectValue("password", ERROR_MSG, "Field cannot be blank.");
-            }
         }
 
         @Override
@@ -220,8 +205,6 @@ public class MobileAppStudyController extends SpringActionController
             MobileAppStudy study = MobileAppStudyManager.get().getStudy(getContainer());
             if (study == null || !study.getShortName().equals(form.getShortName()) || study.getCollectionEnabled() != form.getCollectionEnabled())
                 study = MobileAppStudyManager.get().insertOrUpdateStudy(form.getShortName(), form.getCollectionEnabled(), getContainer(), getUser());
-
-            MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form.getUrl(), form.getUsername(), form.getPassword(), form.isForwardingEnabled());
 
             return success(PageFlowUtil.map(
                 "rowId", study.getRowId(),
@@ -601,10 +584,6 @@ public class MobileAppStudyController extends SpringActionController
     {
         private String _shortName;
         private boolean _collectionEnabled;
-        private boolean _forwardingEnabled;
-        private String _url;
-        private String _username;
-        private String _password;
 
         public String getShortName()
         {
@@ -633,46 +612,6 @@ public class MobileAppStudyController extends SpringActionController
         public String getStudyId()
         {
             return _shortName;
-        }
-
-        public boolean isForwardingEnabled()
-        {
-            return _forwardingEnabled;
-        }
-
-        public void setForwardingEnabled(Boolean forwardingEnabled)
-        {
-            _forwardingEnabled = forwardingEnabled;
-        }
-
-        public String getUrl()
-        {
-            return _url;
-        }
-
-        public void setUrl(String url)
-        {
-            _url = url;
-        }
-
-        public String getUsername()
-        {
-            return _username;
-        }
-
-        public void setUsername(String username)
-        {
-            _username = username;
-        }
-
-        public String getPassword()
-        {
-            return _password;
-        }
-
-        public void setPassword(String password)
-        {
-            _password = password;
         }
     }
 
@@ -920,5 +859,187 @@ public class MobileAppStudyController extends SpringActionController
         {
             this.activityVersion = activityVersion;
         }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public static class ForwardingSettingsAction extends FolderManagementViewPostAction<ForwardingSettingsForm>
+    {
+        @Override
+        protected HttpView getTabView(ForwardingSettingsForm form, boolean reshow, BindException errors) throws Exception
+        {
+            return new JspView<>("/org/labkey/mobileappstudy/view/forwarderSettings.jsp", form, errors);
+        }
+
+        @Override
+        public void validateCommand(ForwardingSettingsForm form, Errors errors)
+        {
+            switch(form.getForwardingType())
+            {
+                case Disabled:
+                    return;
+                case OAuth:
+                    validateOAuthConfig(form, errors);
+                    break;
+                case Basic:
+                    validateBasicConfig(form, errors);
+                    break;
+                default:
+                    errors.reject(ERROR_MSG, "Invalid authentication type selected");
+                    break;
+            }
+        }
+
+        private void validateOAuthConfig(ForwardingSettingsForm form, Errors errors)
+        {
+            if (StringUtils.isBlank(form.getOauthURL()))
+                errors.rejectValue("oauthURL", ERROR_REQUIRED, "Field cannot be blank.");
+
+            try
+            {
+                new URL(form.getOauthURL());
+            }
+            catch (MalformedURLException e)
+            {
+                errors.rejectValue("oauthURL", ERROR_MSG, "Malformed URL");
+            }
+
+
+            if (StringUtils.isBlank(form.getTokenRequestURL()))
+                errors.rejectValue("tokenRequestURL", ERROR_REQUIRED, "Field cannot be blank.");
+
+            try
+            {
+                new URL(form.getTokenRequestURL());
+            }
+            catch (MalformedURLException e)
+            {
+                errors.rejectValue("tokenRequestURL", ERROR_MSG, "Malformed URL");
+            }
+
+        }
+
+        private void validateBasicConfig(ForwardingSettingsForm form, Errors errors)
+        {
+
+                if (StringUtils.isBlank(form.getBasicURL()))
+                    errors.rejectValue("basicURL", ERROR_REQUIRED, "Field cannot be blank.");
+
+                try
+                {
+                    new URL(form.getBasicURL());
+                }
+                catch (MalformedURLException e)
+                {
+                    errors.rejectValue("basicURL", ERROR_MSG, "Malformed URL");
+                }
+
+                if (StringUtils.isBlank(form.getUsername()))
+                    errors.rejectValue("username", ERROR_REQUIRED, "Field cannot be blank.");
+                if ( StringUtils.isBlank(form.getPassword()))
+                    errors.rejectValue("password", ERROR_REQUIRED, "Field cannot be blank.");
+        }
+
+        @Override
+        public boolean handlePost(ForwardingSettingsForm form, BindException errors) throws Exception
+        {
+            MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form.getForwardingType(),
+                    form.getBasicURL(), form.getUsername(), form.getPassword(),
+                    form.getTokenRequestURL(), form.getTokenField(), form.getHeader(), form.getOauthURL());
+
+            return true;
+        }
+    }
+
+    public static class ForwardingSettingsForm
+    {
+        private MobileAppStudyManager.ForwardingType forwardingType;
+        private String basicURL;
+        private String username;
+        private String password;
+        private String tokenRequestURL;
+        private String tokenField;
+        private String header;
+        private String oauthURL;
+
+        public MobileAppStudyManager.ForwardingType getForwardingType ()
+        {
+            return forwardingType;
+        }
+
+        public void setForwardingType(MobileAppStudyManager.ForwardingType forwardingType)
+        {
+            this.forwardingType = forwardingType;
+        }
+
+        public String getBasicURL()
+        {
+            return basicURL;
+        }
+
+        public void setBasicURL(String url)
+        {
+            this.basicURL = url;
+        }
+
+        public String getUsername()
+        {
+            return username;
+        }
+
+        public void setUsername(String username)
+        {
+            this.username = username;
+        }
+
+        public String getPassword()
+        {
+            return password;
+        }
+
+        public void setPassword(String password)
+        {
+            this.password = password;
+        }
+
+        public String getTokenRequestURL()
+        {
+            return tokenRequestURL;
+        }
+
+        public void setTokenRequestURL(String tokenRequestURL)
+        {
+            this.tokenRequestURL = tokenRequestURL;
+        }
+
+        public String getTokenField()
+        {
+            return tokenField;
+        }
+
+        public void setTokenField(String tokenField)
+        {
+            this.tokenField = tokenField;
+        }
+
+        public String getHeader()
+        {
+            return header;
+        }
+
+        public void setHeader(String header)
+        {
+            this.header = header;
+        }
+
+        public String getOauthURL()
+        {
+            return oauthURL;
+        }
+
+        public void setOauthURL(String oauthURL)
+        {
+            this.oauthURL = oauthURL;
+        }
+
     }
 }

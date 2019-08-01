@@ -100,9 +100,8 @@ public class ForwardingScheduler
     {
         Set<String> refreshedContainers = new HashSet<>();
         Collection<String> containers = MobileAppStudyManager.get().getStudyContainers();
-        final ForwarderProperties properties = new ForwarderProperties();
         containers.stream().distinct().forEach(c -> {
-            if (properties.isForwardingEnabled(ContainerManager.getForId(c)))
+            if (MobileAppStudyManager.get().isForwardingEnabled(ContainerManager.getForId(c)))
                 refreshedContainers.add(c);
         });
 

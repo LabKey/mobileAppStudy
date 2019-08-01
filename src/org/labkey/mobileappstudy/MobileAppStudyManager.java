@@ -1380,11 +1380,13 @@ public class MobileAppStudyManager
         return new ForwarderProperties().getForwarderConnection(container);
     }
 
-    public void setForwarderConfiguration(Container container, String url, String username, String password, boolean forwardingEnabled)
+    public void setForwarderConfiguration(Container container, ForwardingType authType,
+                                          String url, String username, String password,
+                                          String tokenRequestURL, String tokenField, String header, String oauthURL)
     {
         logger.info( String.format("Updating forwarder configuration for container: %1$s", container.getName()));
-        new ForwarderProperties().setForwardingProperties(container, url, username, password, forwardingEnabled);
-        ForwardingScheduler.get().enableContainer(container, forwardingEnabled);
+        new ForwarderProperties().setForwarderProperties(container, authType, url, username, password, tokenRequestURL, tokenField, header, oauthURL);
+        ForwardingScheduler.get().enableContainer(container, authType != ForwardingType.Disabled);
     }
 
     /**
@@ -1414,5 +1416,17 @@ public class MobileAppStudyManager
         filter.addCondition(fkey, ResponseStatus.PROCESSED.getPkId());
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
                 .getRowCount() > 0;
+    }
+
+    public boolean isForwardingEnabled(Container container)
+    {
+        return ForwardingType.Disabled != ForwarderProperties.getForwardingType(container);
+    }
+
+    public enum ForwardingType
+    {
+        Disabled,
+        OAuth,
+        Basic
     }
 }

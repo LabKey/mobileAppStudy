@@ -121,35 +121,6 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
         warning.clickOk();
     }
 
-    public StudySetupWebPart checkEnableForwarding()
-    {
-        elementCache().forwardingCheckbox.check();
-        getWrapper().shortWait().until(ExpectedConditions.visibilityOf(elementCache().urlField.getComponentElement()));
-        return this;
-    }
-
-    public StudySetupWebPart uncheckEnableForwarding()
-    {
-        elementCache().forwardingCheckbox.uncheck();
-        getWrapper().shortWait().until(ExpectedConditions.invisibilityOf(elementCache().urlField.getComponentElement()));
-        return this;
-    }
-
-    public StudySetupWebPart setUrlField(String url)
-    {
-        return setField(elementCache().urlField, url);
-    }
-
-    public StudySetupWebPart setUserField(String username)
-    {
-        return setField(elementCache().userField, username);
-    }
-
-    public StudySetupWebPart setPasswordField(String password)
-    {
-        return setField(elementCache().passwordField, password);
-    }
-
     private StudySetupWebPart setField(Input field, String value)
     {
         field.set(value);

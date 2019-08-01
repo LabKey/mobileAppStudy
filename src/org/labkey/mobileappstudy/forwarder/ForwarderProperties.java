@@ -15,29 +15,26 @@
  */
 package org.labkey.mobileappstudy.forwarder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.mobileappstudy.MobileAppStudyManager.ForwardingType;
 
 import java.util.Map;
 
 public class ForwarderProperties
 {
-    public static final String PASSWORD_PLACEHOLDER = "***REDACTED***";
     private static final String FORWARDER_CATEGORY = "MobileAppForwarder";
+    public static final String PASSWORD_PLACEHOLDER = "***REDACTED***";
     public static final String URL_PROPERTY_NAME = "URL";
     public static final String USER_PROPERTY_NAME = "USER";
     public static final String PASSWORD_PROPERTY_NAME = "PASSWORD";
     public static final String ENABLED_PROPERTY_NAME = "ENABLED";
-
-    /**
-     * Check is forwarding enabled for the study container
-     * @param container to check
-     * @return True if forwarding is enabled
-     */
-    public boolean isForwardingEnabled( Container container)
-    {
-        return Boolean.valueOf(PropertyManager.getEncryptedStore().getProperties(container, FORWARDER_CATEGORY).get(ENABLED_PROPERTY_NAME));
-    }
+    public static final String FORWARDING_TYPE = "FORWARDING_TYPE";
+    public static final String TOKEN_REQUEST_URL = "TOKEN_REQUEST_URL";
+    public static final String TOKEN_FIELD = "TOKEN_FIELD";
+    public static final String TOKEN_HEADER = "TOKEN_HEADER";
+    public static final String OAUTH_URL = "OAUTH_URL";
 
     /**
      * Set the connection properties for the forwarding endpoint
@@ -45,16 +42,22 @@ public class ForwarderProperties
      * @param url endpoint to forward to
      * @param username to authenticate with
      * @param password to authenticate with
-     * @param enable flag indicating whether forwarding is enabled
+     * @param authType flag indicating whether forwarding is enabled, and which authentication type to use
      */
-    public void setForwardingProperties(Container container, String url, String username, String password, Boolean enable)
+    public void setForwarderProperties(Container container, ForwardingType authType,
+                                       String url, String username, String password,
+                                       String tokenRequestURL, String tokenField, String tokenHeader, String oauthURL)
     {
         PropertyManager.PropertyMap propertyMap = PropertyManager.getEncryptedStore().getWritableProperties(container, FORWARDER_CATEGORY ,true);
         propertyMap.put(URL_PROPERTY_NAME, url);
         propertyMap.put(USER_PROPERTY_NAME, username);
-        if (!password.equals(PASSWORD_PLACEHOLDER))
+        if (StringUtils.isNotBlank(password) && !password.equals(PASSWORD_PLACEHOLDER))
             propertyMap.put(PASSWORD_PROPERTY_NAME, password);
-        propertyMap.put(ENABLED_PROPERTY_NAME, String.valueOf(enable));
+        propertyMap.put(TOKEN_REQUEST_URL, tokenRequestURL);
+        propertyMap.put(TOKEN_FIELD, tokenField);
+        propertyMap.put(TOKEN_HEADER, tokenHeader);
+        propertyMap.put(OAUTH_URL, oauthURL);
+        propertyMap.put(FORWARDING_TYPE, authType.name());
 
         propertyMap.save();
     }
@@ -68,4 +71,16 @@ public class ForwarderProperties
     {
         return PropertyManager.getEncryptedStore().getProperties(container, FORWARDER_CATEGORY);
     }
+
+    /**
+     * Check is forwarding enabled for the study container
+     * @param container to check
+     * @return True if forwarding is enabled
+     */
+    public static ForwardingType getForwardingType(Container container)
+    {
+        String authType = PropertyManager.getEncryptedStore().getProperties(container, FORWARDER_CATEGORY).getOrDefault(FORWARDING_TYPE, ForwardingType.Disabled.name());
+        return ForwardingType.valueOf(authType);
+    }
+
 }
