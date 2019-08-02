@@ -1,0 +1,19 @@
+.form-group {
+
+}
+
+.lk-forwarder-input {
+    display: inline-block;
+    margin-right: 10px;
+    width: 60%;
+}
+
+.form-group label {
+    display: inline-block;
+    float: left;
+    clear: left;
+    width: 150px;
+    text-align: left;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}

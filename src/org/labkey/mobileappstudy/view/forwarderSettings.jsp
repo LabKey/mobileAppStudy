@@ -19,7 +19,7 @@
     {
         dependencies.add("internal/jQuery");
         dependencies.add("Ext4");
-        dependencies.add("mobileAppStudy/panel/forwardingPanel.js");
+        dependencies.add("mobileAppStudy/panel/forwarderSettings.css");
     }
 %>
 <%
@@ -48,7 +48,7 @@
 <labkey:errors></labkey:errors>
 
 <labkey:form name="mobileAppStudyForwardingSettingsForm" action="<%=h(new ActionURL(ForwardingSettingsAction.class, getContainer()))%>" method="POST">
-    <div id="authTypeSelector" >
+    <div id="authTypeSelector" class=" form-group" >
         <label>
             <input type="radio" name="forwardingType" value="<%=h(ForwardingType.Disabled.name())%>" <%=checked(authType == ForwardingType.Disabled) %> />
             Disabled
@@ -63,17 +63,17 @@
         </label><br>
     </div>
 
-    <div style="padding: 10px" >
-        <div id="basicAuthPanel" class="requests-editor">
-            <labkey:input type="text" label="User" name="username" value="<%=h(basicAuthUser)%>" />
-            <labkey:input type="password" label="Password" name="password" value="<%=h(basicAuthPassword)%>"/>
-            <labkey:input type="text" label="Endpoint URL" name="basicURL" value="<%=h(basicAuthURL)%>" />
+    <div style="padding: 10px;" >
+        <div id="basicAuthPanel" class=" form-group">
+            <labkey:input type="text"     className=" form-control lk-forwarder-input" label="User" name="username" value="<%=h(basicAuthUser)%>" />
+            <labkey:input type="password" className=" form-control lk-forwarder-input" label="Password" name="password" value="<%=h(basicAuthPassword)%>"/>
+            <labkey:input type="text"     className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="basicURL" value="<%=h(basicAuthURL)%>" />
         </div>
-        <div id="oauthPanel" >
-            <labkey:input type="text" label="Token Request URL" name="tokenRequestURL" value="<%=h(oauthRequestURL)%>" />
-            <labkey:input type="text" label="Token Field" name="tokenField" value="<%=h(oauthTokenFieldPath)%>"/>
-            <labkey:input type="text" label="Header Name" name="header" value="<%=h(oauthTokenHeader)%>" />
-            <labkey:input type="text" label="Endpoint URL" name="oauthURL" value="<%=h(oauthURL)%>" />
+        <div id="oauthPanel" class=" form-group">
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Token Request URL" name="tokenRequestURL" value="<%=h(oauthRequestURL)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input" label="Token Field" name="tokenField" value="<%=h(oauthTokenFieldPath)%>"/>
+            <labkey:input type="text" className=" form-control lk-forwarder-input" label="Header Name" name="header" value="<%=h(oauthTokenHeader)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="oauthURL" value="<%=h(oauthURL)%>" />
         </div>
     </div>
     <div id="buttonBar">
@@ -110,7 +110,19 @@
             }
         }
 
+        // function validateForm(e) {
+            // Clear old errors
+            // $('.labkey-error').remove();
+        // }
+
+        function validateURLInput(evt) {
+            $(evt.target).after('<span class="labkey-error">Invalid URL</span>');
+        }
+
         $('#authTypeSelector').change(showAuthPanel);
+        $('.lk-forwarder-url').blur(validateURLInput);
+        // $('form[name="mobileAppStudyForwardingSettingsForm"]').submit(validateForm);
+
 
         showAuthPanel();
     } (jQuery);
