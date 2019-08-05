@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class MobileAppStudyModule extends DefaultModule
 {
@@ -41,6 +42,11 @@ public class MobileAppStudyModule extends DefaultModule
     public static final String SURVEY_METADATA_DIRECTORY = "SurveyMetadataDirectory";
     public static final String METADATA_SERVICE_BASE_URL = "MetadataServiceBaseUrl";
     public static final String METADATA_SERVICE_ACCESS_TOKEN = "MetadataServiceAccessToken";
+
+    /**
+     * Predicate that can be used to check if a container has this module active
+     */
+    public final Predicate<Container> IS_ACTIVE = container -> container.hasActiveModuleByName(getName());
 
     @Override
     public String getName()
@@ -101,9 +107,8 @@ public class MobileAppStudyModule extends DefaultModule
         metadataServiceAccessToken.setInputFieldWidth(500);
         this.addModuleProperty(metadataServiceAccessToken);
 
-
         FolderManagement.addTab(FolderManagement.TYPE.FolderManagement, "Response Forwarding", "forwarding",
-                FolderManagement.FOLDERS_AND_PROJECTS, MobileAppStudyController.ForwardingSettingsAction.class);
+                IS_ACTIVE, MobileAppStudyController.ForwardingSettingsAction.class);
 
         //Startup shredding and forwarder jobs
         MobileAppStudyManager.get().doStartup();
