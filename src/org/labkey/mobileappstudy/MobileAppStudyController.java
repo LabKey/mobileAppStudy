@@ -893,8 +893,7 @@ public class MobileAppStudyController extends SpringActionController
         {
             if (StringUtils.isBlank(form.getOauthURL()))
                 errors.rejectValue("oauthURL", ERROR_REQUIRED, "Field cannot be blank.");
-
-            try
+            else try
             {
                 new URL(form.getOauthURL());
             }
@@ -906,8 +905,7 @@ public class MobileAppStudyController extends SpringActionController
 
             if (StringUtils.isBlank(form.getTokenRequestURL()))
                 errors.rejectValue("tokenRequestURL", ERROR_REQUIRED, "Field cannot be blank.");
-
-            try
+            else try
             {
                 new URL(form.getTokenRequestURL());
             }
@@ -923,8 +921,7 @@ public class MobileAppStudyController extends SpringActionController
 
                 if (StringUtils.isBlank(form.getBasicURL()))
                     errors.rejectValue("basicURL", ERROR_REQUIRED, "Field cannot be blank.");
-
-                try
+                else try
                 {
                     new URL(form.getBasicURL());
                 }

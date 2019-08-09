@@ -68,13 +68,13 @@
         <div id="basicAuthPanel" class=" form-group">
             <labkey:input type="text" className=" form-control lk-forwarder-input" label="User" name="username" value="<%=h(basicAuthUser)%>" />
             <labkey:input type="password" className=" form-control lk-forwarder-input" label="Password" name="password" value="<%=h(basicAuthPassword)%>"/>
-            <labkey:input type="url" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="basicURL" value="<%=h(basicAuthURL)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="basicURL" value="<%=h(basicAuthURL)%>" />
         </div>
         <div id="oauthPanel" class=" form-group">
-            <labkey:input type="url" className=" form-control lk-forwarder-input lk-forwarder-url" label="Token Request URL" name="tokenRequestURL" value="<%=h(oauthRequestURL)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Token Request URL" name="tokenRequestURL" value="<%=h(oauthRequestURL)%>" />
             <labkey:input type="text" className=" form-control lk-forwarder-input" label="Token Field" name="tokenField" value="<%=h(oauthTokenFieldPath)%>"/>
             <labkey:input type="text" className=" form-control lk-forwarder-input" label="Header Name" name="header" value="<%=h(oauthTokenHeader)%>" />
-            <labkey:input type="url" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="oauthURL" value="<%=h(oauthURL)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="oauthURL" value="<%=h(oauthURL)%>" />
         </div>
     </div>
     <div id="buttonBar">
@@ -87,9 +87,8 @@
 
     +function ($) {
 
-        $('#authTypeSelector').change(showAuthPanel);
-        $('.lk-forwarder-url').bind('input', validateURL);
+        $('#authTypeSelector').change(LABKEY.MobileAppForwarderSettings.showAuthPanel);
 
-        showAuthPanel();
+        LABKEY.MobileAppForwarderSettings.showAuthPanel();
     } (jQuery);
 </script>
