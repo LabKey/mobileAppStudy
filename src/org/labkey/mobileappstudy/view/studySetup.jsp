@@ -31,7 +31,6 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
-        dependencies.add("mobileAppStudy/panel/forwardingPanel.js");
         dependencies.add("mobileAppStudy/panel/studySetup.js");
     }
 %>
