@@ -8,6 +8,7 @@ import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.pages.admin.FolderManagementTab;
 import org.labkey.test.selenium.LazyWebElement;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class ForwardingTab extends LabKeyPage<ForwardingTab.ElementCache> implements FolderManagementTab
 {
@@ -80,7 +81,8 @@ public class ForwardingTab extends LabKeyPage<ForwardingTab.ElementCache> implem
 
     public void submit()
     {
-        clickButton("submit");
+        shortWait().until(ExpectedConditions.elementToBeClickable(Locator.button("Submit")));
+        clickButton("Submit");
     }
 
     protected class ElementCache extends LabKeyPage.ElementCache
