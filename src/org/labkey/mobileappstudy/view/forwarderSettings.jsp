@@ -2,14 +2,13 @@
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="org.labkey.mobileappstudy.MobileAppStudyManager" %>
-<%@ page import="org.labkey.mobileappstudy.MobileAppStudyManager.ForwardingType" %>
 <%@ page import="org.labkey.mobileappstudy.forwarder.ForwarderProperties" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.mobileappstudy.MobileAppStudyController.ForwardingSettingsForm" %>
 <%@ page import="org.labkey.mobileappstudy.MobileAppStudyController.ForwardingSettingsAction" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.mobileappstudy.MobileAppStudyController" %>
+<%@ page import="org.labkey.mobileappstudy.forwarder.ForwardingType" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 
@@ -27,11 +26,9 @@
     JspView<ForwardingSettingsForm> me = (JspView<ForwardingSettingsForm>) HttpView.currentView();
     ForwardingSettingsForm bean = me.getModelBean();
 
-    String renderId = "labkey-mobileappstudy-forwardingsetup";
-
     MobileAppStudyManager manager = MobileAppStudyManager.get();
 
-    Map<String, String> forwardingProperties = manager.getForwardingProperties(getContainer(), getUser());
+    Map<String, String> forwardingProperties = manager.getForwardingProperties(getContainer());
     ForwardingType authType = ForwarderProperties.getForwardingType(getContainer());
 
     String basicAuthURL = forwardingProperties.get(ForwarderProperties.URL_PROPERTY_NAME);

@@ -67,7 +67,7 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
 
     public void call(User user, Container c)
     {
-        if (!validateCall(user, c))
+        if (!validateCall(c))
             return;
 
         try
@@ -82,7 +82,7 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
         }
     }
 
-    private boolean validateCall(User user, Container c)
+    private boolean validateCall(Container c)
     {
         String msg = null;
 
@@ -97,7 +97,7 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
             msg = String.format("Forwarding not enabled for container [%1$s].", c.getName());
         }
         //Check if container was unsuccessful recently
-        else if (c != null && unsuccessful.contains(c.getId()))
+        else if (unsuccessful.contains(c.getId()))
         {
             msg = String.format("Not forwarding survey responses for container [%1$s] because target endpoint is marked as unsuccessful.", c.getName());
         }
@@ -143,7 +143,7 @@ public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<Str
     }
 
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException
+    public void execute(JobExecutionContext context)
     {
         try
         {

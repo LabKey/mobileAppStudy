@@ -43,7 +43,6 @@ import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.roles.FolderAdminRole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.FolderManagement.FolderManagementViewPostAction;
@@ -56,6 +55,7 @@ import org.labkey.mobileappstudy.data.MobileAppStudy;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
+import org.labkey.mobileappstudy.forwarder.ForwardingType;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
@@ -66,8 +66,6 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -865,7 +863,7 @@ public class MobileAppStudyController extends SpringActionController
     public static class ForwardingSettingsAction extends FolderManagementViewPostAction<ForwardingSettingsForm>
     {
         @Override
-        protected HttpView getTabView(ForwardingSettingsForm form, boolean reshow, BindException errors) throws Exception
+        protected HttpView getTabView(ForwardingSettingsForm form, boolean reshow, BindException errors)
         {
             return new JspView<>("/org/labkey/mobileappstudy/view/forwarderSettings.jsp", form, errors);
         }
@@ -873,83 +871,20 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public void validateCommand(ForwardingSettingsForm form, Errors errors)
         {
-            switch(form.getForwardingType())
-            {
-                case Disabled:
-                    return;
-                case OAuth:
-                    validateOAuthConfig(form, errors);
-                    break;
-                case Basic:
-                    validateBasicConfig(form, errors);
-                    break;
-                default:
-                    errors.reject(ERROR_MSG, "Invalid authentication type selected");
-                    break;
-            }
-        }
-
-        private void validateOAuthConfig(ForwardingSettingsForm form, Errors errors)
-        {
-            if (StringUtils.isBlank(form.getOauthURL()))
-                errors.rejectValue("oauthURL", ERROR_REQUIRED, "Field cannot be blank.");
-            else try
-            {
-                new URL(form.getOauthURL());
-            }
-            catch (MalformedURLException e)
-            {
-                errors.rejectValue("oauthURL", ERROR_MSG, "Malformed URL");
-            }
-
-
-            if (StringUtils.isBlank(form.getTokenRequestURL()))
-                errors.rejectValue("tokenRequestURL", ERROR_REQUIRED, "Field cannot be blank.");
-            else try
-            {
-                new URL(form.getTokenRequestURL());
-            }
-            catch (MalformedURLException e)
-            {
-                errors.rejectValue("tokenRequestURL", ERROR_MSG, "Malformed URL");
-            }
-
-        }
-
-        private void validateBasicConfig(ForwardingSettingsForm form, Errors errors)
-        {
-
-                if (StringUtils.isBlank(form.getBasicURL()))
-                    errors.rejectValue("basicURL", ERROR_REQUIRED, "Field cannot be blank.");
-                else try
-                {
-                    new URL(form.getBasicURL());
-                }
-                catch (MalformedURLException e)
-                {
-                    errors.rejectValue("basicURL", ERROR_MSG, "Malformed URL");
-                }
-
-                if (StringUtils.isBlank(form.getUsername()))
-                    errors.rejectValue("username", ERROR_REQUIRED, "Field cannot be blank.");
-                if ( StringUtils.isBlank(form.getPassword()))
-                    errors.rejectValue("password", ERROR_REQUIRED, "Field cannot be blank.");
+            form.getForwardingType().validateConfig(form, errors);
         }
 
         @Override
-        public boolean handlePost(ForwardingSettingsForm form, BindException errors) throws Exception
+        public boolean handlePost(ForwardingSettingsForm form, BindException errors)
         {
-            MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form.getForwardingType(),
-                    form.getBasicURL(), form.getUsername(), form.getPassword(),
-                    form.getTokenRequestURL(), form.getTokenField(), form.getHeader(), form.getOauthURL());
-
+            MobileAppStudyManager.get().setForwarderConfiguration(getContainer(), form);
             return true;
         }
     }
 
     public static class ForwardingSettingsForm
     {
-        private MobileAppStudyManager.ForwardingType forwardingType;
+        private ForwardingType forwardingType = ForwardingType.Disabled;
         private String basicURL;
         private String username;
         private String password;
@@ -958,12 +893,12 @@ public class MobileAppStudyController extends SpringActionController
         private String header;
         private String oauthURL;
 
-        public MobileAppStudyManager.ForwardingType getForwardingType ()
+        public ForwardingType getForwardingType ()
         {
             return forwardingType;
         }
 
-        public void setForwardingType(MobileAppStudyManager.ForwardingType forwardingType)
+        public void setForwardingType(ForwardingType forwardingType)
         {
             this.forwardingType = forwardingType;
         }

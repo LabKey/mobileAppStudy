@@ -54,9 +54,6 @@ import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
-import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
-import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
-import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
 import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
@@ -67,6 +64,10 @@ import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
 import org.labkey.mobileappstudy.data.TextChoiceResult;
+import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
+import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
+import org.labkey.mobileappstudy.forwarder.ForwardingType;
+import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
@@ -1375,18 +1376,17 @@ public class MobileAppStudyManager
         forwarder.setUnsuccessful(c);
     }
 
-    public Map<String, String> getForwardingProperties(Container container, User user)
+    public Map<String, String> getForwardingProperties(Container container)
     {
         return new ForwarderProperties().getForwarderConnection(container);
     }
 
-    public void setForwarderConfiguration(Container container, ForwardingType authType,
-                                          String url, String username, String password,
-                                          String tokenRequestURL, String tokenField, String header, String oauthURL)
+    public void setForwarderConfiguration(Container container, MobileAppStudyController.ForwardingSettingsForm form)
     {
         logger.info( String.format("Updating forwarder configuration for container: %1$s", container.getName()));
-        new ForwarderProperties().setForwarderProperties(container, authType, url, username, password, tokenRequestURL, tokenField, header, oauthURL);
-        ForwardingScheduler.get().enableContainer(container, authType != ForwardingType.Disabled);
+        form.getForwardingType().setForwardingProperties(container, form);
+
+        ForwardingScheduler.get().enableContainer(container, form.getForwardingType() != ForwardingType.Disabled);
     }
 
     /**
@@ -1421,12 +1421,5 @@ public class MobileAppStudyManager
     public boolean isForwardingEnabled(Container container)
     {
         return ForwardingType.Disabled != ForwarderProperties.getForwardingType(container);
-    }
-
-    public enum ForwardingType
-    {
-        Disabled,
-        OAuth,
-        Basic
     }
 }

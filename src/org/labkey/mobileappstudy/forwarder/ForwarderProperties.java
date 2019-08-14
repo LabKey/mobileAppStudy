@@ -18,9 +18,9 @@ package org.labkey.mobileappstudy.forwarder;
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.mobileappstudy.MobileAppStudyManager.ForwardingType;
 
 import java.util.Map;
+import java.util.Set;
 
 public class ForwarderProperties
 {
@@ -36,29 +36,46 @@ public class ForwarderProperties
     public static final String TOKEN_HEADER = "TOKEN_HEADER";
     public static final String OAUTH_URL = "OAUTH_URL";
 
+    public static final Set<String> PROPERTIES = Set.of(
+        PASSWORD_PLACEHOLDER,
+        URL_PROPERTY_NAME,
+        USER_PROPERTY_NAME,
+        PASSWORD_PROPERTY_NAME,
+        ENABLED_PROPERTY_NAME,
+        FORWARDING_TYPE,
+        TOKEN_REQUEST_URL,
+        TOKEN_FIELD,
+        TOKEN_HEADER,
+        OAUTH_URL);
+
     /**
      * Set the connection properties for the forwarding endpoint
      * @param container containing study
-     * @param url endpoint to forward to
-     * @param username to authenticate with
-     * @param password to authenticate with
-     * @param authType flag indicating whether forwarding is enabled, and which authentication type to use
+     * @param newConfig Set of properties to save
      */
-    public void setForwarderProperties(Container container, ForwardingType authType,
-                                       String url, String username, String password,
-                                       String tokenRequestURL, String tokenField, String tokenHeader, String oauthURL)
+    public void setForwarderProperties(Container container, Map<String, String> newConfig)
     {
         PropertyManager.PropertyMap propertyMap = PropertyManager.getEncryptedStore().getWritableProperties(container, FORWARDER_CATEGORY ,true);
-        propertyMap.put(URL_PROPERTY_NAME, url);
-        propertyMap.put(USER_PROPERTY_NAME, username);
-        if (StringUtils.isNotBlank(password) && !password.equals(PASSWORD_PLACEHOLDER))
-            propertyMap.put(PASSWORD_PROPERTY_NAME, password);
-        propertyMap.put(TOKEN_REQUEST_URL, tokenRequestURL);
-        propertyMap.put(TOKEN_FIELD, tokenField);
-        propertyMap.put(TOKEN_HEADER, tokenHeader);
-        propertyMap.put(OAUTH_URL, oauthURL);
-        propertyMap.put(FORWARDING_TYPE, authType.name());
+        newConfig.keySet().forEach((key) -> {
+            if (PROPERTIES.contains(key))
+            {
+                String propValue = newConfig.get(key);
 
+                //If property key is basic auth password, and the value is blank or our placeholder, then skip
+                if (PASSWORD_PROPERTY_NAME.equals(key) && (StringUtils.isBlank(propValue) || propValue.equals(PASSWORD_PLACEHOLDER)))
+                    return;
+
+                propertyMap.put(key, propValue);
+            }
+        });
+
+        propertyMap.save();
+    }
+
+    public void setForwarderDisabled(Container container, ForwardingType authType)
+    {
+        PropertyManager.PropertyMap propertyMap = PropertyManager.getEncryptedStore().getWritableProperties(container, FORWARDER_CATEGORY ,true);
+        propertyMap.put(FORWARDING_TYPE, authType.name());
         propertyMap.save();
     }
 
