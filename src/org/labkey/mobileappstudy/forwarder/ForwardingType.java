@@ -58,7 +58,7 @@ public enum ForwardingType
                     }
                     catch (MalformedURLException e)
                     {
-                        errors.rejectValue("oauthURL", ERROR_MSG, "Malformed URL");
+                        errors.rejectValue("oauthURL", ERROR_MSG, "Forwarding endpoint URL is malformed");
                     }
 
 
@@ -70,7 +70,7 @@ public enum ForwardingType
                     }
                     catch (MalformedURLException e)
                     {
-                        errors.rejectValue("tokenRequestURL", ERROR_MSG, "Malformed URL");
+                        errors.rejectValue("tokenRequestURL", ERROR_MSG, "Token request URL is malformed");
                     }
 
                 }
