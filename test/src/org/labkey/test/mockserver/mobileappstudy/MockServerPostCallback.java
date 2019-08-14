@@ -26,17 +26,31 @@ import static org.mockserver.model.HttpResponse.response;
 public class MockServerPostCallback implements ExpectationResponseCallback
 {
     public static final int PUT_SUCCESS_RESPONSE_CODE = 202;
+    public static final int UNAUTHORIZED = 401;
     public static final int PUT_FAILURE_RESPONSE_CODE = 500;
 
     @Override
     public HttpResponse handle(HttpRequest httpRequest)
     {
-        if (httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME01) || httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME03))
+        if (httpRequest.withHeader(ForwardResponseTest.OAUTH_TOKEN_HEADER).getHeader(ForwardResponseTest.OAUTH_TOKEN_HEADER).equals(ForwardResponseTest.OAUTH_INVALID_TEST_TOKEN))
+        {
+            return response()
+                    .withStatusCode(UNAUTHORIZED);
+        }
+        else if (httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME01) || httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME03)
+                || httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME04) || httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME06))
             return response()
                     .withStatusCode(PUT_SUCCESS_RESPONSE_CODE);
-        else if(httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME02))
+        else if (httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME02) || httpRequest.getPath().getValue().contains(ForwardResponseTest.STUDY_NAME05))
             return response()
                     .withStatusCode(PUT_FAILURE_RESPONSE_CODE);
+        else if (httpRequest.getPath().getValue().contains(ForwardResponseTest.OAUTH_TOKEN_URL_PATH))
+            return response()
+                .withStatusCode(200)
+                .withBody(String.format("{\"%1$s\":\"%2$s\"}", ForwardResponseTest.OAUTH_TOKEN_FIELD, ForwardResponseTest.OAUTH_VALID_TEST_TOKEN));
+        else if (httpRequest.getPath().getValue().contains(ForwardResponseTest.OAUTH_ENDPOINT_PATH) || httpRequest.getPath().getValue().contains(ForwardResponseTest.OAUTH_ENDPOINT_PATH2))
+            return response()
+                    .withStatusCode(200);
         else
             return notFoundResponse();
     }

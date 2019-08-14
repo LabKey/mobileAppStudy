@@ -16,6 +16,7 @@
 package org.labkey.mobileappstudy.forwarder;
 
 import org.apache.log4j.Logger;
+import org.labkey.api.collections.ConcurrentHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.mobileappstudy.MobileAppStudyManager;
@@ -40,7 +41,7 @@ public class ForwardingScheduler
     private static final Logger logger = Logger.getLogger(ForwardingScheduler.class);
     private static final int INTERVAL_MINUTES = 5;
     private static final ForwardingScheduler instance = new ForwardingScheduler();
-    private static volatile Set<String> enabledContainers = new HashSet<>();
+    private static  Set<String> enabledContainers = new ConcurrentHashSet<>();
     private TriggerKey triggerKey;
 
     private ForwardingScheduler()
@@ -100,9 +101,8 @@ public class ForwardingScheduler
     {
         Set<String> refreshedContainers = new HashSet<>();
         Collection<String> containers = MobileAppStudyManager.get().getStudyContainers();
-        final ForwarderProperties properties = new ForwarderProperties();
         containers.stream().distinct().forEach(c -> {
-            if (properties.isForwardingEnabled(ContainerManager.getForId(c)))
+            if (MobileAppStudyManager.get().isForwardingEnabled(ContainerManager.getForId(c)))
                 refreshedContainers.add(c);
         });
 
