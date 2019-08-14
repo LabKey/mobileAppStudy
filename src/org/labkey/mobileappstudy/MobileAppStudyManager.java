@@ -54,9 +54,6 @@ import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
-import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
-import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
-import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
 import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
@@ -67,6 +64,10 @@ import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.data.SurveyResponse.ResponseStatus;
 import org.labkey.mobileappstudy.data.SurveyResult;
 import org.labkey.mobileappstudy.data.TextChoiceResult;
+import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
+import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
+import org.labkey.mobileappstudy.forwarder.ForwardingType;
+import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
@@ -1375,16 +1376,17 @@ public class MobileAppStudyManager
         forwarder.setUnsuccessful(c);
     }
 
-    public Map<String, String> getForwardingProperties(Container container, User user)
+    public Map<String, String> getForwardingProperties(Container container)
     {
         return new ForwarderProperties().getForwarderConnection(container);
     }
 
-    public void setForwarderConfiguration(Container container, String url, String username, String password, boolean forwardingEnabled)
+    public void setForwarderConfiguration(Container container, MobileAppStudyController.ForwardingSettingsForm form)
     {
         logger.info( String.format("Updating forwarder configuration for container: %1$s", container.getName()));
-        new ForwarderProperties().setForwardingProperties(container, url, username, password, forwardingEnabled);
-        ForwardingScheduler.get().enableContainer(container, forwardingEnabled);
+        form.getForwardingType().setForwardingProperties(container, form);
+
+        ForwardingScheduler.get().enableContainer(container, form.getForwardingType() != ForwardingType.Disabled);
     }
 
     /**
@@ -1414,5 +1416,10 @@ public class MobileAppStudyManager
         filter.addCondition(fkey, ResponseStatus.PROCESSED.getPkId());
         return new TableSelector(MobileAppStudySchema.getInstance().getTableInfoResponse(), filter, null)
                 .getRowCount() > 0;
+    }
+
+    public boolean isForwardingEnabled(Container container)
+    {
+        return ForwardingType.Disabled != ForwarderProperties.getForwardingType(container);
     }
 }

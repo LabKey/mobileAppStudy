@@ -31,7 +31,6 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
-        dependencies.add("mobileAppStudy/panel/forwardingPanel.js");
         dependencies.add("mobileAppStudy/panel/studySetup.js");
     }
 %>
@@ -45,7 +44,7 @@
     Boolean canChangeCollection = bean.getCanChangeCollection();
     boolean collectionEnabled = bean.getCollectionEnabled();
 
-    Map<String, String> forwardingProperties = MobileAppStudyManager.get().getForwardingProperties(getContainer(), getUser());
+    Map<String, String> forwardingProperties = MobileAppStudyManager.get().getForwardingProperties(getContainer());
     boolean forwardingEnabled = Boolean.valueOf(forwardingProperties.get(ForwarderProperties.ENABLED_PROPERTY_NAME));
     String forwardingURL = forwardingProperties.get(ForwarderProperties.URL_PROPERTY_NAME);
     String forwardingUser = forwardingProperties.get(ForwarderProperties.USER_PROPERTY_NAME);

@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
+import org.labkey.test.components.mobileappstudy.ForwardingTab;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
@@ -42,17 +43,34 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     private static final String FORWARDING_URL = "http://localhost:" + PORT;
     private static final String FORWARDING_USER = "forwarding_test_user";
     private static final String FORWARDING_PASSWORD = "password";
+
+    public static final String OAUTH_TOKEN_URL_PATH = "oauthRequest";  //Request new auth tokens here
+    public static final String OAUTH_TOKEN_FIELD = "access_token";      //Response field containing requested auth token
+    public static final String OAUTH_TOKEN_HEADER = "Authorization";            //Header to send token in to endpoint
+    public static final String OAUTH_ENDPOINT_PATH = "oauth_endpoint";  //Forward responses here
+    public static final String OAUTH_ENDPOINT_PATH2 = "oauth_endpoint2";  //Forward responses here
+    public static final String OAUTH_VALID_TEST_TOKEN = "GoodToken";
+    public static final String OAUTH_INVALID_TEST_TOKEN = "NotGood";
+
+
     protected static ClientAndServer mockServer = null;
-    private static final String FORWARD_BODY_FORMAT = "{\"token\": \"%1$s\", \"response\": %2$s}";  //Needs to match SurveyResponsePipelineJob.FORWARD_JSON_FORMAT
+
+    //Needs to match SurveyResponsePipelineJob.FORWARD_JSON_FORMAT
+    private static final String FORWARD_BODY_FORMAT = "{\"type\": \"SurveyResponse\", \"metadata\": {\"activityid\": \"%1$s\", \"version\": \"%2$s\"}, \"token\": \"%3$s\", \"data\": %4$s }";
 
     //Create study
-    public final static String STUDY_NAME01 = "ForwardingSuccess";  // Study names are case insensitive
-    public final static String STUDY_NAME02 = "ForwardingFailed";
-    public final static String STUDY_NAME03 = "ForwardingIfAtFirst";
+    public final static String STUDY_NAME01 = "ForwardingSuccessOAuth";  // Study names are case insensitive
+    public final static String STUDY_NAME02 = "ForwardingFailedOAuth";
+    public final static String STUDY_NAME03 = "ForwardingIfAtFirstOAuth";
+    public final static String STUDY_NAME04 = "ForwardingSuccess";  // Study names are case insensitive
+    public final static String STUDY_NAME05 = "ForwardingFailed";
+    public final static String STUDY_NAME06 = "ForwardingIfAtFirst";
     private final static String BASE_PROJECT_NAME = "Response Forwarding Test Project";
     private final static String PROJECT_NAME01 = BASE_PROJECT_NAME + " " + STUDY_NAME01;
     private final static String PROJECT_NAME02 = BASE_PROJECT_NAME + " " + STUDY_NAME02;
     private final static String PROJECT_NAME03 = BASE_PROJECT_NAME + " " + STUDY_NAME03;
+    private final static String PROJECT_NAME04 = BASE_PROJECT_NAME + " " + STUDY_NAME04 + " BasicAuth";
+    private final static String PROJECT_NAME05 = BASE_PROJECT_NAME + " " + STUDY_NAME05 + " BasicAuth";
     private final static String SURVEY_NAME = "FakeForwardingSurvey";
     private final static String FORWARDING_PIPELINE_JOB_FORMAT = "Survey Response forwarding for %1$s";
 
@@ -83,6 +101,12 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
             addRequestMatcher(mockServer, STUDY_NAME01, this::log);
             addRequestMatcher(mockServer, STUDY_NAME02, this::log);
             addRequestMatcher(mockServer, STUDY_NAME03, this::log);
+            addRequestMatcher(mockServer, STUDY_NAME04, this::log);
+            addRequestMatcher(mockServer, STUDY_NAME05, this::log);
+            addRequestMatcher(mockServer, OAUTH_TOKEN_URL_PATH, this::log);
+            addRequestMatcher(mockServer, OAUTH_ENDPOINT_PATH, this::log);
+            addRequestMatcher(mockServer, OAUTH_ENDPOINT_PATH2, this::log);
+            addRequestMatcher(mockServer, FORWARDING_URL, this::log);
         }
         else {
             log("Mockserver is not running, could not add RequestMatcher.");
@@ -105,21 +129,35 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         setupProject(STUDY_NAME01, PROJECT_NAME01, SURVEY_NAME, true);
         setupProject(STUDY_NAME02, PROJECT_NAME02, SURVEY_NAME, true);
         setupProject(STUDY_NAME03, PROJECT_NAME03, SURVEY_NAME, true);
+        setupProject(STUDY_NAME04, PROJECT_NAME04, SURVEY_NAME, true);
+        setupProject(STUDY_NAME05, PROJECT_NAME05, SURVEY_NAME, true);
+
         setSurveyMetadataDropDir();
         initMockserver();
     }
 
-    private void enableForwarding(String projectName, String forwardingPath)
+    private void enableOAuthForwarding(String projectName, String tokenRequestPath, String tokenField, String tokenHeader, String forwardingPath)
     {
-        log(String.format("Enabling forwarding for %1$s", projectName));
+        log(String.format("Enabling OAuth forwarding for %1$s", projectName));
         goToProjectHome(projectName);
-        SetupPage setupPage = new SetupPage(this);
-        setupPage.getStudySetupWebPart().checkEnableForwarding();
-        setupPage.getStudySetupWebPart().setUrlField(FORWARDING_URL + "/" + forwardingPath);
-        setupPage.getStudySetupWebPart().setUserField(FORWARDING_USER);
-        setupPage.getStudySetupWebPart().setPasswordField(FORWARDING_PASSWORD);
-        setupPage.validateSubmitButtonEnabled();
-        setupPage.getStudySetupWebPart().clickSubmit();
+        ForwardingTab forwardingTab = ForwardingTab.beginAt(this);
+
+        String tokenURL = FORWARDING_URL + "/" + tokenRequestPath;
+        String endpointURL = FORWARDING_URL + "/" + forwardingPath;
+
+
+        forwardingTab.setOauthCredentials(tokenURL, tokenField, tokenHeader, endpointURL);
+        forwardingTab.submit();
+    }
+
+    private void enableBasicAuthForwarding(String projectName, String username, String password, String forwardingPath)
+    {
+        log(String.format("Enabling basic forwarding for %1$s", projectName));
+        goToProjectHome(projectName);
+        ForwardingTab forwardingTab = ForwardingTab.beginAt(this);
+
+        forwardingTab.setBasicAuthCredentials(username, password, forwardingPath);
+        forwardingTab.submit();
     }
 
     private TokenListPage createTokenBatch(SetupPage setupPage)
@@ -136,25 +174,62 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         return tokenListPage;
     }
 
-    private HttpRequest getMockRequest(String urlPath, String enrollmentToken)
+    private HttpRequest getMockRequest(String urlPath, String activityId, String version, String enrollmentToken)
     {
         return request()
                 .withMethod("POST")
                 .withPath("/" + urlPath)
                 .withBody(new StringBody(
-                    String.format(FORWARD_BODY_FORMAT, enrollmentToken, BASE_RESULTS.replaceAll("\\s", "")),
-//                    true,
+                    String.format(FORWARD_BODY_FORMAT, activityId, version, enrollmentToken, BASE_RESULTS.replaceAll("\\s", "")),
                     MediaType.PLAIN_TEXT_UTF_8)
                 );
     }
 
     @Test
-    public void testForwardResponse()
+    public void testOauthForwardResponse()
     {
         goToProjectHome(PROJECT_NAME01);
-        enableForwarding(PROJECT_NAME01, STUDY_NAME01);
+        enableOAuthForwarding(PROJECT_NAME01, OAUTH_TOKEN_URL_PATH, OAUTH_TOKEN_FIELD, OAUTH_TOKEN_HEADER, OAUTH_ENDPOINT_PATH);
 
-        goToProjectHome(PROJECT_NAME01);
+        testSuccessfulForwardResponse(PROJECT_NAME01, STUDY_NAME01, OAUTH_ENDPOINT_PATH);
+    }
+
+    @Test
+    public void testBasicAuthForwardResponse()
+    {
+        String projectName = PROJECT_NAME04;
+
+        goToProjectHome(projectName);
+        enableBasicAuthForwarding(projectName, FORWARDING_USER, FORWARDING_PASSWORD, FORWARDING_URL + "/" + STUDY_NAME04);
+
+        testSuccessfulForwardResponse(projectName, STUDY_NAME04, STUDY_NAME04);
+    }
+
+    @Test
+    public void testBasicAuthFailedForwardResponse()
+    {
+        String projectName = PROJECT_NAME05;
+
+        goToProjectHome(projectName);
+        enableBasicAuthForwarding(projectName, FORWARDING_USER, FORWARDING_PASSWORD, FORWARDING_URL + "/" + STUDY_NAME05);
+
+        testFailedForwardResponse(projectName, STUDY_NAME05);
+    }
+
+    @Test
+    public void testOAuthFailedForwardResponse()
+    {
+        String projectName = PROJECT_NAME02;
+
+        goToProjectHome(projectName);
+        enableOAuthForwarding(projectName, OAUTH_TOKEN_URL_PATH, OAUTH_TOKEN_FIELD, OAUTH_TOKEN_HEADER, STUDY_NAME02);
+
+        testFailedForwardResponse(projectName, STUDY_NAME02);
+    }
+
+    private void testSuccessfulForwardResponse(String projectName, String studyName, String endpointPath)
+    {
+        goToProjectHome(projectName);
         SetupPage setupPage = new SetupPage(this);
         TokenListPage tokenListPage = createTokenBatch(setupPage);
         String myToken = tokenListPage.getToken(0);
@@ -163,14 +238,14 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         PipelineStatusTable pst = goToDataPipeline();
 
         log("Testing successfully forwarding response");
-        submitResponse(PROJECT_NAME01, STUDY_NAME01, myToken);
+        submitResponse(projectName, studyName, myToken);
 
-        String forwardingJobDescription = String.format(FORWARDING_PIPELINE_JOB_FORMAT, PROJECT_NAME01);
+        String forwardingJobDescription = String.format(FORWARDING_PIPELINE_JOB_FORMAT, projectName);
         //TODO: this may be flaky as Timer job may create one in the interim...
         waitForPipelineJobsToComplete(1, forwardingJobDescription, false);
         assertTrue("Forwarding job failed unexpectedly.", "Complete".equalsIgnoreCase(pst.getJobStatus(forwardingJobDescription)));
 
-        HttpRequest req = getMockRequest(STUDY_NAME01, myToken);
+        HttpRequest req = getMockRequest(endpointPath, SURVEY_NAME, "1", myToken);
         mockServer.verify(req, VerificationTimes.once()); //Will throw an AssertionError if not found correct number of times.
 
         log("Checking pipeline job log");
@@ -179,19 +254,15 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         assertTextPresent("Forwarding completed. 1 response(s) sent to");
     }
 
-    @Test
-    public void testFailedForwardResponse()
+    private void testFailedForwardResponse(String project, String study)
     {
-        goToProjectHome(PROJECT_NAME02);
-        enableForwarding(PROJECT_NAME02, STUDY_NAME02);
-
         checkErrors();
         PipelineStatusTable pst = goToDataPipeline();
 
         log("Testing failed forwarding of survey response");
-        submitResponse(PROJECT_NAME02, STUDY_NAME02, null);
+        submitResponse(project, study, null);
 
-        String forwardingJobDescription = String.format(FORWARDING_PIPELINE_JOB_FORMAT, PROJECT_NAME02);
+        String forwardingJobDescription = String.format(FORWARDING_PIPELINE_JOB_FORMAT, project);
         waitForPipelineJobsToComplete(1, forwardingJobDescription, true);
         assertTrue("Forwarding job Passed unexpectedly.", "Error".equalsIgnoreCase(pst.getJobStatus(forwardingJobDescription)));
 
@@ -204,8 +275,11 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     @Test
     public void testEnableAndDisableForwarding()
     {
-        goToProjectHome(PROJECT_NAME02);
-        HttpRequest req = request().withMethod("POST").withPath("/" + STUDY_NAME03);
+        String project = PROJECT_NAME03;
+        String study = STUDY_NAME03;
+
+        goToProjectHome(project);
+        HttpRequest req = request().withMethod("POST").withPath("/" + OAUTH_ENDPOINT_PATH2);
         log("Testing forwarding of prior survey responses");
 
         checkErrors();
@@ -213,9 +287,9 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         int oldCount = pst.getDataRowCount();
 
         log("Submitting responses prior to enabling forwarding");
-        submitResponse(PROJECT_NAME03, STUDY_NAME03, null);
-        submitResponse(PROJECT_NAME03, STUDY_NAME03, null);
-        submitResponse(PROJECT_NAME03, STUDY_NAME03, null);
+        submitResponse(project, study, null);
+        submitResponse(project, study, null);
+        submitResponse(project, study, null);
         int responseCount = 3;
 
         sleep(2000);  //Give pipeline job a chance to start processing
@@ -225,14 +299,14 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         mockServer.verify(req, VerificationTimes.exactly(0));  //Will throw AssertionError if count doesn't match
 
         assertEquals("Response forwarding pipeline job count not as expected", 0, pst.getDataRowCount()); //Allow delta of 1 in the event scheduled job runs
-        enableForwarding(PROJECT_NAME03, STUDY_NAME03);
+        enableOAuthForwarding(project, OAUTH_TOKEN_URL_PATH, OAUTH_TOKEN_FIELD, OAUTH_TOKEN_HEADER, OAUTH_ENDPOINT_PATH2);
         pst = goToDataPipeline();
 
         log("Submitting response to trigger forwarding now that it is enabled");
-        submitResponse(PROJECT_NAME03, STUDY_NAME03, null);
+        submitResponse(project, study, null);
         responseCount++;
 
-        String forwardingJobDescription = String.format(FORWARDING_PIPELINE_JOB_FORMAT, PROJECT_NAME03);
+        String forwardingJobDescription = String.format(FORWARDING_PIPELINE_JOB_FORMAT, project);
         waitForPipelineJobsToComplete(1, forwardingJobDescription, false);
         assertTrue("Forwarding job failed unexpectedly.", "Complete".equalsIgnoreCase(pst.getJobStatus(forwardingJobDescription)));
 
@@ -246,15 +320,17 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         log("Clearing mockserver request logs");
         mockServer.clear(req);
 
-        goToProjectHome(PROJECT_NAME03);
-        SetupPage setupPage = new SetupPage(this);
-        setupPage.getStudySetupWebPart().uncheckEnableForwarding();
-        setupPage.validateSubmitButtonEnabled();
-        setupPage.getStudySetupWebPart().clickSubmit();
+        goToProjectHome(project);
+        ForwardingTab tab = ForwardingTab.beginAt(this);
+//        tab.validateSubmitButtonDisabled();
+        tab.disableForwarding();
+//        tab.validateSubmitButtonEnabled();
+        tab.submit();
 
+        goToProjectHome(project);
         pst = goToDataPipeline();
         oldCount = pst.getDataRowCount();
-        submitResponse(PROJECT_NAME03, STUDY_NAME03, null);
+        submitResponse(project, study, null);
         sleep(2000);  //Give pipeline job a chance to start processing
         pst = goToDataPipeline();
         newCount = pst.getDataRowCount();
