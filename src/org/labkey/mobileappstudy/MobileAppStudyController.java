@@ -146,7 +146,9 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root.addChild("Token Batches", getEnrollmentTokenBatchURL()).addChild("Enrollment Tokens");
+            root.addChild("Token Batches", getEnrollmentTokenBatchURL());
+            root.addChild("Enrollment Tokens");
+            return root;
         }
 
         @Override
