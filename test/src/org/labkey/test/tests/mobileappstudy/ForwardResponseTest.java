@@ -19,6 +19,8 @@ import com.google.common.net.MediaType;
 import org.jetbrains.annotations.Nullable;
 import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.components.mobileappstudy.ForwardingTab;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
@@ -37,6 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.HttpRequest.request;
 
+@Category({Git.class})
 public class ForwardResponseTest extends BaseMobileAppStudyTest
 {
     protected static final int PORT = 8082;
