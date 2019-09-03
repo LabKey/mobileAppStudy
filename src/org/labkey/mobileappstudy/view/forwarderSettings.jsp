@@ -1,14 +1,14 @@
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page import="java.util.Map" %>
+<%@ page import="org.labkey.mobileappstudy.MobileAppStudyController.ForwardingSettingsAction" %>
+<%@ page import="org.labkey.mobileappstudy.MobileAppStudyController.ForwardingSettingsForm" %>
 <%@ page import="org.labkey.mobileappstudy.MobileAppStudyManager" %>
 <%@ page import="org.labkey.mobileappstudy.forwarder.ForwarderProperties" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.mobileappstudy.MobileAppStudyController.ForwardingSettingsForm" %>
-<%@ page import="org.labkey.mobileappstudy.MobileAppStudyController.ForwardingSettingsAction" %>
-<%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.mobileappstudy.forwarder.ForwardingType" %>
+<%@ page import="java.util.Map" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 
@@ -45,18 +45,18 @@
 
 <labkey:errors></labkey:errors>
 
-<labkey:form name="mobileAppStudyForwardingSettingsForm" action="<%=h(new ActionURL(ForwardingSettingsAction.class, getContainer()))%>" method="POST" >
+<labkey:form name="mobileAppStudyForwardingSettingsForm" action="<%=new ActionURL(ForwardingSettingsAction.class, getContainer())%>" method="POST" >
     <div id="authTypeSelector" class=" form-group" >
         <label>
-            <input type="radio" name="forwardingType" value="<%=h(ForwardingType.Disabled.name())%>" <%=checked(authType == ForwardingType.Disabled) %> />
+            <input type="radio" name="forwardingType" value="<%=ForwardingType.Disabled%>"<%=checked(authType == ForwardingType.Disabled)%>/>
             Disabled
         </label><br>
         <label>
-            <input type="radio" name="forwardingType" value="<%=h(ForwardingType.Basic.name())%>" <%=checked(authType == ForwardingType.Basic) %>/>
+            <input type="radio" name="forwardingType" value="<%=ForwardingType.Basic%>"<%=checked(authType == ForwardingType.Basic)%>/>
             Basic Authorization
         </label><br>
         <label>
-            <input type="radio" name="forwardingType" value="<%=h(ForwardingType.OAuth.name())%>" <%=checked(authType == ForwardingType.OAuth)%> />
+            <input type="radio" name="forwardingType" value="<%=ForwardingType.OAuth%>"<%=checked(authType == ForwardingType.OAuth)%>/>
             OAuth
         </label><br>
     </div>
@@ -76,7 +76,6 @@
     </div>
     <div id="buttonBar">
         <button id="forwarderSubmitButton" type="submit" class="labkey-button primary" >Submit</button>
-        <button type="reset" value="Cancel">Cancel</button>
     </div>
 </labkey:form>
 
