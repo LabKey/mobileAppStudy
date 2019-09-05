@@ -230,7 +230,7 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void testBasicAuthFailedForwardResponse()
+    public void testBasicAuthFailedForwardResponse() throws Exception
     {
         String projectName = PROJECT_NAME05;
 
@@ -241,7 +241,7 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void testOAuthFailedForwardResponse()
+    public void testOAuthFailedForwardResponse() throws Exception
     {
         String projectName = PROJECT_NAME02;
 
@@ -278,7 +278,7 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         assertTextPresent("Forwarding completed. 1 response(s) sent to");
     }
 
-    private void testFailedForwardResponse(String project, String study)
+    private void testFailedForwardResponse(String project, String study) throws IOException
     {
         checkErrors();
         PipelineStatusTable pst = goToDataPipeline();
@@ -294,6 +294,7 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         pst.clickStatusLink(forwardingJobDescription);
         assertTextPresent("ERROR: Stopping forwarding job.");
         checkExpectedErrors(1);
+        disableForwarding(project); // Disable so that failed retries don't cause collateral failures
     }
 
     @Test
