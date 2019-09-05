@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.mobileappstudy;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.BeforeClass;
 import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
@@ -61,6 +62,11 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
             "\t\t\"results\": []\n" +
             "}";
 
+    @Override
+    protected @Nullable String getProjectName()
+    {
+        return null;
+    }
 
     @Override
     protected BrowserType bestBrowser()
