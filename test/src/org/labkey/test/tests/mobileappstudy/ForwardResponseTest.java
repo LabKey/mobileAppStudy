@@ -16,23 +16,34 @@
 package org.labkey.test.tests.mobileappstudy;
 
 import com.google.common.net.MediaType;
+import org.apache.http.HttpStatus;
 import org.jetbrains.annotations.Nullable;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.CommandResponse;
+import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.PostCommand;
+import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.components.mobileappstudy.ForwardingTab;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
+import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PipelineStatusTable;
+import org.labkey.test.util.TestLogger;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
 import org.mockserver.verify.VerificationTimes;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
@@ -74,6 +85,7 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     private final static String PROJECT_NAME03 = BASE_PROJECT_NAME + " " + STUDY_NAME03;
     private final static String PROJECT_NAME04 = BASE_PROJECT_NAME + " " + STUDY_NAME04 + " BasicAuth";
     private final static String PROJECT_NAME05 = BASE_PROJECT_NAME + " " + STUDY_NAME05 + " BasicAuth";
+    private static final String[] PROJECTS = new String[]{PROJECT_NAME01, PROJECT_NAME02, PROJECT_NAME03, PROJECT_NAME04, PROJECT_NAME05};
     private final static String SURVEY_NAME = "FakeForwardingSurvey";
     private final static String FORWARDING_PIPELINE_JOB_FORMAT = "Survey Response forwarding for %1$s";
 
@@ -82,6 +94,15 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     protected @Nullable String getProjectName()
     {
         return null;
+    }
+
+    @Override
+    protected void doCleanup(boolean afterTest)
+    {
+        for (String projectName : PROJECTS)
+        {
+            _containerHelper.deleteProject(projectName, afterTest);
+        }
     }
 
     private void initMockserver()
@@ -353,28 +374,55 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     }
 
     @AfterClass
-    public static void afterClassCleanup()
+    @LogMethod
+    public static void afterClassCleanup() throws IOException
     {
-        ForwardResponseTest afterClass = (ForwardResponseTest) getCurrentTest();
+        for (String projectName : PROJECTS)
+        {
+            disableForwarding(projectName);
+        }
 
         if(null != mockServer)
         {
-            afterClass.log("Stopping the mockserver.");
+            TestLogger.log("Stopping the mockserver.");
             mockServer.stop();
 
             try
             {
                 while (mockServer.isRunning())
                 {
-                    afterClass.log("Waiting for the mockserver to stop.");
+                    TestLogger.log("Waiting for the mockserver to stop.");
                     Thread.sleep(1000);
                 }
 
-                afterClass.log("The mockserver is stopped.");
+                TestLogger.log("The mockserver is stopped.");
             }
             catch (InterruptedException ie)
             {
-                afterClass.log("Got an Interrupt Exception when trying to stop the mockserver: " + ie);
+                TestLogger.log("Got an Interrupt Exception when trying to stop the mockserver: " + ie);
+            }
+        }
+    }
+
+    @LogMethod
+    private static void disableForwarding(String containerPath) throws IOException
+    {
+        PostCommand<CommandResponse> command = new PostCommand<>("mobileAppStudy", "forwardingSettings");
+        Map<String, Object> params = new HashMap<>();
+        params.put("forwardingType", "Disabled");
+        command.setParameters(params);
+        Connection connection = WebTestHelper.getRemoteApiConnection();
+
+        try
+        {
+            command.execute(connection, containerPath);
+        }
+        catch (CommandException e)
+        {
+            if (e.getStatusCode() != HttpStatus.SC_NOT_FOUND)
+            {
+                TestLogger.warn("Failed to disable mobileAppStudy response forwarding in '" + containerPath + "'");
+                e.printStackTrace();
             }
         }
     }
