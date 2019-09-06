@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.mobileappstudy;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.BeforeClass;
 import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
@@ -26,7 +27,6 @@ import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.InitialSurvey;
@@ -62,6 +62,11 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
             "\t\t\"results\": []\n" +
             "}";
 
+    @Override
+    protected @Nullable String getProjectName()
+    {
+        return null;
+    }
 
     @Override
     protected BrowserType bestBrowser()
@@ -95,7 +100,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         return appToken;
     }
 
-    protected boolean mobileAppTableExists(String table, String schema)
+    protected boolean mobileAppTableExists(String table, String schema) throws CommandException, IOException
     {
         Connection cn = createDefaultConnection(true);
         SelectRowsCommand selectCmd = new SelectRowsCommand(schema, table);
@@ -104,13 +109,15 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         try
         {
             selectCmd.execute(cn, getCurrentContainerPath());
+            return true;
         }
-        catch (CommandException | IOException e)
+        catch (CommandException e)
         {
-            return false;
+            if (e.getStatusCode() == 404)
+                return false;
+            else
+                throw e;
         }
-
-        return true;
     }
 
     protected SelectRowsResponse getMobileAppData(String table, String schema)
@@ -197,15 +204,6 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         //Do nothing as default, Tests can override if needed
     }
 
-    @Override
-    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-    {
-        for (String project : _containerHelper.getCreatedProjects())
-        {
-            _containerHelper.deleteProject(project, false);
-        }
-    }
-
     /**
      * Wrap question response and submit to server via the API
      *
@@ -244,7 +242,6 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
     protected void setupProject(String studyName, String projectName, String surveyName, boolean enableResponseCollection)
     {
-        _containerHelper.deleteProject(projectName, false);
         _containerHelper.createProject(projectName, "Mobile App Study");
         log("Set a study name.");
         goToProjectHome(projectName);
