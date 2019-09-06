@@ -40,6 +40,7 @@ import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
 import org.mockserver.verify.VerificationTimes;
+import org.openqa.selenium.support.ui.FluentWait;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -388,20 +389,9 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
             TestLogger.log("Stopping the mockserver.");
             mockServer.stop();
 
-            try
-            {
-                while (mockServer.isRunning())
-                {
-                    TestLogger.log("Waiting for the mockserver to stop.");
-                    Thread.sleep(1000);
-                }
-
-                TestLogger.log("The mockserver is stopped.");
-            }
-            catch (InterruptedException ie)
-            {
-                TestLogger.log("Got an Interrupt Exception when trying to stop the mockserver: " + ie);
-            }
+            TestLogger.log("Waiting for the mockserver to stop.");
+            new FluentWait<>(mockServer).withMessage("waiting for the mockserver to stop.").until(mockServer -> !mockServer.isRunning());
+            TestLogger.log("The mockserver is stopped.");
         }
     }
 
