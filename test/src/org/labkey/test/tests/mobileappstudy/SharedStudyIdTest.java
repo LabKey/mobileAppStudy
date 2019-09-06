@@ -62,7 +62,8 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
 
     void setUpProject(String project, String subfolder, String studyId, boolean addTokens)
     {
-        _containerHelper.createProject(project, null);
+        if (!_containerHelper.getCreatedProjects().contains(project))
+            _containerHelper.createProject(project, null);
         _containerHelper.createSubfolder(project, subfolder, "Mobile App Study");
 
         String projectPath = project + "/" + subfolder;
