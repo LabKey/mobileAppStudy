@@ -402,16 +402,7 @@ public class MobileAppStudyController extends SpringActionController
 
             // Error when binding means null ParticipantForm, #33486
             if (!errors.hasErrors())
-            {
                 form.getParticipantForm().validateForm(errors);
-
-                if (!errors.hasErrors())
-                {
-                    // Set our special, filtered schema on the form so getQuerySettings() works right
-                    UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
-                    form.setSchema(schema);
-                }
-            }
         }
 
         @Override
@@ -518,18 +509,14 @@ public class MobileAppStudyController extends SpringActionController
 
     public static class SelectRowsForm extends QueryForm
     {
-        private UserSchema _userSchema = null;
         private ParticipantForm _participantForm = null;
-
-        void setSchema(UserSchema userSchema)
-        {
-            _userSchema = userSchema;
-        }
 
         @Override
         protected @Nullable UserSchema createSchema()
         {
-            return _userSchema;
+            // If this is being called them we've successfully validated and set the ParticipantForm
+            // Return our special, filtered schema so getQuerySettings() works right
+            return ReadResponsesQuerySchema.get(getParticipant());
         }
 
         Participant getParticipant()
