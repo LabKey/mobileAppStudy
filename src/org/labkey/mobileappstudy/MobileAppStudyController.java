@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiQueryResponse;
@@ -525,9 +526,8 @@ public class MobileAppStudyController extends SpringActionController
             _userSchema = userSchema;
         }
 
-        @NotNull
         @Override
-        public UserSchema getSchema()
+        protected @Nullable UserSchema createSchema()
         {
             return _userSchema;
         }

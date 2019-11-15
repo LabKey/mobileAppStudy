@@ -305,13 +305,13 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         {
             // Connect as a normal admin user and test the row count in each list
 
-            SelectRowsResponse response = getListInfo("lists", LIST_DIFF_DATATYPES);
+            SelectRowsResponse response = getListInfo(LIST_DIFF_DATATYPES);
             log(LIST_DIFF_DATATYPES + " has " + response.getRowCount() + " rows");
 
-            response = getListInfo("lists", LIST_SECOND);
+            response = getListInfo(LIST_SECOND);
             log(LIST_SECOND + " has " + response.getRowCount() + " rows");
 
-            response = getListInfo("lists", LIST_THIRD);
+            response = getListInfo(LIST_THIRD);
             log(LIST_THIRD + " has " + response.getRowCount() + " rows");
         }
         catch (IOException | CommandException e)
@@ -653,9 +653,9 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void validateSelectRowsErrorConditions() throws CommandException, IOException
+    public void validateSelectRowsErrorConditions() throws IOException
     {
-        final String ERROR_NO_PARTICIPANTID = "ParticipantId not included in request";
+        final String errorNoParticipantId = "ParticipantId not included in request";
         goToProjectHome();
 
         String task = "Call selectRows without a participantId.";
@@ -671,7 +671,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            assertEquals("Command exception did not include expected message: ", ce.getMessage(), ERROR_NO_PARTICIPANTID);
+            assertEquals("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage(), errorNoParticipantId);
         }
 
         log("Looks good. Go home.");
@@ -784,7 +784,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the first item returned in the json.");
         Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
 
         JSONObject jsonArrayEntry = (JSONObject)jsonArray.get(0);
@@ -795,7 +795,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the second item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + SECOND_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + SECOND_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(1);
@@ -826,7 +826,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the first item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("stringField", DESCRIPTION_VALUE_THIRD_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
+        expectedValues.put("stringField", DESCRIPTION_VALUE_THIRD_LIST + (participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(0);
@@ -868,7 +868,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the first item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(0);
@@ -879,7 +879,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the second item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + SECOND_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + SECOND_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(1);
@@ -914,7 +914,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            assertEquals("Command exception did not include expected message: ", ce.getMessage(), ERROR_NO_PARTICIPANTID);
+            assertEquals("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage(), ERROR_NO_PARTICIPANTID);
         }
 
         task = "Call executeSql looking only at an 'external' table.";
@@ -935,7 +935,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
         }
 
         task = "Call executeSql while joining to an 'external' table.";
@@ -954,7 +954,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
         }
 
         task = "Call executeSql with garbage as the sql.";
@@ -973,7 +973,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().contains(ERROR_INVALID_TOKEN));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_INVALID_TOKEN));
         }
 
         log("Looks good. Go home.");
@@ -1039,7 +1039,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
                     // Not worth worrying about, but will need to account for.
                     if(jsonObjectValue.getClass().getSimpleName().equals("Long"))
                     {
-                        log("Have to do a caste. Expected field is an int, the json returned a long.");
+                        log("Have to do a cast. Expected field is an int, the json returned a long.");
                         long temp = (int)expectedValues.get(column);
                         Assert.assertEquals(column + " not as expected.", temp, jsonObjectValue);
                     }
@@ -1065,36 +1065,37 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         // If we've gotten to this point then we know that all of the expected columns and values were there.
         // Now we need to check that the jsonObject did not return any unexpected columns.
-        String unexpectedJsonColum = "";
+        StringBuilder unexpectedJsonColumn = new StringBuilder();
         boolean pass = true;
         for(Object jsonColumn : jsonObject.keySet())
         {
+            String column = (String)jsonColumn;
             // If the query returned all columns there are a few columns to ignore.
             // Ignore the 'Created', 'Key', 'EntityId', 'lastIndexed' and 'Modified' fields. These fields can be tricky to get an accurate expected value especially the timestamp fields.
-            if((!expectedValues.keySet().contains(jsonColumn)) &&
-                    (!jsonColumn.equals("Key") &&
-                    !jsonColumn.equals("Created") &&
-                    !jsonColumn.equals("Modified") &&
-                    !jsonColumn.equals("lastIndexed") &&
-                    !jsonColumn.equals("EntityId")))
+            if ((!expectedValues.containsKey(column)) &&
+                    (!column.equals("Key") &&
+                    !column.equals("Created") &&
+                    !column.equals("Modified") &&
+                    !column.equals("lastIndexed") &&
+                    !column.equals("EntityId")))
             {
-                unexpectedJsonColum = unexpectedJsonColum + "Found unexpected column '" + jsonColumn.toString() + "' in jsonObject.\r\n";
+                unexpectedJsonColumn.append("Found unexpected column '").append(column).append("' in jsonObject.\r\n");
                 pass = false;
             }
         }
 
-        Assert.assertTrue(unexpectedJsonColum, pass);
+        Assert.assertTrue(unexpectedJsonColumn.toString(), pass);
     }
 
-    private SelectRowsResponse getListInfo(String schema, String query) throws IOException, CommandException
+    private SelectRowsResponse getListInfo(String query) throws IOException, CommandException
     {
         Connection cn;
-        SelectRowsCommand selectCmd = new SelectRowsCommand(schema, query);
+        SelectRowsCommand selectCmd = new SelectRowsCommand("lists", query);
         cn = createDefaultConnection(false);
         return selectCmd.execute(cn, getProjectName());
     }
 
-    private class ParticipantInfo
+    private static class ParticipantInfo
     {
         protected long _participantId;
         protected String _appToken;
