@@ -24,9 +24,11 @@ import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.GuestCredentialsProvider;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.Locator;
+import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
@@ -304,13 +306,13 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
             // Connect as a normal admin user and test the row count in each list
 
             SelectRowsResponse response = getListInfo("lists", LIST_DIFF_DATATYPES);
-            log(LIST_DIFF_DATATYPES + " has " + response.getRowCount() + "rows");
+            log(LIST_DIFF_DATATYPES + " has " + response.getRowCount() + " rows");
 
             response = getListInfo("lists", LIST_SECOND);
-            log(LIST_SECOND + " has " + response.getRowCount() + "rows");
+            log(LIST_SECOND + " has " + response.getRowCount() + " rows");
 
             response = getListInfo("lists", LIST_THIRD);
-            log(LIST_THIRD + " has " + response.getRowCount() + "rows");
+            log(LIST_THIRD + " has " + response.getRowCount() + " rows");
         }
         catch (IOException | CommandException e)
         {
@@ -356,7 +358,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
@@ -430,7 +431,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String participantAppToken = ReadResponseTest.participantWithOneRow.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
@@ -476,7 +476,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String participantAppToken = ReadResponseTest.participantToSkip.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
@@ -506,7 +505,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String participantAppToken = ReadResponseTest.participantWithOneRow.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
@@ -536,7 +534,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Call selectRows with no columns parameter, this should return all columns.");
 
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("participantId", participantAppToken);
 
@@ -573,7 +570,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Now call selectRows with only bad column names.");
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "foo, bar");
         params.put("participantId", participantAppToken);
@@ -597,7 +593,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         columnsToReturn = "integerField, participantId, foo, stringField, dateTimeField, bar, multiLineField";
 
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
@@ -632,7 +627,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         columnsToReturn = "participantId, CreatedBy, ModifiedBy, container";
         log("Column parameter: '" + columnsToReturn + "'.");
 
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
@@ -667,7 +661,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String task = "Call selectRows without a participantId.";
         log(task);
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
 
@@ -696,7 +689,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -752,7 +744,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -780,7 +771,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Call the executeSql action with sql: '" + sql + "' and participant " + participantId + " (" + participantAppToken + ").");
 
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -823,7 +813,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -866,7 +855,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -916,7 +904,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String task = "Call executeSql without a participantId.";
         log(task);
         Map<String, Object> params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         log("Call the executeSql action with sql: '" + sql + "' and no participant parameter.");
 
@@ -936,7 +923,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
         sql = "select * from core.Users";
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -949,14 +935,13 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
+            Assert.assertTrue("Command exception did not include expected message: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
         }
 
         task = "Call executeSql while joining to an 'external' table.";
         log(task);
         sql = "select TestListDiffDataTypes.participantId, TestListDiffDataTypes.user, core.Users.email from TestListDiffDataTypes inner join core.Users on TestListDiffDataTypes.user = core.Users.DisplayName";
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -976,7 +961,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log(task);
         sql = "select this should never ever ever work!";
         params = new HashMap<>();
-//        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -1007,18 +991,19 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
     private CommandResponse callSelectRows(Map<String, Object> params) throws IOException, CommandException
     {
-        return callCommand("mobileAppStudy", "selectRows", params);
+        return callCommand("selectRows", params);
     }
 
     private CommandResponse callExecuteSql(Map<String, Object> params) throws IOException, CommandException
     {
-        return callCommand("mobileAppStudy", "executeSql", params);
+        return callCommand("executeSql", params);
     }
 
-    private CommandResponse callCommand(String controller, String action, Map<String, Object> params)  throws IOException, CommandException
+    private CommandResponse callCommand(String action, Map<String, Object> params)  throws IOException, CommandException
     {
-        Connection cn = createDefaultConnection(false);
-        Command selectCmd = new Command(controller, action);
+        // No cookies, no credentials -- test that participantId authenticates correctly
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), new GuestCredentialsProvider());
+        Command selectCmd = new Command("mobileAppStudy", action);
         selectCmd.setParameters(params);
 
         return selectCmd.execute(cn, getProjectName());
@@ -1030,7 +1015,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         for(String column : columns)
         {
-            Assert.assertTrue("Expected column " + column + " was not in the jsonObject.", jsonObject.keySet().contains(column));
+            Assert.assertTrue("Expected column " + column + " was not in the jsonObject.", jsonObject.containsKey(column));
 
             Object  jsonObjectValue;
             if(jsonObject.get(column).getClass().getSimpleName().equals("JSONObject"))
