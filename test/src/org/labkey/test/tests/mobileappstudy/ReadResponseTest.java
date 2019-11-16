@@ -359,7 +359,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         Map<String, Object> params = new HashMap<>();
         params.put("queryName", LIST_DIFF_DATATYPES);
-        params.put("columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
+        params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
 
         log("Columns parameter: " + params.get("query.columns"));
@@ -477,7 +477,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         Map<String, Object> params = new HashMap<>();
         params.put("queryName", LIST_DIFF_DATATYPES);
-        params.put("columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
+        params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
 
         log("Columns parameter: " + params.get("query.columns"));
@@ -594,7 +594,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         columnsToReturn = "integerField, participantId, foo, stringField, dateTimeField, bar, multiLineField";
 
         params.put("queryName", LIST_DIFF_DATATYPES);
-        params.put("columns", columnsToReturn);
+        params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
 
         log("Now validate with a mix of valid and invalid columns. Column parameter: '" + params.get("query.columns") + "'.");
@@ -662,7 +662,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log(task);
         Map<String, Object> params = new HashMap<>();
         params.put("queryName", LIST_DIFF_DATATYPES);
-        params.put("columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
+        params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
 
         try
         {
