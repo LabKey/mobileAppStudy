@@ -514,7 +514,7 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         protected @Nullable UserSchema createSchema()
         {
-            // If this is being called them we've successfully validated and set the ParticipantForm
+            // If this is being called then we've successfully validated and set the ParticipantForm
             // Return our special, filtered schema so getQuerySettings() works right
             return ReadResponsesQuerySchema.get(getParticipant());
         }
