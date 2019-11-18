@@ -21,53 +21,67 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.PropertyStorageSpec;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ChangePropertyDescriptorException;
-import org.labkey.api.exp.PropertyType;
 import org.labkey.api.exp.list.ListDefinition;
-import org.labkey.api.exp.list.ListService;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.exp.property.Lookup;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.security.LimitedUser;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.security.roles.SubmitterRole;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
+import org.labkey.mobileappstudy.data.ParticipantPropertyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
+import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesign;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 
-import java.sql.JDBCType;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Class to process and apply a survey design to the underlying lists
  */
-public class SurveyDesignProcessor
+public class SurveyDesignProcessor extends DynamicListProcessor
 {
-    private Logger logger;
+    private static final String PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY = "ParticipantProperties";
+    private static final String PARTICIPANT_PROPERTIES_VERSION_KEY = "Version";
 
     /**
      * List properties that are needed for survey relationships
      */
     private enum StandardProperties
     {
-        Key("Key", JDBCType.INTEGER),
-        ParticipantId("ParticipantId", JDBCType.INTEGER),
-        ParentId("ParentId", JDBCType.INTEGER);
+        Key("Key", JdbcType.INTEGER),
+        ParticipantId("ParticipantId", JdbcType.INTEGER),
+        ParentId("ParentId", JdbcType.INTEGER),
+        EnrollmentTokenId("EnrollmentTokenId", JdbcType.INTEGER);
 
         private String key;
-        private JDBCType type;
+        private JdbcType type;
 
-        StandardProperties(String key, JDBCType type)
+        StandardProperties(String key, JdbcType type)
         {
             this.key = key;
             this.type = type;
@@ -106,17 +120,29 @@ public class SurveyDesignProcessor
             switch (propName)
             {
                 case Key:
-                    prop = listDomain.addProperty(new PropertyStorageSpec(propName.key, JdbcType.INTEGER));
+                    prop = listDomain.addProperty(new PropertyStorageSpec(propName.key, propName.type));
                     break;
                 case ParticipantId:
-                    prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, JdbcType.INTEGER));
-                    prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
+                    //Most lists use participantId
+                    if (ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME.compareToIgnoreCase(listDomain.getName()) != 0)
+                    {
+                        prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, propName.type));
+                        prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
+                    }
                     break;
                 case ParentId:
                     if (StringUtils.isNotBlank(parentListName))
                     {
-                        prop = listDomain.addProperty(new PropertyStorageSpec( getParentListKey(parentListName), JdbcType.INTEGER));
+                        prop = listDomain.addProperty(new PropertyStorageSpec( getParentListKey(parentListName), propName.type));
                         prop.setLookup(new Lookup(container, "lists", parentListName));
+                    }
+                    break;
+                case EnrollmentTokenId:
+                    //ParticipantProperties list uses enrollment token
+                    if (ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME.compareToIgnoreCase(listDomain.getName()) == 0)
+                    {
+                        prop = listDomain.addProperty(new PropertyStorageSpec(EnrollmentTokenId.key, propName.type));
+                        prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE));
                     }
                     break;
             }
@@ -130,9 +156,10 @@ public class SurveyDesignProcessor
         }
     }
 
+
     public SurveyDesignProcessor(Logger logger)
     {
-        this.logger = logger != null ? logger : Logger.getLogger(MobileAppStudy.class);
+        super(logger);
     }
 
     public void updateSurveyDesign(@NotNull SurveyResponse surveyResponse, User user) throws Exception
@@ -161,40 +188,110 @@ public class SurveyDesignProcessor
         applySurveyUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getSteps(), design.getSurveyName(), "");
     }
 
-    /**
-     * Get existing list or create new one
-     *
-     * @param listName name of list
-     * @param container where list resides
-     * @param user accessing/creating list
-     * @return ListDefinition representing list
-     * @throws InvalidDesignException if list is not able to be created, this is a wrapper of any other exception
-     */
-    private ListDefinition ensureList(Container container, User user, String listName, String parentListName) throws InvalidDesignException
+    public void updateParticipantPropertiesDesign(@NotNull MobileAppStudy study, @Nullable User user) throws Exception
     {
-        ListDefinition listDef = ListService.get().getList(container, listName);
-        return listDef != null ?
-               listDef :
-               newSurveyListDefinition(container, user, listName, parentListName);
+        Double currentVersion = getParticipantPropertiesDesignVersion(user, study.getContainer());
+
+        SurveyDesignProvider provider = MobileAppStudyManager.get().getSurveyDesignProvider(study.getContainer());
+        if (provider == null)
+            throw new InvalidDesignException(LogMessageFormats.PROVIDER_NULL);
+
+        ParticipantPropertiesDesign design = provider.getParticipantPropertiesDesign(study.getContainer(), study.getShortName());
+        if (design == null)
+            throw new InvalidDesignException(LogMessageFormats.DESIGN_NULL);
+        else if (!design.isValid())
+            throw new InvalidDesignException(LogMessageFormats.PARTICIPANT_PROPERTIES_MISSING_METADATA);
+
+        // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
+        User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
+                new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
+
+        if (currentVersion < design.getStudyVersion())
+        {
+            logger.info(String.format(LogMessageFormats.START_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
+            ListDefinition listDef = ensureList(study.getContainer(), insertUser, ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME, null);
+            applyParticipantPropertiesUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getParticipantProperties());
+            updateParticipantPropertiesVersion(insertUser, study.getContainer(), design.getStudyVersion());
+        }
     }
 
-    private ListDefinition newSurveyListDefinition(Container container, User user, String listName, String parentListName) throws InvalidDesignException
+    private static Double getParticipantPropertiesDesignVersion(User user, Container container)
+    {
+        String version = PropertyManager.getProperty(user, container, PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY, PARTICIPANT_PROPERTIES_VERSION_KEY);
+        return StringUtils.isNotBlank(version)? Double.valueOf(version) : Double.MIN_VALUE; //Return min value if property not set yet
+    }
+
+    private void applyParticipantPropertiesUpdate(Container container, User user, Domain listDomain, Collection<ParticipantProperty> properties) throws InvalidDesignException
     {
         try
         {
-            ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.AutoIncrementInteger);
-            list.setKeyName("Key");
-            list.save(user);
+            StandardProperties.ensureStandardProperties(container, listDomain, null);
 
-            logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
+            Map<String, ParticipantPropertyMetadata> propertyMetadatas = getParticipantPropertyMetadatas(container);
 
-            //Return a refreshed version of listDefinition
-            return ListService.get().getList(container, listName);
+            for (ParticipantProperty property : properties)
+            {
+                DomainProperty listProp = ensureStepProperty(listDomain, property);
+                ParticipantPropertyMetadata metadata = propertyMetadatas.get(listProp.getPropertyURI());
+
+                if (metadata == null)
+                    insertPropertyMetadata(property, listProp);
+                else if (metadata.getPropertyType() != property.getPropertyType())
+                    updatePropertyMetadata(metadata.getRowId(), property.getPropertyType());
+            }
+
+            listDomain.save(user);
+            logger.info(LogMessageFormats.PARTICIPANT_PROPERTIES_END_UPDATE);
+        }
+        catch (InvalidDesignException e)
+        {
+            //Pass it through
+            throw e;
         }
         catch (Exception e)
         {
-            throw new InvalidDesignException(String.format(LogMessageFormats.UNABLE_CREATE_LIST, listName), e);
+            //Wrap any other exception
+            throw new InvalidDesignException(LogMessageFormats.UNABLE_TO_APPLY_SURVEY, e);
         }
+    }
+
+    private Map<String, ParticipantPropertyMetadata> getParticipantPropertyMetadatas(Container container)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
+
+        return new TableSelector(ti, SimpleFilter.createContainerFilter(container),null).getCollection(ParticipantPropertyMetadata.class)
+                .stream().collect(Collectors.toMap(ParticipantPropertyMetadata::getPropertyURI, ppm -> ppm));
+    }
+
+    private void insertPropertyMetadata(ParticipantProperty property, DomainProperty listProp)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
+
+        ParticipantPropertyMetadata metadata = new ParticipantPropertyMetadata();
+        metadata.setPropertyURI(listProp.getPropertyURI());
+        metadata.setPropertyType(property.getPropertyType());
+        metadata.setContainer(listProp.getContainer());
+        Table.insert(null, ti, metadata);
+    }
+
+    private void updatePropertyMetadata(Integer rowId, ParticipantProperty.ParticipantPropertyType propertyType)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
+
+        Map<String,Object> values = new HashMap<>();
+        values.put(FieldKey.fromParts("propertyType").toString(), propertyType);
+
+        Table.update(null, ti, values, rowId);
+    }
+
+    private void updateParticipantPropertiesVersion(User user, Container container, Double currentVersion)
+    {
+        PropertyManager.PropertyMap versionProperties = PropertyManager.getWritableProperties(user, container, PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY, true);
+        versionProperties.put(PARTICIPANT_PROPERTIES_VERSION_KEY, currentVersion.toString());
+        versionProperties.save();
     }
 
     private void applySurveyUpdate(Container container, User user, Domain listDomain, List<SurveyStep> steps, String listName, String parentListName) throws InvalidDesignException
@@ -267,29 +364,6 @@ public class SurveyDesignProcessor
         applySurveyUpdate(container, user, listDef.getDomain(), step.getSteps(), subListName, parentListName);
     }
 
-    private void ensureStepProperty(Domain listDomain, SurveyStep step) throws InvalidDesignException
-    {
-        DomainProperty prop = listDomain.getPropertyByName(step.getKey());
-        if (prop != null)
-        {
-            //existing property
-            if (prop.getPropertyDescriptor().getJdbcType() != step.getPropertyType())
-                throw new InvalidDesignException(String.format(LogMessageFormats.RESULT_TYPE_MISMATCH, step.getKey()));
-
-            //Update a string field's size. Increase only.
-            if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
-            {
-                //Logged in List audit log
-                if (step.getMaxLength() > prop.getScale())
-                    prop.setScale(step.getMaxLength());
-            }
-        }
-        else
-        {
-            //New property
-            getNewDomainProperty(listDomain, step);
-        }
-    }
 
     private void updateChoiceList(Container container, User user, String parentSurveyName, SurveyStep step) throws InvalidDesignException, ChangePropertyDescriptorException
     {
@@ -329,47 +403,8 @@ public class SurveyDesignProcessor
         if (prop == null)
         {
             //New property
-            getNewDomainProperty(listDomain, otherTextKey, propType, OTHER_OPTION_BASE_DESCRIPTION, OTHER_OPTION_MAX_LENGTH );
+            getNewDomainProperty(listDomain, otherTextKey, propType, null, OTHER_OPTION_BASE_DESCRIPTION, OTHER_OPTION_MAX_LENGTH );
         }
         // Else field already exists, no need to generate it...
-    }
-
-    private static DomainProperty getNewDomainProperty(Domain domain, SurveyStep step)
-    {
-        return getNewDomainProperty(domain, step.getKey(), step.getPropertyType(), step.getTitle(), step.getMaxLength());
-    }
-
-    private static DomainProperty getNewDomainProperty(Domain domain, String key, JdbcType propertyType, String description, Integer length)
-    {
-        DomainProperty prop = domain.addProperty(new PropertyStorageSpec(key, propertyType));
-        prop.setName(key);
-        prop.setDescription(description);
-        prop.setPropertyURI(domain.getTypeURI() + "#" + key);
-        if (prop.getPropertyType() == PropertyType.STRING && length != null)
-            prop.setScale(length);
-
-        prop.setMeasure(false);
-        prop.setDimension(false);
-        prop.setRequired(false);
-
-        return prop;
-    }
-
-    private static class LogMessageFormats
-    {
-        public static final String UNABLE_TO_APPLY_SURVEY = "Unable to apply survey changes";
-        public static final String STEP_IS_NULL = "Step is null";
-        public static final String RESULT_TYPE_MISMATCH = "Can not change question result types. Field: %1$s";
-        public static final String INVALID_RESULT_TYPE = "Unknown step result type for key: %1$s";
-        public static final String PROVIDER_NULL = "No SurveyDesignProvider configured.";
-        public static final String DESIGN_NULL = "Unable to parse design metadata";
-        public static final String MISSING_METADATA = "Design document does not contain all the required fields (activityId, steps)";
-        public static final String START_UPDATE_SURVEY = "Getting new survey version: Study: %1$s, Survey: %2$s, Version: %3$s";
-        public static final String END_SURVEY_UPDATE = "Survey update completed";
-        public static final String UNABLE_CREATE_LIST = "Unable to create new list. List: %1$s";
-        public static final String LIST_CREATED = "Survey list [%1$s] successfully created.";
-        public static final String SUBLIST_PROPERTY_ERROR = "Unable to add sub-list property: %1$s";
-        public static final String NO_GROUP_STEPS = "Form contains no steps: Step: %1$s";
-        public static final String DUPLICATE_FIELD_KEY = "Design schema contains duplicate field keys: %1$s";
     }
 }

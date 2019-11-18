@@ -37,9 +37,11 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.list.ListDefinition;
+import org.labkey.api.exp.list.ListItem;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
@@ -68,6 +70,8 @@ import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
 import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
 import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
+import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
@@ -79,6 +83,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -555,7 +560,7 @@ public class MobileAppStudyManager
         {
             try
             {
-                updateSurveys(surveyResponse, user);
+                updateDesign(study, surveyResponse, user);
                 logger.info(String.format("Processing response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
 
                 this.store(surveyResponse, rowId, user);
@@ -580,24 +585,46 @@ public class MobileAppStudyManager
         }
     }
 
+
+    /**
+     * Provide common synchronization block for updating study's survey & properties lists
+     * @param study study to update
+     * @param surveyResponse (can be null) if provided use to update activity's survey lists
+     * @param user executing response (can be null)
+     * @throws Exception
+     */
+    private synchronized void updateDesign(@Nullable MobileAppStudy study, @Nullable SurveyResponse surveyResponse, @Nullable User user) throws Exception
+    {
+        try (DbScope.Transaction transaction = MobileAppStudySchema.getInstance().getSchema().getScope().ensureTransaction())
+        {
+            updateParticipantProperties(study, user);
+
+            if (surveyResponse != null)
+                updateSurveys(surveyResponse, user);
+
+            transaction.commit();
+        }
+    }
+
+    private void updateParticipantProperties(MobileAppStudy study, User user) throws Exception
+    {
+        new SurveyDesignProcessor(logger).updateParticipantPropertiesDesign(study, user);
+    }
+
     /**
      * Check if survey was previously seen, if not retrieve schema and apply
      * @param surveyResponse that was sent, includes SurveyId and Version
      * @param user executing response (can be null)
      * @throws InvalidDesignException If design schema cannot be applied
      */
-    private synchronized void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws Exception
+    private void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws Exception
     {
         //If we've seen this activity metadata before continue
         if (isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
             return;
 
         //Else retrieve and apply any changes
-        try (DbScope.Transaction transaction = MobileAppStudySchema.getInstance().getSchema().getScope().ensureTransaction())
-        {
-            new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
-            transaction.commit();
-        }
+        new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
     }
 
     /**
@@ -1238,25 +1265,32 @@ public class MobileAppStudyManager
         Collection<ListDefinition> lists = ListService.get().getLists(participant.getContainer()).values();
 
         for (ListDefinition list :lists)
-            deleteParticipantFromList(list, participant.getContainer(), participant.getRowId(), user);
+        {
+            Container container = participant.getContainer();
+
+            if (list.getName() == ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME)
+                deleteParticipantFromList(list, container, getEnrollmentTokenId(container, participant.getRowId()), user, "EnrollmentTokenId");
+            else
+                deleteParticipantFromList(list, container, participant.getRowId(), user, "ParticipantId");
+        }
     }
 
     /**
      * Delete participant data from a list
      * @param list ListDefinition to delete data from
      * @param container hosting list and participant
-     * @param participantId to target
+     * @param keyValue to target
      * @param user LabKey user executing the deletion action
      * @throws Exception
      */
-    private void deleteParticipantFromList(ListDefinition list, Container container, Integer participantId, User user) throws Exception
+    private void deleteParticipantFromList(ListDefinition list, Container container, Integer keyValue, User user, String columnName) throws Exception
     {
         //Get the table
         TableInfo table = list.getTable(user, container);
         if (table == null)
             throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
 
-        List<ColumnInfo> piCols = table.getColumns("ParticipantId");
+        List<ColumnInfo> piCols = table.getColumns(columnName);
         if (piCols == null || piCols.size() == 0)
             return;     //No participantId column in list.
 
@@ -1265,7 +1299,7 @@ public class MobileAppStudyManager
             throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
 
         //Get rowIds associated to this participant
-        List<Map<String, Object>> rows = getListRowKeys(table, participantId);
+        List<Map<String, Object>> rows = getListRowKeys(table, keyValue);
         if (rows != null && rows.size() > 0)
             qus.deleteRows(user, container, rows, null,null);
     }
@@ -1409,6 +1443,15 @@ public class MobileAppStudyManager
         return new TableSelector(column, filter, null).getObject(String.class);
     }
 
+    public Integer getEnrollmentTokenId(Container container, Integer participantId)
+    {
+        FieldKey fkey = FieldKey.fromParts("ParticipantId");
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(fkey, participantId);
+        ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken().getColumn("rowId");
+        return new TableSelector(column, filter, null).getObject(Integer.class);
+    }
+
     public boolean hasResponsesToForward(@NotNull Container container)
     {
         FieldKey fkey = FieldKey.fromParts("Status");
@@ -1421,5 +1464,39 @@ public class MobileAppStudyManager
     public boolean isForwardingEnabled(Container container)
     {
         return ForwardingType.Disabled != ForwarderProperties.getForwardingType(container);
+    }
+
+    public void updateStudyDesign(Container container, User user) throws Exception
+    {
+        updateDesign(getStudy(container), null, user);
+    }
+
+    public Collection<ParticipantProperty> getParticipantProperties(User user, Container container, String token, String shortName, boolean preEnrollmentOnly)
+    {
+        List<Container> containers = getStudyContainers(shortName);
+        if (containers.isEmpty())
+            return new HashSet<>();
+
+//        ListDefinition listDef = ListService.get().getList(containers.get(0), ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME);
+//        TableInfo ppListTable = listDef.getTable(user, container);
+//
+//        listDef.getDomain().getProperties()
+//
+//        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+//
+//        SQLFragment sqlFragment = new SQLFragment()
+//                .append("SELECT *").append('\n')
+//                .append("FROM ").append(ppListTable, "pp").append(", ").append(schema.getTableInfoEnrollmentToken(), "et").append('\n')
+//                .append("WHERE et.").append(FieldKey.fromParts("token")).append("=?").add(token).append('\n')
+//                .append("AND pp.").append(FieldKey.fromParts("enrollmentTokenId")).append("= et.").append(FieldKey.fromParts("rowId"));
+//
+//        Map<String, Object> participantProperties =
+//        new SqlSelector(schema.getSchema(), sqlFragment).fillValueMap();
+//
+//
+//
+//        ListItem row = listDef.getListItem(token, user, container);
+
+        return new HashSet<>();
     }
 }

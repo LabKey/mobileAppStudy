@@ -15,10 +15,12 @@
  */
 package org.labkey.mobileappstudy.surveydesign;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.mobileappstudy.data.ActivityMetadataResponse;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 
 import java.io.IOException;
 
@@ -41,5 +43,13 @@ public abstract class AbstractSurveyDesignProviderImpl implements SurveyDesignPr
         ObjectMapper mapper = new ObjectMapper();
         ActivityMetadataResponse response = mapper.readValue(contents, ActivityMetadataResponse.class);
         return response == null ? null : response.getActivity();
+    }
+
+    protected ParticipantPropertiesDesign getParticipantPropertiesDesign(String contents) throws IOException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
+        ParticipantPropertiesDesign response = mapper.readValue(contents, ParticipantPropertiesDesign.class);
+        return response == null ? null : response;
     }
 }

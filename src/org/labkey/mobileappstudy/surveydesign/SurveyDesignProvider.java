@@ -16,6 +16,7 @@
 package org.labkey.mobileappstudy.surveydesign;
 
 import org.labkey.api.data.Container;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 
 /**
  * Created by iansigmon on 2/2/17.
@@ -23,4 +24,5 @@ import org.labkey.api.data.Container;
 public interface SurveyDesignProvider
 {
     SurveyDesign getSurveyDesign(Container c, String shortName, String activityId, String version) throws Exception;
+    ParticipantPropertiesDesign getParticipantPropertiesDesign(Container c, String shortName) throws Exception;
 }

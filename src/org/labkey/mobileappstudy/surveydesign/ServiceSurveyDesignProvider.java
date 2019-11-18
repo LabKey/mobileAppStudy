@@ -30,6 +30,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 
 import java.net.URI;
 
@@ -41,6 +42,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static final String STUDY_ID_PARAM = "studyId";
     private static final String ACTIVITY_ID_PARAM = "activityId";
     private static final String VERSION_PARAM = "activityVersion";
+    private static final String PARTICIPANT_PROPERTIES_ACTION = "participantProperties"; //TODO: verify with BTC docs
 
     public ServiceSurveyDesignProvider(Container container, Logger logger)
     {
@@ -68,6 +70,34 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
                 if (status.getStatusCode() == HttpStatus.SC_OK || status.getStatusCode() == HttpStatus.SC_CREATED)
                 {
                     return getSurveyDesign(handler.handleResponse(response));
+                }
+                else
+                {
+                    throw new Exception(String.format("Received response status %d using uri %s",  status.getStatusCode(), uri));
+                }
+            }
+        }
+    }
+
+    @Override
+    public ParticipantPropertiesDesign getParticipantPropertiesDesign(Container c, String shortName) throws Exception
+    {
+        URIBuilder uriBuilder = new URIBuilder(String.join("/", getServiceUrl(c), PARTICIPANT_PROPERTIES_ACTION));
+        uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
+        URI uri = uriBuilder.build();
+        try (CloseableHttpClient httpclient = HttpClients.createDefault())
+        {
+            HttpGet httpGet = new HttpGet(uri);
+            httpGet.addHeader("Authorization", "Basic " + getServiceToken(c));
+
+            try (CloseableHttpResponse response = httpclient.execute(httpGet))
+            {
+                ResponseHandler<String> handler = new BasicResponseHandler();
+                StatusLine status = response.getStatusLine();
+
+                if (status.getStatusCode() == HttpStatus.SC_OK || status.getStatusCode() == HttpStatus.SC_CREATED)
+                {
+                    return getParticipantPropertiesDesign(handler.handleResponse(response));
                 }
                 else
                 {
