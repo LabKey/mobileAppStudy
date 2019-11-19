@@ -50,6 +50,26 @@ public abstract class DynamicListProcessor
         try
         {
             ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.AutoIncrementInteger);
+            list.setKeyName("Key");
+//            setKey(list, listName);
+            list.save(user);
+
+            logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
+
+            //Return a refreshed version of listDefinition
+            return ListService.get().getList(container, listName);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidDesignException(String.format(LogMessageFormats.UNABLE_CREATE_LIST, listName), e);
+        }
+    }
+
+    private ListDefinition newParticipantPropertiesListDefinition(Container container, User user, String listName) throws InvalidDesignException
+    {
+        try
+        {
+            ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.Varchar);
             setKey(list, listName);
             list.save(user);
 
@@ -139,7 +159,9 @@ public abstract class DynamicListProcessor
         public static final String SUBLIST_PROPERTY_ERROR = "Unable to add sub-list property: %1$s";
         public static final String NO_GROUP_STEPS = "Form contains no steps: Step: %1$s";
         public static final String DUPLICATE_FIELD_KEY = "Design schema contains duplicate field keys: %1$s";
-        public static final String START_UPDATE_PARTICIPANT_PROPERTIES = "Updating participant properties for study [%1$s] current version [%2$s] new version [%3$s]";
+        public static final String START_UPDATE_PARTICIPANT_PROPERTIES = "Checking for participant properties for study [%1$s] current version [%2$s] new version [%3$s]";
+        public static final String UPDATE_PARTICIPANT_PROPERTIES = "Applying update for participant properties for study [%1$s] current version [%2$s] new version [%3$s]";
+        public static final String FINISH_UPDATE_PARTICIPANT_PROPERTIES = "Updated participant properties for study [%1$s] from [%2$s --> %3$s]";
         public static final String PARTICIPANT_PROPERTIES_MISSING_METADATA = "Design document does not contain required fields (study metadata and properties)";
         public static final String PARTICIPANT_PROPERTIES_END_UPDATE = "Participant Properties update completed";
     }

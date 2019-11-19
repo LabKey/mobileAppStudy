@@ -36,12 +36,12 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.ObjectProperty;
 import org.labkey.api.exp.list.ListDefinition;
 import org.labkey.api.exp.list.ListItem;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
@@ -1471,32 +1471,55 @@ public class MobileAppStudyManager
         updateDesign(getStudy(container), null, user);
     }
 
-    public Collection<ParticipantProperty> getParticipantProperties(User user, Container container, String token, String shortName, boolean preEnrollmentOnly)
+    public Map<String, Object> getParticipantProperties(Container container, User user, String token, String shortName, boolean preEnrollmentOnly)
     {
         List<Container> containers = getStudyContainers(shortName);
         if (containers.isEmpty())
-            return new HashSet<>();
+            return new HashMap<>();
 
-//        ListDefinition listDef = ListService.get().getList(containers.get(0), ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME);
-//        TableInfo ppListTable = listDef.getTable(user, container);
-//
-//        listDef.getDomain().getProperties()
-//
-//        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-//
+        ListDefinition listDef = ListService.get().getList(container, ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME);
+        ListItem row = getParticipantPropertiesListItem(container, user, token, listDef);
+        if (row == null) //Properties for token not found
+            return new HashMap<>();
+
+        Set<String> filteredProperties = getParticipantPropertyMetadata(container, user, listDef.getListId(), preEnrollmentOnly);
+        return row.getProperties().values().stream()
+                .filter( p -> filteredProperties.contains(p.getPropertyURI()))
+                .collect(Collectors.toMap(ObjectProperty::getName, ObjectProperty::value));
+    }
+
+    private Set<String> getParticipantPropertyMetadata(Container container, User user, int listId, boolean preEnrollmentOnly)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(FieldKey.fromParts("ListId"), listId);
+        if (preEnrollmentOnly)
+            filter.addCondition(FieldKey.fromParts("PropertyType"), ParticipantProperty.ParticipantPropertyType.PreEnrollment.getId());
+
+        ColumnInfo col = ti.getColumn(FieldKey.fromParts("PropertyURI"));
+        return new HashSet<>(new TableSelector(col, filter, null).getCollection(String.class));
+    }
+
+    private @Nullable ListItem getParticipantPropertiesListItem(Container container, User user, String token, ListDefinition listDef)
+    {
+        TableInfo ppListTable = listDef.getTable(user, container);
+
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+
 //        SQLFragment sqlFragment = new SQLFragment()
-//                .append("SELECT *").append('\n')
+//                .append("SELECT pp.").append(FieldKey.fromParts("key")).append('\n')
 //                .append("FROM ").append(ppListTable, "pp").append(", ").append(schema.getTableInfoEnrollmentToken(), "et").append('\n')
-//                .append("WHERE et.").append(FieldKey.fromParts("token")).append("=?").add(token).append('\n')
-//                .append("AND pp.").append(FieldKey.fromParts("enrollmentTokenId")).append("= et.").append(FieldKey.fromParts("rowId"));
-//
-//        Map<String, Object> participantProperties =
-//        new SqlSelector(schema.getSchema(), sqlFragment).fillValueMap();
-//
-//
-//
-//        ListItem row = listDef.getListItem(token, user, container);
+//                .append("WHERE et.").append(FieldKey.fromParts("token")).append(" = ?").add(token).append('\n')
+//                .append("AND pp.").append(FieldKey.fromParts("enrollmentToken ")).append("= et.").append(FieldKey.fromParts("rowId"));
 
-        return new HashSet<>();
+        ColumnInfo col = ppListTable.getColumn(FieldKey.fromParts("Key"));
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(FieldKey.fromParts("EnrollmentToken", "Token"), token);
+
+//        Integer listItemId = new SqlSelector(schema.getSchema(), sqlFragment).getObject(Integer.class);
+        Integer listItemId = new TableSelector(col,filter, null).getObject(Integer.class);
+
+        return listItemId == null ? null : listDef.getListItem(listItemId, user, container);
     }
 }

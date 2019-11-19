@@ -6,10 +6,20 @@ import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 public class ParticipantPropertyMetadata
 {
     private Integer rowId;
+    private Integer listId;
     private String propertyURI;
     private ParticipantProperty.ParticipantPropertyType propertyType;
     private Container container;
 
+    public void setListId(Integer listId)
+    {
+        this.listId = listId;
+    }
+
+    public Integer getListId()
+    {
+        return this.listId;
+    }
 
     public void setRowId(Integer rowId)
     {

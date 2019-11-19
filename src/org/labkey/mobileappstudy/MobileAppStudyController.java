@@ -57,7 +57,6 @@ import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
-import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
@@ -68,7 +67,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -335,9 +334,8 @@ public class MobileAppStudyController extends SpringActionController
         public Object execute(EnrollmentForm enrollmentForm, BindException errors)
         {
             //If action passes validation then it was successful
-            Collection<ParticipantProperty> pp = enrollmentForm.getParticipantProperties(getUser(), getContainer());
-
-            return success();
+            Map<String, Object> participantProperties = enrollmentForm.getParticipantProperties(getUser(), getContainer());
+            return success(participantProperties);
         }
     }
 
@@ -654,9 +652,9 @@ public class MobileAppStudyController extends SpringActionController
             return _shortName;
         }
 
-        public Collection<ParticipantProperty> getParticipantProperties(User user, Container container)
+        public Map<String, Object> getParticipantProperties(User user, Container container)
         {
-            return MobileAppStudyManager.get().getParticipantProperties(user, container, getToken(), getShortName(), true);
+            return MobileAppStudyManager.get().getParticipantProperties(container, user, getToken(), getShortName(), true);
         }
     }
 

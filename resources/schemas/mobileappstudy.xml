@@ -153,6 +153,7 @@
         <ns:titleColumn>RowId</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="RowId"/>
+            <ns:column columnName="ListId"/>
             <ns:column columnName="PropertyURI"/>
             <ns:column columnName="PropertyType"/>
             <ns:column columnName="Created"/>

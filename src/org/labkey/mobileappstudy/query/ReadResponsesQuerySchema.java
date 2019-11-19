@@ -118,6 +118,11 @@ public class ReadResponsesQuerySchema extends UserSchema
 
                 if (null != pid)  // Maybe throw instead?
                     addCondition(pid, participant.getRowId());
+
+                // ParticipantProperties uses EnrollmentToken instead of the ParticipantId, so join to the EnrollmentToken Table
+                ColumnInfo eTokenPid = table.getColumn(FieldKey.fromParts("EnrollmentToken", "ParticipantId"));
+                if (null != eTokenPid)
+                    addCondition(eTokenPid, participant.getRowId());
             }
         }
 

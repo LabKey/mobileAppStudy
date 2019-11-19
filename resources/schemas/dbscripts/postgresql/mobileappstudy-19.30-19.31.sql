@@ -1,8 +1,9 @@
 
 
-CREATE TABLE mobileappstudy.ParticipantPropertiesMetadata
+CREATE TABLE mobileappstudy.ParticipantPropertyMetadata
 (
     RowId SERIAL,
+    ListId INTEGER NOT NULL,
     PropertyURI VARCHAR NOT NULL,
     PropertyType INTEGER NOT NULL,
 

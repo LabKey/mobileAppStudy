@@ -76,7 +76,7 @@ public class SurveyDesignProcessor extends DynamicListProcessor
         Key("Key", JdbcType.INTEGER),
         ParticipantId("ParticipantId", JdbcType.INTEGER),
         ParentId("ParentId", JdbcType.INTEGER),
-        EnrollmentTokenId("EnrollmentTokenId", JdbcType.INTEGER);
+        EnrollmentToken("EnrollmentToken", JdbcType.VARCHAR);
 
         private String key;
         private JdbcType type;
@@ -137,11 +137,11 @@ public class SurveyDesignProcessor extends DynamicListProcessor
                         prop.setLookup(new Lookup(container, "lists", parentListName));
                     }
                     break;
-                case EnrollmentTokenId:
+                case EnrollmentToken:
                     //ParticipantProperties list uses enrollment token
                     if (ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME.compareToIgnoreCase(listDomain.getName()) == 0)
                     {
-                        prop = listDomain.addProperty(new PropertyStorageSpec(EnrollmentTokenId.key, propName.type));
+                        prop = listDomain.addProperty(new PropertyStorageSpec(EnrollmentToken.key, propName.type));
                         prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE));
                     }
                     break;
@@ -206,13 +206,15 @@ public class SurveyDesignProcessor extends DynamicListProcessor
         User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
                 new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
 
-        if (currentVersion < design.getStudyVersion())
+        logger.debug(String.format(LogMessageFormats.START_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
+        if (currentVersion < design.getStudyVersion()) //TODO: should this be !=, e.g. the transition from 5.9 --> 5.10 ???
         {
-            logger.info(String.format(LogMessageFormats.START_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
+            logger.info(String.format(LogMessageFormats.UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
             ListDefinition listDef = ensureList(study.getContainer(), insertUser, ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME, null);
-            applyParticipantPropertiesUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getParticipantProperties());
-            updateParticipantPropertiesVersion(insertUser, study.getContainer(), design.getStudyVersion());
+            applyParticipantPropertiesUpdate(study.getContainer(), insertUser, listDef, design.getParticipantProperties());
+            updateParticipantPropertiesVersion(study.getContainer(), insertUser, design.getStudyVersion());
         }
+        logger.debug(String.format(LogMessageFormats.FINISH_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
     }
 
     private static Double getParticipantPropertiesDesignVersion(User user, Container container)
@@ -221,10 +223,11 @@ public class SurveyDesignProcessor extends DynamicListProcessor
         return StringUtils.isNotBlank(version)? Double.valueOf(version) : Double.MIN_VALUE; //Return min value if property not set yet
     }
 
-    private void applyParticipantPropertiesUpdate(Container container, User user, Domain listDomain, Collection<ParticipantProperty> properties) throws InvalidDesignException
+    private void applyParticipantPropertiesUpdate(Container container, User user, ListDefinition list, Collection<ParticipantProperty> properties) throws InvalidDesignException
     {
         try
         {
+            Domain listDomain = list.getDomain();
             StandardProperties.ensureStandardProperties(container, listDomain, null);
 
             Map<String, ParticipantPropertyMetadata> propertyMetadatas = getParticipantPropertyMetadatas(container);
@@ -235,7 +238,7 @@ public class SurveyDesignProcessor extends DynamicListProcessor
                 ParticipantPropertyMetadata metadata = propertyMetadatas.get(listProp.getPropertyURI());
 
                 if (metadata == null)
-                    insertPropertyMetadata(property, listProp);
+                    insertPropertyMetadata(property, list.getListId(), listProp);
                 else if (metadata.getPropertyType() != property.getPropertyType())
                     updatePropertyMetadata(metadata.getRowId(), property.getPropertyType());
             }
@@ -264,12 +267,13 @@ public class SurveyDesignProcessor extends DynamicListProcessor
                 .stream().collect(Collectors.toMap(ParticipantPropertyMetadata::getPropertyURI, ppm -> ppm));
     }
 
-    private void insertPropertyMetadata(ParticipantProperty property, DomainProperty listProp)
+    private void insertPropertyMetadata(ParticipantProperty property, Integer listId, DomainProperty listProp)
     {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
         TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
 
         ParticipantPropertyMetadata metadata = new ParticipantPropertyMetadata();
+        metadata.setListId(listId);
         metadata.setPropertyURI(listProp.getPropertyURI());
         metadata.setPropertyType(property.getPropertyType());
         metadata.setContainer(listProp.getContainer());
@@ -287,7 +291,7 @@ public class SurveyDesignProcessor extends DynamicListProcessor
         Table.update(null, ti, values, rowId);
     }
 
-    private void updateParticipantPropertiesVersion(User user, Container container, Double currentVersion)
+    private void updateParticipantPropertiesVersion(Container container, User user, Double currentVersion)
     {
         PropertyManager.PropertyMap versionProperties = PropertyManager.getWritableProperties(user, container, PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY, true);
         versionProperties.put(PARTICIPANT_PROPERTIES_VERSION_KEY, currentVersion.toString());
