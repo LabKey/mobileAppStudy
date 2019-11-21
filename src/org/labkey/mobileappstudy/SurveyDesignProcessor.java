@@ -21,53 +21,35 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
-import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.PropertyStorageSpec;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ChangePropertyDescriptorException;
 import org.labkey.api.exp.list.ListDefinition;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.exp.property.Lookup;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.security.LimitedUser;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.security.roles.SubmitterRole;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
-import org.labkey.mobileappstudy.data.ParticipantPropertyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
-import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
-import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesign;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * Class to process and apply a survey design to the underlying lists
  */
 public class SurveyDesignProcessor extends DynamicListProcessor
 {
-    private static final String PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY = "ParticipantProperties";
-    private static final String PARTICIPANT_PROPERTIES_VERSION_KEY = "Version";
-
     /**
      * List properties that are needed for survey relationships
      */
@@ -75,8 +57,7 @@ public class SurveyDesignProcessor extends DynamicListProcessor
     {
         Key("Key", JdbcType.INTEGER),
         ParticipantId("ParticipantId", JdbcType.INTEGER),
-        ParentId("ParentId", JdbcType.INTEGER),
-        EnrollmentToken("EnrollmentToken", JdbcType.VARCHAR);
+        ParentId("ParentId", JdbcType.INTEGER);
 
         private String key;
         private JdbcType type;
@@ -124,25 +105,14 @@ public class SurveyDesignProcessor extends DynamicListProcessor
                     break;
                 case ParticipantId:
                     //Most lists use participantId
-                    if (ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME.compareToIgnoreCase(listDomain.getName()) != 0)
-                    {
-                        prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, propName.type));
-                        prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
-                    }
+                    prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, propName.type));
+                    prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
                     break;
                 case ParentId:
                     if (StringUtils.isNotBlank(parentListName))
                     {
                         prop = listDomain.addProperty(new PropertyStorageSpec( getParentListKey(parentListName), propName.type));
                         prop.setLookup(new Lookup(container, "lists", parentListName));
-                    }
-                    break;
-                case EnrollmentToken:
-                    //ParticipantProperties list uses enrollment token
-                    if (ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME.compareToIgnoreCase(listDomain.getName()) == 0)
-                    {
-                        prop = listDomain.addProperty(new PropertyStorageSpec(EnrollmentToken.key, propName.type));
-                        prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE));
                     }
                     break;
             }
@@ -186,116 +156,6 @@ public class SurveyDesignProcessor extends DynamicListProcessor
 
         ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), null);
         applySurveyUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getSteps(), design.getSurveyName(), "");
-    }
-
-    public void updateParticipantPropertiesDesign(@NotNull MobileAppStudy study, @Nullable User user) throws Exception
-    {
-        Double currentVersion = getParticipantPropertiesDesignVersion(user, study.getContainer());
-
-        SurveyDesignProvider provider = MobileAppStudyManager.get().getSurveyDesignProvider(study.getContainer());
-        if (provider == null)
-            throw new InvalidDesignException(LogMessageFormats.PROVIDER_NULL);
-
-        ParticipantPropertiesDesign design = provider.getParticipantPropertiesDesign(study.getContainer(), study.getShortName());
-        if (design == null)
-            throw new InvalidDesignException(LogMessageFormats.DESIGN_NULL);
-        else if (!design.isValid())
-            throw new InvalidDesignException(LogMessageFormats.PARTICIPANT_PROPERTIES_MISSING_METADATA);
-
-        // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
-        User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,
-                new int[0], Collections.singleton(RoleManager.getRole(SubmitterRole.class)), false);
-
-        logger.debug(String.format(LogMessageFormats.START_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
-        if (currentVersion < design.getStudyVersion()) //TODO: should this be !=, e.g. the transition from 5.9 --> 5.10 ???
-        {
-            logger.info(String.format(LogMessageFormats.UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
-            ListDefinition listDef = ensureList(study.getContainer(), insertUser, ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME, null);
-            applyParticipantPropertiesUpdate(study.getContainer(), insertUser, listDef, design.getParticipantProperties());
-            updateParticipantPropertiesVersion(study.getContainer(), insertUser, design.getStudyVersion());
-        }
-        logger.debug(String.format(LogMessageFormats.FINISH_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
-    }
-
-    private static Double getParticipantPropertiesDesignVersion(User user, Container container)
-    {
-        String version = PropertyManager.getProperty(user, container, PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY, PARTICIPANT_PROPERTIES_VERSION_KEY);
-        return StringUtils.isNotBlank(version)? Double.valueOf(version) : Double.MIN_VALUE; //Return min value if property not set yet
-    }
-
-    private void applyParticipantPropertiesUpdate(Container container, User user, ListDefinition list, Collection<ParticipantProperty> properties) throws InvalidDesignException
-    {
-        try
-        {
-            Domain listDomain = list.getDomain();
-            StandardProperties.ensureStandardProperties(container, listDomain, null);
-
-            Map<String, ParticipantPropertyMetadata> propertyMetadatas = getParticipantPropertyMetadatas(container);
-
-            for (ParticipantProperty property : properties)
-            {
-                DomainProperty listProp = ensureStepProperty(listDomain, property);
-                ParticipantPropertyMetadata metadata = propertyMetadatas.get(listProp.getPropertyURI());
-
-                if (metadata == null)
-                    insertPropertyMetadata(property, list.getListId(), listProp);
-                else if (metadata.getPropertyType() != property.getPropertyType())
-                    updatePropertyMetadata(metadata.getRowId(), property.getPropertyType());
-            }
-
-            listDomain.save(user);
-            logger.info(LogMessageFormats.PARTICIPANT_PROPERTIES_END_UPDATE);
-        }
-        catch (InvalidDesignException e)
-        {
-            //Pass it through
-            throw e;
-        }
-        catch (Exception e)
-        {
-            //Wrap any other exception
-            throw new InvalidDesignException(LogMessageFormats.UNABLE_TO_APPLY_SURVEY, e);
-        }
-    }
-
-    private Map<String, ParticipantPropertyMetadata> getParticipantPropertyMetadatas(Container container)
-    {
-        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
-
-        return new TableSelector(ti, SimpleFilter.createContainerFilter(container),null).getCollection(ParticipantPropertyMetadata.class)
-                .stream().collect(Collectors.toMap(ParticipantPropertyMetadata::getPropertyURI, ppm -> ppm));
-    }
-
-    private void insertPropertyMetadata(ParticipantProperty property, Integer listId, DomainProperty listProp)
-    {
-        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
-
-        ParticipantPropertyMetadata metadata = new ParticipantPropertyMetadata();
-        metadata.setListId(listId);
-        metadata.setPropertyURI(listProp.getPropertyURI());
-        metadata.setPropertyType(property.getPropertyType());
-        metadata.setContainer(listProp.getContainer());
-        Table.insert(null, ti, metadata);
-    }
-
-    private void updatePropertyMetadata(Integer rowId, ParticipantProperty.ParticipantPropertyType propertyType)
-    {
-        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
-
-        Map<String,Object> values = new HashMap<>();
-        values.put(FieldKey.fromParts("propertyType").toString(), propertyType);
-
-        Table.update(null, ti, values, rowId);
-    }
-
-    private void updateParticipantPropertiesVersion(Container container, User user, Double currentVersion)
-    {
-        PropertyManager.PropertyMap versionProperties = PropertyManager.getWritableProperties(user, container, PARTICIPANT_PROPERTIES_PROPERTY_CATEGORY, true);
-        versionProperties.put(PARTICIPANT_PROPERTIES_VERSION_KEY, currentVersion.toString());
-        versionProperties.save();
     }
 
     private void applySurveyUpdate(Container container, User user, Domain listDomain, List<SurveyStep> steps, String listName, String parentListName) throws InvalidDesignException

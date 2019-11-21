@@ -83,7 +83,19 @@ public class ParticipantProperty implements IDynamicListField
         }
     }
 
+    //Needed for deserialization
+    public ParticipantProperty()
+    {
+    }
+
+    public ParticipantProperty(String propertyId, Object value)
+    {
+        setPropertyId(propertyId);
+        setValue(value);
+    }
+
     private String propertyId;
+
     private String propertyName;
     private ParticipantPropertyType propertyType;
     private ParticipantPropertyDataType propertyDataType;
@@ -104,6 +116,7 @@ public class ParticipantProperty implements IDynamicListField
         this.propertyDataType = propertyDataType;
     }
 
+    @JsonIgnore
     public ParticipantPropertyDataType getPropertyDataType()
     {
         return this.propertyDataType;
@@ -114,6 +127,7 @@ public class ParticipantProperty implements IDynamicListField
         this.propertyType = propertyType;
     }
 
+    @JsonIgnore
     public ParticipantPropertyType getPropertyType()
     {
         return this.propertyType;
@@ -124,6 +138,7 @@ public class ParticipantProperty implements IDynamicListField
         this.propertyName = propertyName;
     }
 
+    @JsonIgnore
     public String getPropertyName()
     {
         return this.propertyName;
@@ -140,6 +155,7 @@ public class ParticipantProperty implements IDynamicListField
     }
 
     @Override
+    @JsonIgnore
     public String getKey()
     {
         return getPropertyId();
@@ -153,14 +169,24 @@ public class ParticipantProperty implements IDynamicListField
     }
 
     @Override
+    @JsonIgnore
     public @Nullable Integer getMaxLength()
     {
         return null;
     }
 
     @Override
+    @JsonIgnore
     public String getDescription()
     {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public String getLabel()
+    {
+        return getPropertyName();
+    }
+
 }

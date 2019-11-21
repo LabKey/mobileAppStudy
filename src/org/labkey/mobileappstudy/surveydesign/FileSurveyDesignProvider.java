@@ -58,20 +58,20 @@ public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
     @Override
     public ParticipantPropertiesDesign getParticipantPropertiesDesign(Container c, String shortName) throws Exception
     {
-//        try
-//        {
-//            //TODO: make this more flexible
-//            StringBuilder sb = new StringBuilder();
-//            Path filePath = Paths.get(getBasePath(c), String.join("_", studyId, activityId, version) + ".json");
-//            Files.readAllLines(filePath).forEach(sb::append);
-//
-//            return getSurveyDesign(sb.toString());
-//        }
-//        catch (IOException x)
-//        {
-//            throw new InvalidDesignException("Unable to read from SurveyDesign file", x);
-//        }
-            throw new InvalidDesignException("Unable to read from SurveyDesign file");
+        try
+        {
+            StringBuilder sb = new StringBuilder();
+            Path filePath = Paths.get(getBasePath(c), String.join("_", shortName, "ParticipantProperties") + ".json");
+            if (!Files.exists(filePath))
+                return null; // No test file present
+
+            Files.readAllLines(filePath).forEach(sb::append);
+            return getParticipantPropertiesDesign(sb.toString());
+        }
+        catch (IOException x)
+        {
+            throw new InvalidDesignException("Invalid participant properties design file.");
+        }
     }
 
     public static String getBasePath(Container c)

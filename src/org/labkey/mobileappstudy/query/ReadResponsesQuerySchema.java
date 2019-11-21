@@ -23,7 +23,9 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ForeignKey;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DefaultSchema;
@@ -38,6 +40,7 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.mobileappstudy.MobileAppStudySchema;
 import org.labkey.mobileappstudy.data.Participant;
 
 import java.util.Set;
@@ -120,10 +123,22 @@ public class ReadResponsesQuerySchema extends UserSchema
                     addCondition(pid, participant.getRowId());
 
                 // ParticipantProperties uses EnrollmentToken instead of the ParticipantId, so join to the EnrollmentToken Table
-                ColumnInfo eTokenPid = table.getColumn(FieldKey.fromParts("EnrollmentToken", "ParticipantId"));
-                if (null != eTokenPid)
-                    addCondition(eTokenPid, participant.getRowId());
+                ColumnInfo eTokenCol = table.getColumn(FieldKey.fromParts("EnrollmentToken"));
+                if (null != eTokenCol)
+                {
+                    String enrollmentToken = getEnrollmentTokenForParticipant(participant);
+                    addCondition(eTokenCol, enrollmentToken);
+                }
             }
+        }
+
+        private String getEnrollmentTokenForParticipant(@NotNull Participant participant)
+        {
+            TableInfo enrollmentTokenTable = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken();
+            ColumnInfo tokenCol = enrollmentTokenTable.getColumn(FieldKey.fromParts("Token"));
+            ColumnInfo pid = enrollmentTokenTable.getColumn(FieldKey.fromParts("ParticipantId"));
+            SimpleFilter filter = new SimpleFilter().addCondition(pid, participant.getRowId());
+            return new TableSelector(tokenCol, filter, null).getObject(String.class);
         }
 
         private static final Set<String> NAUGHTY_COLUMNS = Sets.newCaseInsensitiveHashSet("CreatedBy", "ModifiedBy", "Container");

@@ -47,11 +47,15 @@ public abstract class DynamicListProcessor
 
     private ListDefinition newListDefinition(Container container, User user, String listName, String parentListName) throws InvalidDesignException
     {
+        return newListDefinition(container, user, listName, parentListName,"Key", ListDefinition.KeyType.AutoIncrementInteger);
+    }
+
+    protected ListDefinition newListDefinition(Container container, User user, String listName, String parentListName, String keyName, ListDefinition.KeyType keyType) throws InvalidDesignException
+    {
         try
         {
-            ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.AutoIncrementInteger);
-            list.setKeyName("Key");
-//            setKey(list, listName);
+            ListDefinition list = ListService.get().createList(container, listName, keyType);
+            list.setKeyName(keyName);
             list.save(user);
 
             logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
@@ -63,36 +67,6 @@ public abstract class DynamicListProcessor
         {
             throw new InvalidDesignException(String.format(LogMessageFormats.UNABLE_CREATE_LIST, listName), e);
         }
-    }
-
-    private ListDefinition newParticipantPropertiesListDefinition(Container container, User user, String listName) throws InvalidDesignException
-    {
-        try
-        {
-            ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.Varchar);
-            setKey(list, listName);
-            list.save(user);
-
-            logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
-
-            //Return a refreshed version of listDefinition
-            return ListService.get().getList(container, listName);
-        }
-        catch (Exception e)
-        {
-            throw new InvalidDesignException(String.format(LogMessageFormats.UNABLE_CREATE_LIST, listName), e);
-        }
-    }
-
-    private void setKey(ListDefinition list, String listName)
-    {
-        if (listName == ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME)
-        {
-            list.setKeyName("EnrollmentToken");
-            list.setKeyType(ListDefinition.KeyType.Varchar);
-        }
-        else
-            list.setKeyName("Key");
     }
 
     protected DomainProperty ensureStepProperty(Domain listDomain, IDynamicListField field) throws InvalidDesignException
@@ -123,7 +97,7 @@ public abstract class DynamicListProcessor
 
     protected static DomainProperty getNewDomainProperty(Domain domain, IDynamicListField step)
     {
-        return getNewDomainProperty(domain, step.getKey(), step.getPropertyStorageType(),null, step.getDescription(), step.getMaxLength());
+        return getNewDomainProperty(domain, step.getKey(), step.getPropertyStorageType(), step.getLabel(), step.getDescription(), step.getMaxLength());
     }
 
     protected static DomainProperty getNewDomainProperty(Domain domain, String key, JdbcType propertyType, String label, String description, Integer length)
@@ -164,5 +138,6 @@ public abstract class DynamicListProcessor
         public static final String FINISH_UPDATE_PARTICIPANT_PROPERTIES = "Updated participant properties for study [%1$s] from [%2$s --> %3$s]";
         public static final String PARTICIPANT_PROPERTIES_MISSING_METADATA = "Design document does not contain required fields (study metadata and properties)";
         public static final String PARTICIPANT_PROPERTIES_END_UPDATE = "Participant Properties update completed";
+        public static final String PARTICIPANT_PROPERTIES_DESIGN_NOT_FOUND = "No participant properties design found for study [%1$s]";
     }
 }

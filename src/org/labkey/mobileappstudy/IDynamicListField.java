@@ -12,4 +12,6 @@ public interface IDynamicListField
     @Nullable Integer getMaxLength();
 
     String getDescription();
+
+    String getLabel();
 }

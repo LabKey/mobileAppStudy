@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiQueryResponse;
+import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.MutatingApiAction;
@@ -34,6 +35,7 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
@@ -57,6 +59,7 @@ import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
+import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
@@ -67,11 +70,12 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.labkey.api.util.Result.failure;
 
 @Marshal(Marshaller.Jackson)
 public class MobileAppStudyController extends SpringActionController
@@ -176,9 +180,16 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public Object execute(GenerateTokensForm form, BindException errors)
         {
-            EnrollmentTokenBatch batch = MobileAppStudyManager.get().createTokenBatch(form.getCount(), getUser(), getContainer());
-
-            return success(PageFlowUtil.map("batchId", batch.getRowId()));
+            try
+            {
+                EnrollmentTokenBatch batch = MobileAppStudyManager.get().createTokenBatch(form.getCount(), getUser(), getContainer());
+                return success(PageFlowUtil.map("batchId", batch.getRowId()));
+            }
+            catch (Exception e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return failure(errors);
+            }
         }
     }
 
@@ -331,11 +342,14 @@ public class MobileAppStudyController extends SpringActionController
     public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
     {
         @Override
-        public Object execute(EnrollmentForm enrollmentForm, BindException errors)
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws InvalidKeyException
         {
             //If action passes validation then it was successful
-            Map<String, Object> participantProperties = enrollmentForm.getParticipantProperties(getUser(), getContainer());
-            return success(participantProperties);
+            Collection<ParticipantProperty> participantProperties = enrollmentForm.getParticipantProperties(getUser(), getContainer());
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("success", true);
+            response.put("preEnrollmentParticipantProperties", participantProperties);
+            return response;
         }
     }
 
@@ -652,7 +666,7 @@ public class MobileAppStudyController extends SpringActionController
             return _shortName;
         }
 
-        public Map<String, Object> getParticipantProperties(User user, Container container)
+        public Collection<ParticipantProperty> getParticipantProperties(User user, Container container) throws InvalidKeyException
         {
             return MobileAppStudyManager.get().getParticipantProperties(container, user, getToken(), getShortName(), true);
         }

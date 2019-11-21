@@ -42,6 +42,7 @@ import org.labkey.api.exp.list.ListItem;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
@@ -70,7 +71,7 @@ import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
 import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
 import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
-import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesProcessor;
 import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
@@ -93,6 +94,7 @@ import java.util.stream.Collectors;
 
 public class MobileAppStudyManager
 {
+    public static final String PARTICIPANT_PROPERTIES_LIST_NAME = "ParticipantProperties";
     private static final String TRUNCATED_MESSAGE_SUFFIX =  "... (message truncated)";
     private static final Integer ERROR_MESSAGE_MAX_SIZE = 1000 - TRUNCATED_MESSAGE_SUFFIX.length();
     private static final Integer TOKEN_SIZE = 8;
@@ -291,7 +293,7 @@ public class MobileAppStudyManager
      * @param container container in which the tokens are being generated
      * @return an enrollment token batch object representing the newly created batch.
      */
-    public EnrollmentTokenBatch createTokenBatch(@NotNull Integer count, @NotNull User user, @NotNull Container container)
+    public EnrollmentTokenBatch createTokenBatch(@NotNull Integer count, @NotNull User user, @NotNull Container container) throws Exception
     {
         DbScope scope = MobileAppStudySchema.getInstance().getSchema().getScope();
 
@@ -323,6 +325,11 @@ public class MobileAppStudyManager
             }
 
             transaction.commit();
+
+            ListDefinition participantProperties = ListService.get().getList(container, PARTICIPANT_PROPERTIES_LIST_NAME);
+            if (participantProperties != null)
+                insertParticipantPropertiesEnrollmentTokens(container, user, participantProperties);
+
             return batch;
         }
     }
@@ -608,7 +615,7 @@ public class MobileAppStudyManager
 
     private void updateParticipantProperties(MobileAppStudy study, User user) throws Exception
     {
-        new SurveyDesignProcessor(logger).updateParticipantPropertiesDesign(study, user);
+        new ParticipantPropertiesProcessor(logger).updateParticipantPropertiesDesign(study, user);
     }
 
     /**
@@ -1268,7 +1275,7 @@ public class MobileAppStudyManager
         {
             Container container = participant.getContainer();
 
-            if (list.getName() == ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME)
+            if (list.getName() == PARTICIPANT_PROPERTIES_LIST_NAME)
                 deleteParticipantFromList(list, container, getEnrollmentTokenId(container, participant.getRowId()), user, "EnrollmentTokenId");
             else
                 deleteParticipantFromList(list, container, participant.getRowId(), user, "ParticipantId");
@@ -1471,21 +1478,26 @@ public class MobileAppStudyManager
         updateDesign(getStudy(container), null, user);
     }
 
-    public Map<String, Object> getParticipantProperties(Container container, User user, String token, String shortName, boolean preEnrollmentOnly)
+    public Collection<ParticipantProperty> getParticipantProperties(Container container, User user, String token, String shortName, boolean preEnrollmentOnly) throws InvalidKeyException
     {
         List<Container> containers = getStudyContainers(shortName);
         if (containers.isEmpty())
-            return new HashMap<>();
+            return new ArrayList<>();
 
-        ListDefinition listDef = ListService.get().getList(container, ParticipantPropertiesDesign.PARTICIPANT_PROPERTIES_LIST_NAME);
+        ListDefinition listDef = ListService.get().getList(container, PARTICIPANT_PROPERTIES_LIST_NAME);
         ListItem row = getParticipantPropertiesListItem(container, user, token, listDef);
         if (row == null) //Properties for token not found
-            return new HashMap<>();
+            throw new InvalidKeyException("Enrollment token not found in ParticipantProperties list.", Collections.singletonMap("Token", token));
 
         Set<String> filteredProperties = getParticipantPropertyMetadata(container, user, listDef.getListId(), preEnrollmentOnly);
-        return row.getProperties().values().stream()
-                .filter( p -> filteredProperties.contains(p.getPropertyURI()))
-                .collect(Collectors.toMap(ObjectProperty::getName, ObjectProperty::value));
+        List<ParticipantProperty> properties = new ArrayList<>();
+        for (ObjectProperty prop : row.getProperties().values())
+        {
+            if (filteredProperties.contains(prop.getPropertyURI()))
+                properties.add(new ParticipantProperty(prop.getName(), prop.value()));
+        }
+
+        return properties;
     }
 
     private Set<String> getParticipantPropertyMetadata(Container container, User user, int listId, boolean preEnrollmentOnly)
@@ -1503,23 +1515,49 @@ public class MobileAppStudyManager
 
     private @Nullable ListItem getParticipantPropertiesListItem(Container container, User user, String token, ListDefinition listDef)
     {
-        TableInfo ppListTable = listDef.getTable(user, container);
+        if (listDef == null)
+            return null;
 
+        return listDef.getListItem(token, user, container);
+    }
+
+    /**
+     * Insert any existing enrollment tokens for study into list
+     * @param container hosting study
+     * @param user user with insert permissions
+     * @param listDef ListDefinition for list to insert tokens into
+     */
+    public void insertParticipantPropertiesEnrollmentTokens(Container container, User user, ListDefinition listDef) throws Exception
+    {
+        if (listDef == null)
+        {
+            logger.debug("ListDefinition was null, no tokens inserted.");
+            return;
+        }
+
+        List<ListItem> participantProperties = new ArrayList<>();
+
+        Collection<EnrollmentToken> tokens = getEnrollmentTokens(container, user);
+        for (EnrollmentToken token : tokens)
+            if (listDef.getListItem(token.getToken(), user, container) == null)
+            {
+                ListItem row = listDef.createListItem();
+                row.setKey(token.getToken());
+                row.setProperty(listDef.getDomain().getPropertyByName("EnrollmentToken"), token.getToken());
+                participantProperties.add(row);
+            }
+
+        listDef.insertListItems(user, container, participantProperties);
+        listDef.save(user);
+
+        logger.debug(String.format("Inserted [%1$s] enrollment tokens into list", participantProperties.size()));
+    }
+
+    private Collection<EnrollmentToken> getEnrollmentTokens(Container container, User user)
+    {
         MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
-
-//        SQLFragment sqlFragment = new SQLFragment()
-//                .append("SELECT pp.").append(FieldKey.fromParts("key")).append('\n')
-//                .append("FROM ").append(ppListTable, "pp").append(", ").append(schema.getTableInfoEnrollmentToken(), "et").append('\n')
-//                .append("WHERE et.").append(FieldKey.fromParts("token")).append(" = ?").add(token).append('\n')
-//                .append("AND pp.").append(FieldKey.fromParts("enrollmentToken ")).append("= et.").append(FieldKey.fromParts("rowId"));
-
-        ColumnInfo col = ppListTable.getColumn(FieldKey.fromParts("Key"));
         SimpleFilter filter = SimpleFilter.createContainerFilter(container);
-        filter.addCondition(FieldKey.fromParts("EnrollmentToken", "Token"), token);
-
-//        Integer listItemId = new SqlSelector(schema.getSchema(), sqlFragment).getObject(Integer.class);
-        Integer listItemId = new TableSelector(col,filter, null).getObject(Integer.class);
-
-        return listItemId == null ? null : listDef.getListItem(listItemId, user, container);
+        TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
+        return selector.getCollection(EnrollmentToken.class);
     }
 }

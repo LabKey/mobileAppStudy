@@ -436,7 +436,15 @@ public class SurveyStep implements IDynamicListField
     {
         return title;
     }
+
+    @JsonIgnore @Override
     public String getDescription() { return getTitle(); }
+
+    @JsonIgnore @Override
+    public String getLabel()
+    {
+        return null;
+    }
 
     @JsonIgnore
     @Nullable

@@ -10,8 +10,6 @@ import java.util.Collections;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ParticipantPropertiesDesign
 {
-    @JsonIgnore
-    public static final String PARTICIPANT_PROPERTIES_LIST_NAME = "ParticipantProperties";  //TODO: verify against BTC doc
     private Collection<ParticipantProperty> participantProperties;
     private String message;
     private SurveyMetadata metadata;
@@ -53,8 +51,8 @@ public class ParticipantPropertiesDesign
     }
 
     @JsonIgnore
-    public Double getStudyVersion()
+    public String getStudyVersion()
     {
-        return Double.valueOf(metadata.getStudyVersion());
+        return metadata.getStudyVersion();
     }
 }
