@@ -44,6 +44,7 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
 import org.labkey.api.security.User;
@@ -79,7 +80,9 @@ import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -1275,29 +1278,51 @@ public class MobileAppStudyManager
         {
             Container container = participant.getContainer();
 
-            if (list.getName() == PARTICIPANT_PROPERTIES_LIST_NAME)
-                deleteParticipantFromList(list, container, getEnrollmentTokenId(container, participant.getRowId()), user, "EnrollmentTokenId");
+            if (list.getName().equalsIgnoreCase(PARTICIPANT_PROPERTIES_LIST_NAME))
+                deleteParticipantPropertiesFromList(list, container, getEnrollmentToken(container, participant.getRowId()), user);
             else
-                deleteParticipantFromList(list, container, participant.getRowId(), user, "ParticipantId");
+                deleteParticipantFromList(list, container, participant.getRowId(), user);
         }
     }
 
     /**
-     * Delete participant data from a list
-     * @param list ListDefinition to delete data from
-     * @param container hosting list and participant
-     * @param keyValue to target
-     * @param user LabKey user executing the deletion action
+     * Delete participant data from ParticipantProperties list using EnrollmentToken
+     * @param list participantProperties ListDefinition
+     * @param container hosting study
+     * @param enrollmentToken token associated to participant
+     * @param user authorized for delete permissions
      * @throws Exception
      */
-    private void deleteParticipantFromList(ListDefinition list, Container container, Integer keyValue, User user, String columnName) throws Exception
+    private void deleteParticipantPropertiesFromList(ListDefinition list, Container container, String enrollmentToken, User user) throws Exception
     {
         //Get the table
         TableInfo table = list.getTable(user, container);
         if (table == null)
             throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
 
-        List<ColumnInfo> piCols = table.getColumns(columnName);
+        QueryUpdateService qus = table.getUpdateService();
+        if (qus == null)
+            throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
+
+        qus.deleteRows(user, container, Arrays.asList(Collections.singletonMap("EnrollmentToken", enrollmentToken)), null,null);
+    }
+
+    /**
+     * Delete participant data from a list
+     * @param list ListDefinition to delete data from
+     * @param container hosting list and participant
+     * @param participantId to target
+     * @param user LabKey user executing the deletion action
+     * @throws Exception
+     */
+    private void deleteParticipantFromList(ListDefinition list, Container container, Integer participantId, User user) throws Exception
+    {
+        //Get the table
+        TableInfo table = list.getTable(user, container);
+        if (table == null)
+            throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
+
+        List<ColumnInfo> piCols = table.getColumns("ParticipantId");
         if (piCols == null || piCols.size() == 0)
             return;     //No participantId column in list.
 
@@ -1306,7 +1331,7 @@ public class MobileAppStudyManager
             throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
 
         //Get rowIds associated to this participant
-        List<Map<String, Object>> rows = getListRowKeys(table, keyValue);
+        List<Map<String, Object>> rows = getListRowKeys(table, participantId);
         if (rows != null && rows.size() > 0)
             qus.deleteRows(user, container, rows, null,null);
     }
@@ -1448,15 +1473,6 @@ public class MobileAppStudyManager
         filter.addCondition(fkey, participantId);
         ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken().getColumn("Token");
         return new TableSelector(column, filter, null).getObject(String.class);
-    }
-
-    public Integer getEnrollmentTokenId(Container container, Integer participantId)
-    {
-        FieldKey fkey = FieldKey.fromParts("ParticipantId");
-        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
-        filter.addCondition(fkey, participantId);
-        ColumnInfo column = MobileAppStudySchema.getInstance().getTableInfoEnrollmentToken().getColumn("rowId");
-        return new TableSelector(column, filter, null).getObject(Integer.class);
     }
 
     public boolean hasResponsesToForward(@NotNull Container container)
