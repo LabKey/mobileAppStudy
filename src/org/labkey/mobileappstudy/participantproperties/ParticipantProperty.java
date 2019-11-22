@@ -116,7 +116,7 @@ public class ParticipantProperty implements IDynamicListField
         this.propertyDataType = propertyDataType;
     }
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public ParticipantPropertyDataType getPropertyDataType()
     {
         return this.propertyDataType;
@@ -127,7 +127,7 @@ public class ParticipantProperty implements IDynamicListField
         this.propertyType = propertyType;
     }
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public ParticipantPropertyType getPropertyType()
     {
         return this.propertyType;
@@ -138,7 +138,7 @@ public class ParticipantProperty implements IDynamicListField
         this.propertyName = propertyName;
     }
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getPropertyName()
     {
         return this.propertyName;
@@ -155,17 +155,17 @@ public class ParticipantProperty implements IDynamicListField
     }
 
     @Override
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    public JdbcType getPropertyStorageType()
+    {
+        return getPropertyDataType().getDefaultJdbcType();
+    }
+
+    @Override
     @JsonIgnore
     public String getKey()
     {
         return getPropertyId();
-    }
-
-    @JsonIgnore
-    @Override
-    public JdbcType getPropertyStorageType()
-    {
-        return getPropertyDataType().getDefaultJdbcType();
     }
 
     @Override
