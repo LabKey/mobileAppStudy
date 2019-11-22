@@ -42,7 +42,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static final String STUDY_ID_PARAM = "studyId";
     private static final String ACTIVITY_ID_PARAM = "activityId";
     private static final String VERSION_PARAM = "activityVersion";
-    private static final String PARTICIPANT_PROPERTIES_ACTION = "participantProperties"; //TODO: verify with BTC docs
+    private static final String PARTICIPANT_PROPERTIES_ACTION = "participantProperties";
 
     public ServiceSurveyDesignProvider(Container container, Logger logger)
     {

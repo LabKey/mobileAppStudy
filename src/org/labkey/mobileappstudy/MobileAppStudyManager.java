@@ -105,7 +105,7 @@ public class MobileAppStudyManager
     private static final MobileAppStudyManager _instance = new MobileAppStudyManager();
     private static final ChecksumUtil _checksumUtil = new ChecksumUtil(TOKEN_CHARS);
 
-    private static final int THREAD_COUNT = 10; //TODO: Verify this is an appropriate number
+    private static final int THREAD_COUNT = 10;
     private static JobRunner _shredder;
     private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
 

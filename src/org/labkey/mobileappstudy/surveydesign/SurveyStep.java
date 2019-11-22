@@ -305,7 +305,7 @@ public class SurveyStep implements IDynamicListField
             if (StringUtils.isNotBlank(key))
                 return CONVERTER.get(key);
             else
-                //TODO: not sure what default should be, so defaulting to most limited
+                //not sure what default should be, so defaulting to most limited
                 return PHIClassification.PHI;
         }
 

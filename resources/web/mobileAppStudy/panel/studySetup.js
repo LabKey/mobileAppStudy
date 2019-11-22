@@ -94,7 +94,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             this.updateMetadataButton = Ext4.create('Ext.button.Button', {
                 text: 'Update Metadata',
                 itemId: 'metadataBtn',
-                disabled: this.isEditable,
+                disabled: !this.getStudyIdField().value,
                 handler: function (btn) {
                     //TODO: mark disabled based on studyId being readOnly...
                     btn.up('form').doUpdateMetadata(btn)
@@ -281,6 +281,9 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
         var saveBtn = form.getSubmitButton();
         if (saveBtn.hidden)
             saveBtn.show();
+
+        let updateButton = form.getUpdateMetadataButton();
+        updateButton.setDisabled(form.getStudyIdField().isDirty() || !form.isValid());    //dirty studyId may not match what is retrieved
 
         saveBtn.setDisabled(!(form.isDirty() && form.isValid()));
     }
