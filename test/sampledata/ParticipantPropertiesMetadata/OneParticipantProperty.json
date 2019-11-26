@@ -1,0 +1,17 @@
+{
+  "message": "SUCCESS",
+  "metadata": {
+    "studyId": "PARTICIPANTPROPERTIESTEST",
+    "studyVersion": "0"
+  },
+  "participantProperties": [{
+    "propertyId": "SingleProperty",
+    "propertyName": "One",
+    "propertyType": "preenrollment",
+    "propertyDataType": "string",
+    "shouldRefresh": true,
+    "dataSource": "ExternalSystem",
+    "status": "active",
+    "version": "1.0"
+  }]
+}

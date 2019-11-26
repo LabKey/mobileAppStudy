@@ -345,8 +345,8 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws InvalidKeyException
         {
-            //If action passes validation then it was successful
-            Collection<ParticipantProperty> participantProperties = enrollmentForm.getParticipantProperties(getUser(), getContainer());
+            //If action passes validation then Token is valid for container
+            Collection<ParticipantProperty> participantProperties = enrollmentForm.getParticipantProperties(User.getSearchUser(), getContainer());
             ApiSimpleResponse response = new ApiSimpleResponse();
             response.put("success", true);
             response.put("preEnrollmentParticipantProperties", participantProperties);

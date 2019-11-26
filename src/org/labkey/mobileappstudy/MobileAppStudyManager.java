@@ -1563,10 +1563,13 @@ public class MobileAppStudyManager
                 participantProperties.add(row);
             }
 
-        listDef.insertListItems(user, container, participantProperties);
-        listDef.save(user);
-
-        logger.debug(String.format("Inserted [%1$s] enrollment tokens into list", participantProperties.size()));
+        if (participantProperties.size() > 0)
+        {
+            listDef.insertListItems(user, container, participantProperties);
+            listDef.save(user);
+            logger.debug(String.format("Inserted [%1$s] enrollment tokens into list", participantProperties.size()));
+        }
+        else logger.debug("No enrollment tokens to insert.");
     }
 
     private Collection<EnrollmentToken> getEnrollmentTokens(Container container, User user)
