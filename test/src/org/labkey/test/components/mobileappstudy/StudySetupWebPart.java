@@ -96,6 +96,27 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
         getWrapper().shortWait().until(ExpectedConditions.visibilityOf(elementCache().successMessage));
     }
 
+    public void clickUpdateMetadata()
+    {
+        updateMetadata();
+        getWrapper().shortWait().until(ExpectedConditions.visibilityOf(elementCache().successMessage));
+    }
+
+    private void updateMetadata()
+    {
+        if (!isUpdateMetadataEnabled())
+            throw new IllegalStateException("Submit button not enabled");
+
+        elementCache().updateMetadataButton.click();
+    }
+
+    private boolean isUpdateMetadataEnabled()
+    {
+        WebDriverWrapper.sleep(500);
+        String classValue = elementCache().updateMetadataButton.getAttribute("class");
+        return !classValue.toLowerCase().contains("x4-btn-disabled");
+    }
+
     public Error submitAndExpectError()
     {
         submit();
@@ -139,13 +160,10 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
     public class ElementCache extends BodyWebPart.ElementCache
     {
         final WebElement submitButton = Ext4Helper.Locators.ext4Button("Submit").findWhenNeeded(this);
+        final WebElement updateMetadataButton = Ext4Helper.Locators.ext4Button("Update Metadata").findWhenNeeded(this);
         final WebElement shortNamePrompt = Locator.tagWithClass("div", "studysetup-prompt").findWhenNeeded(this);
         final Input shortNameField = Input(Locator.input("studyId"), getDriver()).findWhenNeeded(this);
         final Checkbox collectionCheckbox = Checkbox.Ext4Checkbox().locatedBy(Locator.id("collectionEnabled-inputEl")).findWhenNeeded(this);
-        final Checkbox forwardingCheckbox = Checkbox.Ext4Checkbox().locatedBy(Locator.id("forwardingEnabled-inputEl")).findWhenNeeded(this);
-        final Input urlField = Input(Locator.input("url"), getDriver()).findWhenNeeded(this);
-        final Input userField = Input(Locator.input("username"), getDriver()).findWhenNeeded(this);
-        final Input passwordField = Input(Locator.input("password"), getDriver()).findWhenNeeded(this);
 
         final WebElement successMessage = Locator.tagWithText("label", "Configuration Saved").findWhenNeeded(this);
     }
