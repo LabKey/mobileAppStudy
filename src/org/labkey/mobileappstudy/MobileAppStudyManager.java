@@ -1494,13 +1494,16 @@ public class MobileAppStudyManager
         updateDesign(getStudy(container), null, user);
     }
 
-    public Collection<ParticipantProperty> getParticipantProperties(Container container, User user, String token, String shortName, boolean preEnrollmentOnly) throws InvalidKeyException
+    public @NotNull Collection<ParticipantProperty> getParticipantProperties(Container container, User user, String token, String shortName, boolean preEnrollmentOnly) throws InvalidKeyException
     {
         List<Container> containers = getStudyContainers(shortName);
         if (containers.isEmpty())
             return new ArrayList<>();
 
         ListDefinition listDef = ListService.get().getList(container, PARTICIPANT_PROPERTIES_LIST_NAME);
+        if (listDef == null) //ParticipantProperties list doesn't exist
+            return new ArrayList<>();
+
         ListItem row = getParticipantPropertiesListItem(container, user, token, listDef);
         if (row == null) //Properties for token not found
             throw new InvalidKeyException("Enrollment token not found in ParticipantProperties list.", Collections.singletonMap("Token", token));

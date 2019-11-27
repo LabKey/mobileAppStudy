@@ -653,7 +653,7 @@ public class MobileAppStudyController extends SpringActionController
             return _shortName;
         }
 
-        public Collection<ParticipantProperty> getParticipantProperties(User user, Container container) throws InvalidKeyException
+        public @NotNull Collection<ParticipantProperty> getParticipantProperties(User user, Container container) throws InvalidKeyException
         {
             return MobileAppStudyManager.get().getParticipantProperties(container, user, getToken(), getShortName(), true);
         }
@@ -994,18 +994,7 @@ public class MobileAppStudyController extends SpringActionController
     public static class UpdateStudyMetadataAction extends MutatingApiAction<StudyMetadataForm>
     {
         @Override
-        public void validateForm(StudyMetadataForm studyMetadataForm, Errors errors)
-        {
-//            if (studyMetadataForm == null)
-//                errors.reject(ERROR_MSG, "Request is invalid");
-//            else if (studyMetadataForm.validateForm())
-//                errors.reject(ERROR_REQUIRED, "StudyId not set");
-//            else if (studyMetadataForm.getStudyId() != MobileAppStudyManager.get().getStudyShortName(getContainer()))
-//                errors.reject(ERROR_MSG, String.format("Supplied studyId [%1$s] does not match container", studyMetadataForm.getStudyId()));
-        }
-
-        @Override
-        public Object execute(StudyMetadataForm studyMetadataForm, BindException errors) throws Exception
+        public Object execute(StudyMetadataForm studyMetadataForm, BindException errors)
         {
             try
             {
