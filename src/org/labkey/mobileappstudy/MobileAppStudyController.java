@@ -1007,9 +1007,17 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public Object execute(StudyMetadataForm studyMetadataForm, BindException errors) throws Exception
         {
-            MobileAppStudyManager.get().updateStudyDesign(getContainer(), getUser());
+            try
+            {
+                MobileAppStudyManager.get().updateStudyDesign(getContainer(), getUser());
+            }
+            catch (Exception e)
+            {
+                logger.error("Unable to update study metadata: " + e.getMessage(), e);
+                errors.reject(ERROR_MSG, e.getMessage());
+            }
 
-            return errors.hasErrors() ? errors : success();
+            return errors.hasErrors() ? failure(errors) : success();
         }
     }
 

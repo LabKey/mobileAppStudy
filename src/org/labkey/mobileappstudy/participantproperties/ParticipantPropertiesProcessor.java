@@ -120,6 +120,8 @@ public class ParticipantPropertiesProcessor extends DynamicListProcessor
 
         if (!design.isValid())
             throw new InvalidDesignException(LogMessageFormats.PARTICIPANT_PROPERTIES_MISSING_METADATA);
+        else if (!design.getMetadata().getStudyId().equalsIgnoreCase(study.getShortName()))
+            throw new InvalidDesignException(String.format(LogMessageFormats.DESIGN_STUDYID_MISMATCH, design.getMetadata().getStudyId(), study.getShortName()));
 
         // if a user isn't provided, need to create a LimitedUser to use for checking permissions, wrapping the Guest user
         User insertUser = new LimitedUser((user == null)? UserManager.getGuestUser() : user,

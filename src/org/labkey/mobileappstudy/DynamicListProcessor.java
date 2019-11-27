@@ -11,7 +11,6 @@ import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.security.User;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
-import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 
 public abstract class DynamicListProcessor
@@ -85,6 +84,9 @@ public abstract class DynamicListProcessor
                 if (field.getMaxLength() > prop.getScale())
                     prop.setScale(field.getMaxLength());
             }
+
+            if (field.getLabel() != null && !field.getLabel().equals(prop.getLabel()))
+                prop.setLabel(field.getLabel());
         }
         else
         {
@@ -139,5 +141,6 @@ public abstract class DynamicListProcessor
         public static final String PARTICIPANT_PROPERTIES_MISSING_METADATA = "Design document does not contain required fields (study metadata and properties)";
         public static final String PARTICIPANT_PROPERTIES_END_UPDATE = "Participant Properties update completed";
         public static final String PARTICIPANT_PROPERTIES_DESIGN_NOT_FOUND = "No participant properties design found for study [%1$s]";
+        public static final String DESIGN_STUDYID_MISMATCH = "Design's StudyId [%1$s] doesn't match with container's [%2$s]";
     }
 }
