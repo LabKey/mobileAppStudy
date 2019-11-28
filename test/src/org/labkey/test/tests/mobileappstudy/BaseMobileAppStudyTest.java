@@ -266,6 +266,14 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
             _listHelper.createList(projectName, surveyName, ListHelper.ListColumnType.AutoInteger, "Key");
     }
 
+    /**
+     * Adds a Request matcher to the mockserver
+     * @param mockServer to add matcher to
+     * @param requestPath to add matcher for
+     * @param log logging method
+     * @param method HTTP request type, e.g., GET, POST, etc.
+     * @param matcher Fully qualified class name String to request handler that implements ExpectationResponseCallback
+     */
     protected static void addRequestMatcher(ClientAndServer mockServer, String requestPath, Consumer<String> log, String method, String matcher )
     {
         log.accept(String.format("Adding a response for %1$s requests.", requestPath));
@@ -324,27 +332,21 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
                     // There is this odd case where the field is an integer but the json returns a long.
                     // Not worth worrying about, but will need to account for.
-                    if(jsonObjectValue.getClass().getSimpleName().equals("Long"))
-                    {
-                        log("Have to do a cast. Expected field is an int, the json returned a long.");
-                        long temp = (int)expectedValues.get(column);
-                        Assert.assertEquals(column + " not as expected.", temp, jsonObjectValue);
-                    }
-                    else
-                        Assert.assertEquals(column + " not as expected.", expectedValues.get(column), jsonObjectValue);
-
+                    Assert.assertEquals(column + " not as expected.", expectedValues.get(column), ((Number)jsonObjectValue).intValue());
                     break;
                 case "Double":
                     Assert.assertEquals(column + " not as expected.", Double.parseDouble(expectedValues.get(column).toString()), (double)jsonObjectValue, 0.0);
                     break;
+                case "Number":
+                    Assert.assertEquals(column + " not as expected.", expectedValues.get(column), jsonObjectValue);
                 case "Boolean":
-                    if ((boolean)expectedValues.get("booleanField"))
-                        Assert.assertTrue("booleanField was not true (as expected).",(boolean)jsonObjectValue);
+                    if ((boolean)expectedValues.get(column))
+                        Assert.assertTrue(column + " was not true (as expected).",(boolean)jsonObjectValue);
                     else
-                        Assert.assertFalse("booleanField was not false (as expected).",(boolean)jsonObjectValue);
+                        Assert.assertFalse(column + " was not false (as expected).",(boolean)jsonObjectValue);
                     break;
                 default:
-                    // Long and String are the only types that don't need some kind of special casing.
+                    // Long and String are the only types that don't need some kind of special casting.
                     Assert.assertEquals(column + " not as expected.", expectedValues.get(column), jsonObjectValue);
                     break;
             }
@@ -372,5 +374,10 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
         }
 
         Assert.assertTrue(unexpectedJsonColumn.toString(), pass);
+    }
+
+    protected String getResponseFromFile(String dir, String filename)
+    {
+        return TestFileUtils.getFileContents(TestFileUtils.getSampleData(String.join("/", dir, filename)));
     }
 }

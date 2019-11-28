@@ -1,14 +1,14 @@
 {
   "message": "SUCCESS",
   "metadata": {
-    "studyId": "PARTICIPANTPROPERTIESTEST",
+    "studyId": "%1$s",
     "studyVersion": "3"
   },
   "participantProperties": [{
     "propertyId": "SingleProperty",
     "propertyName": "Update",
     "propertyType": "postenrollment",
-    "propertyDataType": "numeric",
+    "propertyDataType": "string",
     "shouldRefresh": true,
     "dataSource": "ExternalSystem",
     "status": "active",

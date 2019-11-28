@@ -17,6 +17,7 @@ import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
+import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.commands.mobileappstudy.WithdrawParticipantCommand;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.data.mobileappstudy.ParticipantProperty;
@@ -75,13 +76,13 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
 
     private final static int EXECUTE_SQL_INDEX = 0;
     private final static int XSTUDY_TOKEN_INDEX = 1;
-    private final static int SELECTROWS_TOKEN_INDEX = 2;
-    private static final int INSERT_ROW_TOKEN_INDEX = 3;
+    private static final int INSERT_ROW_TOKEN_INDEX = 2;
 
     public final static String WCP_API_METHOD = "participantProperties";
     public final static String ADD_PATH = "AddPropertyPath";
     public final static String UPDATE_PATH = "UpdatePropertyPath";
     public final static String DELETE_PATH = "DeletePropertyPath";
+    public final static String SURVEY_UPDATE_PATH = "SurveyUpdatePath";
 
 
     @Override
@@ -161,6 +162,8 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
             addRequestMatcher(mockServer, String.join("/", ADD_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
             addRequestMatcher(mockServer, String.join("/", UPDATE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
             addRequestMatcher(mockServer, String.join("/", DELETE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
+            addRequestMatcher(mockServer, String.join("/", SURVEY_UPDATE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
+            addRequestMatcher(mockServer, SURVEY_UPDATE_PATH, this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
         }
         else {
             log("Mockserver is not running, could not add RequestMatcher.");
@@ -205,8 +208,8 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         String testStringValue = "Some Test Value";
         String dateValue = "2019-02-22 00:00:00.000";
         String timeValue = "12:34:56.789";
-        int intValue = 1;
-        double doubleValue = 1.1;
+        Number intValue = 1;
+        Number doubleValue = 1.1;
         boolean booleanValue = true;
 
         Map<String, Object> values = new HashMap<>();
@@ -373,13 +376,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         SetupPage setupPage = SetupPage.beginAt(this, project);
         setupPage.getStudySetupWebPart().clickUpdateMetadata();  //Should load OriginalParticipantProperty.json
 
-        EnrollmentTokenValidationCommand cmd = new EnrollmentTokenValidationCommand(project, study, token, this::log);
-        cmd.execute(200);
-        assertTrue("Enrollment token validation failed when it shouldn't have", cmd.getSuccess());
-        Collection<ParticipantProperty> preenrollmentProperties = cmd.getPreEnrollmentParticipantProperties();
-        assertEquals("Unexpected number of preenrollment properties", 2, preenrollmentProperties.size());
-        for (ParticipantProperty prop : preenrollmentProperties)
-            assertTrue("Unexpected preenrollment property: " + prop.getPropertyId(), Arrays.asList("SingleProperty", "AddedProperty").contains(prop.getPropertyId()));
+        verifyAddColumn(project, study, token);
     }
 
     @Test
@@ -442,10 +439,57 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         Map<String, Object> row = (Map<String, Object>)rows.get(0);
         for (String propertyId : row.keySet())
         {
-            assertTrue(String.format("Expected column not found: " + propertyId), "SingleProperty".equalsIgnoreCase(propertyId));
+            assertTrue(String.format("Expected column not found: " + propertyId), "SingleProperty".equalsIgnoreCase(propertyId) || ENROLLMENTTOKEN_FIELD_KEY.equalsIgnoreCase(propertyId));
         }
     }
 
+    @Test
+    public void testUpdateAfterSurveyResponse()
+    {
+        String study = SURVEY_UPDATE_PATH;
+        String project = PROJECT_NAME04 + study;
+        String changeUrl = String.join("/", BASE_URL, study);
+        String token = setupProjectWithParticipantProperties(study, project);
+
+        verifyBaseParicipantPropertiesSetup(project, study, token);
+
+        // Easiest way to change response body of mockserver call is to adjust the path,
+        // so update the url used to request participant properties metadata
+        setupMockserverModuleProperties(project, study, changeUrl);
+
+        String appToken = getNewAppToken(project, study, token);
+        String responseString = getResponseFromFile("ParticipantPropertiesMetadata", "Survey_Response.json");
+        SubmitResponseCommand cmd = new SubmitResponseCommand(this::log, SURVEY_UPDATE_PATH, "1", appToken, responseString);
+        cmd.execute(200); //Should load AddParticipantProperty.json
+
+        TokenListPage tokenListPage = TokenListPage.beginAt(this, project);
+        String token2 = tokenListPage.getToken(1);  //get next token (0 was used by setup method above)
+        verifyAddColumn(project, study, token2);
+
+        //Sanity check that survey was actually created too
+        BeginPage beginPage = goToManageLists();
+        List<String> lists = beginPage.getGrid().getColumnDataAsText("Name");
+        assertTrue("Survey list not created", lists.contains(study.toUpperCase()));
+    }
+
+    private void verifyAddColumn(String project, String study, String token)
+    {
+        EnrollmentTokenValidationCommand cmd = new EnrollmentTokenValidationCommand(project, study, token, this::log);
+        cmd.execute(200);
+        assertTrue("Enrollment token validation failed when it shouldn't have", cmd.getSuccess());
+        Collection<ParticipantProperty> preenrollmentProperties = cmd.getPreEnrollmentParticipantProperties();
+        assertEquals("Unexpected number of preenrollment properties", 2, preenrollmentProperties.size());
+        for (ParticipantProperty prop : preenrollmentProperties)
+            assertTrue("Unexpected preenrollment property: " + prop.getPropertyId(), Arrays.asList("SingleProperty", "AddedProperty").contains(prop.getPropertyId()));
+
+    }
+
+    /**
+     * Sets up the StudyId and creates a batch of 10 tokens
+     * @param study StudyId to use
+     * @param project container name
+     * @return first (0th) token in the batch generated
+     */
     private String setupProjectWithParticipantProperties(String study, String project)
     {
         setupProject(study, project, null, true);

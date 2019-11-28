@@ -1,7 +1,7 @@
 {
   "message": "SUCCESS",
   "metadata": {
-    "studyId": "PARTICIPANTPROPERTIESTEST",
+    "studyId": "%1$s",
     "studyVersion": "2"
   },
   "participantProperties": [{
