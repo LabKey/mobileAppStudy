@@ -130,7 +130,7 @@ public class ParticipantPropertiesProcessor extends DynamicListProcessor
         String currentVersion = getParticipantPropertiesDesignVersion(user, study.getContainer());
         logger.debug(String.format(LogMessageFormats.START_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
 
-        if (StringUtils.isBlank(currentVersion) || currentVersion.compareTo(design.getStudyVersion()) < 0) //TODO: the transition from 5.9 --> 5.10
+        if (StringUtils.isBlank(currentVersion) || compareVersionString(currentVersion, design.getStudyVersion()) < 0)
         {
             logger.info(String.format(LogMessageFormats.UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
             ListDefinition listDef = ensureList(study.getContainer(), insertUser, MobileAppStudyManager.PARTICIPANT_PROPERTIES_LIST_NAME, null);
@@ -138,6 +138,32 @@ public class ParticipantPropertiesProcessor extends DynamicListProcessor
             updateParticipantPropertiesVersion(study.getContainer(), insertUser, design.getStudyVersion());
         }
         logger.debug(String.format(LogMessageFormats.FINISH_UPDATE_PARTICIPANT_PROPERTIES, study.getShortName(), currentVersion, design.getStudyVersion()));
+    }
+
+    /**
+     * Compare each section of a version string
+     *
+     * Adapted from: https://stackoverflow.com/a/11024200
+     * @param a left side of comparision
+     * @param b right side of comparision
+     * @return comparable int value
+     */
+    private int compareVersionString(@NotNull String a, @NotNull String b)
+    {
+        String[] aParts = a.split("\\.");
+        String[] bParts = b.split("\\.");
+        int length = Math.max(aParts.length, bParts.length);
+        for(int i = 0; i < length; i++) {
+            int thisPart = i < aParts.length ?
+                    Integer.parseInt(aParts[i]) : 0;
+            int thatPart = i < bParts.length ?
+                    Integer.parseInt(bParts[i]) : 0;
+            if(thisPart < thatPart)
+                return -1;
+            if(thisPart > thatPart)
+                return 1;
+        }
+        return 0;
     }
 
     private static String getParticipantPropertiesDesignVersion(User user, Container container)
@@ -187,8 +213,8 @@ public class ParticipantPropertiesProcessor extends DynamicListProcessor
         SimpleFilter filter = SimpleFilter.createContainerFilter(container);
         filter.addCondition(FieldKey.fromParts("listId"), listId);
 
-        return new TableSelector(ti, filter,null).getCollection(ParticipantPropertyMetadata.class)
-                .stream().collect(Collectors.toMap(ParticipantPropertyMetadata::getPropertyURI, ppm -> ppm));
+        return new TableSelector(ti, filter,null).stream(ParticipantPropertyMetadata.class)
+                .collect(Collectors.toMap(ParticipantPropertyMetadata::getPropertyURI, ppm -> ppm));
     }
 
     private void insertPropertyMetadata(ParticipantProperty property, Integer listId, DomainProperty listProp)

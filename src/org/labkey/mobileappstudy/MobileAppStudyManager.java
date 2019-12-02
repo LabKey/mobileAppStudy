@@ -44,7 +44,6 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
-import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
 import org.labkey.api.security.User;
@@ -57,7 +56,6 @@ import org.labkey.api.util.ContainerUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.Pair;
-import org.labkey.api.view.NotFoundException;
 import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
@@ -80,7 +78,6 @@ import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -623,6 +620,8 @@ public class MobileAppStudyManager
 
     /**
      * Check if survey was previously seen, if not retrieve schema and apply
+     *
+     * note: assumes caller has synchronized access and opened transaction
      * @param surveyResponse that was sent, includes SurveyId and Version
      * @param user executing response (can be null)
      * @throws InvalidDesignException If design schema cannot be applied
@@ -699,7 +698,7 @@ public class MobileAppStudyManager
             getResultTable(activityId, container, user);
             return true;
         }
-        catch (NotFoundException e)
+        catch (IllegalStateException e)
         {
             return false;
         }
@@ -943,17 +942,17 @@ public class MobileAppStudyManager
      * @param container container for the list
      * @param user user for retrieving the table from the list
      * @return the table
-     * @throws NotFoundException if the list or table info cannot be found
+     * @throws IllegalStateException if the list or table info cannot be found
      */
-    private TableInfo getResultTable(@NotNull String listName, @NotNull Container container, @Nullable User user) throws NotFoundException
+    private TableInfo getResultTable(@NotNull String listName, @NotNull Container container, @Nullable User user) throws IllegalStateException
     {
         ListDefinition listDef = ListService.get().getList(container, listName);
         if (listDef == null)
-            throw new NotFoundException("Invalid list '" + listName + "' for container '" + container.getName() + "'");
+            throw new IllegalStateException("Invalid list '" + listName + "' for container '" + container.getName() + "'");
 
         TableInfo resultTable = listDef.getTable(user, container);
         if (resultTable == null)
-            throw new NotFoundException("Unable to find table for list '" + listDef.getName() + "' in container '" + container.getName() + "'");
+            throw new IllegalStateException("Unable to find table for list '" + listDef.getName() + "' in container '" + container.getName() + "'");
 
         return resultTable;
     }
@@ -1003,7 +1002,7 @@ public class MobileAppStudyManager
         BatchValidationException exception = new BatchValidationException();
 
         if (table.getUpdateService() == null)
-            throw new NotFoundException("Unable to get update service for table " + table.getName());
+            throw new IllegalStateException("Unable to get update service for table " + table.getName());
         List<Map<String, Object>> rows = table.getUpdateService().insertRows(user, container, Collections.singletonList(data), exception, null, null);
         if (exception.hasErrors())
             throw exception;
@@ -1298,11 +1297,11 @@ public class MobileAppStudyManager
         //Get the table
         TableInfo table = list.getTable(user, container);
         if (table == null)
-            throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
+            throw new IllegalStateException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
 
         QueryUpdateService qus = table.getUpdateService();
         if (qus == null)
-            throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
+            throw new IllegalStateException("Unable to delete participant data because update service for list " + table.getName() + " was null");
 
         qus.deleteRows(user, container, Arrays.asList(Collections.singletonMap("EnrollmentToken", enrollmentToken)), null,null);
     }
@@ -1320,7 +1319,7 @@ public class MobileAppStudyManager
         //Get the table
         TableInfo table = list.getTable(user, container);
         if (table == null)
-            throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
+            throw new IllegalStateException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
 
         List<ColumnInfo> piCols = table.getColumns("ParticipantId");
         if (piCols == null || piCols.size() == 0)
@@ -1328,7 +1327,7 @@ public class MobileAppStudyManager
 
         QueryUpdateService qus = table.getUpdateService();
         if (qus == null)
-            throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
+            throw new IllegalStateException("Unable to delete participant data because update service for list " + table.getName() + " was null");
 
         //Get rowIds associated to this participant
         List<Map<String, Object>> rows = getListRowKeys(table, participantId);
