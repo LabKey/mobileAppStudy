@@ -150,20 +150,26 @@ public class ParticipantPropertiesProcessor extends DynamicListProcessor
      */
     private int compareVersionString(@NotNull String a, @NotNull String b)
     {
-        String[] aParts = a.split("\\.");
-        String[] bParts = b.split("\\.");
-        int length = Math.max(aParts.length, bParts.length);
-        for(int i = 0; i < length; i++) {
-            int thisPart = i < aParts.length ?
-                    Integer.parseInt(aParts[i]) : 0;
-            int thatPart = i < bParts.length ?
-                    Integer.parseInt(bParts[i]) : 0;
-            if(thisPart < thatPart)
-                return -1;
-            if(thisPart > thatPart)
-                return 1;
+        try
+        {
+            String[] aParts = a.split("\\.");
+            String[] bParts = b.split("\\.");
+            int length = Math.max(aParts.length, bParts.length);
+            for (int i = 0; i < length; i++)
+            {
+                int thisPart = i < aParts.length ? Integer.parseInt(aParts[i]) : 0;
+                int thatPart = i < bParts.length ? Integer.parseInt(bParts[i]) : 0;
+                if (thisPart < thatPart)
+                    return -1;
+                if (thisPart > thatPart)
+                    return 1;
+            }
+            return 0;
         }
-        return 0;
+        catch (NumberFormatException e)
+        {
+            throw new InvalidDesignException("Unable to parse version string", e);
+        }
     }
 
     private static String getParticipantPropertiesDesignVersion(User user, Container container)
