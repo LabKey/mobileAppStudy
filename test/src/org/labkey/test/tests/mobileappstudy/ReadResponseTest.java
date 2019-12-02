@@ -24,9 +24,11 @@ import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.GuestCredentialsProvider;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.Locator;
+import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
@@ -100,7 +102,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         createBatchAndAssignTokens();
 
         setupList();
-
     }
 
     private void createBatchAndAssignTokens()
@@ -139,7 +140,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Now assign some of the tokens from the batch.");
 
         assignTokens(tokensToAssign, PROJECT_NAME, PROJECT_STUDY_NAME);
-
     }
 
     private void setupList()
@@ -299,8 +299,25 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         rowData.put("integerField", Long.toString(idAsLong + FIRST_INT_OFFSET));
         _listHelper.insertNewRow(rowData);
 
-        log("Done creating the lists.");
+        log("Done creating and populating the lists.");
 
+        try
+        {
+            // Connect as a normal admin user and test the row count in each list
+
+            SelectRowsResponse response = getListInfo(LIST_DIFF_DATATYPES);
+            log(LIST_DIFF_DATATYPES + " has " + response.getRowCount() + " rows");
+
+            response = getListInfo(LIST_SECOND);
+            log(LIST_SECOND + " has " + response.getRowCount() + " rows");
+
+            response = getListInfo(LIST_THIRD);
+            log(LIST_THIRD + " has " + response.getRowCount() + " rows");
+        }
+        catch (IOException | CommandException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     private List<ParticipantInfo> getTokens()
@@ -309,7 +326,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         try
         {
-
             Connection cn = createDefaultConnection(false);
             SelectRowsCommand selectCmd = new SelectRowsCommand("mobileappstudy", "Participant");
             SelectRowsResponse rowsResponse = selectCmd.execute(cn, getProjectName());
@@ -337,14 +353,12 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     @Test
     public void validateSelectRowsWithMultipleRows() throws CommandException, IOException
     {
-
         log("Call selectRows with participant " + ReadResponseTest.participantWithMultipleRow.getId() + " (" + ReadResponseTest.participantWithMultipleRow.getAppToken() + "). This participant should return multiple rows.");
         goToProjectHome();
         String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
-        params.put("query.queryName", LIST_DIFF_DATATYPES);
+        params.put("queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
 
@@ -412,13 +426,11 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     @Test
     public void validateSelectRowsWithOneRow() throws CommandException, IOException
     {
-
         log("Call selectRows with participant " + ReadResponseTest.participantWithOneRow.getId() + " (" + ReadResponseTest.participantWithOneRow.getAppToken() + "). This participant should return one row.");
         goToProjectHome();
         String participantAppToken = ReadResponseTest.participantWithOneRow.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
@@ -427,7 +439,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         CommandResponse rowsResponse = callSelectRows(params);
 
-        log("Validate that 1 row is returend.");
+        log("Validate that 1 row is returned.");
 
         JSONArray jsonArray = rowsResponse.getProperty("rows");
         Assert.assertEquals("Number of rows returned for participant " + ReadResponseTest.participantWithOneRow.getId() + " (" + ReadResponseTest.participantWithOneRow.getAppToken() + ") not as expected.", 1, jsonArray.size());
@@ -459,14 +471,12 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     @Test
     public void validateSelectRowsWithNoRows() throws CommandException, IOException
     {
-
         log("Call selectRows with participant " + ReadResponseTest.participantToSkip.getId() + " (" + ReadResponseTest.participantToSkip.getAppToken() + "). This participant has no rows in the list.");
         goToProjectHome();
         String participantAppToken = ReadResponseTest.participantToSkip.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
-        params.put("query.queryName", LIST_DIFF_DATATYPES);
+        params.put("queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
         params.put("participantId", participantAppToken);
 
@@ -486,7 +496,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     @Test
     public void validateSelectRowsColumnParameter() throws CommandException, IOException
     {
-
         String columnsToReturn = "integerField, participantId, stringField, dateTimeField, multiLineField";
 
         log("Call selectRows with participant " + ReadResponseTest.participantWithOneRow.getId() + " (" + ReadResponseTest.participantWithOneRow.getAppToken() + "). This participant should return one row.");
@@ -496,7 +505,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String participantAppToken = ReadResponseTest.participantWithOneRow.getAppToken();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
@@ -526,8 +534,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Call selectRows with no columns parameter, this should return all columns.");
 
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
-        params.put("query.queryName", LIST_DIFF_DATATYPES);
+        params.put("queryName", LIST_DIFF_DATATYPES);
         params.put("participantId", participantAppToken);
 
         rowsResponse = callSelectRows(params);
@@ -563,7 +570,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Now call selectRows with only bad column names.");
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "foo, bar");
         params.put("participantId", participantAppToken);
@@ -587,8 +593,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         columnsToReturn = "integerField, participantId, foo, stringField, dateTimeField, bar, multiLineField";
 
-        params.put("schemaName", "MobileAppResponse");
-        params.put("query.queryName", LIST_DIFF_DATATYPES);
+        params.put("queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
 
@@ -622,7 +627,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         columnsToReturn = "participantId, CreatedBy, ModifiedBy, container";
         log("Column parameter: '" + columnsToReturn + "'.");
 
-        params.put("schemaName", "MobileAppResponse");
         params.put("query.queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", columnsToReturn);
         params.put("participantId", participantAppToken);
@@ -646,34 +650,32 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     @Test
-    public void validateSelectRowsErrorConditions() throws CommandException, IOException
+    public void validateSelectRowsErrorConditions() throws IOException
     {
-
-        final String ERROR_NO_PARTICIPANTID = "ParticipantId not included in request";
+        final String errorNoParticipantId = "ParticipantId not included in request";
         goToProjectHome();
 
-        log("Call selectRows without a participantId.");
+        String task = "Call selectRows without a participantId.";
+        log(task);
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
-        params.put("query.queryName", LIST_DIFF_DATATYPES);
+        params.put("queryName", LIST_DIFF_DATATYPES);
         params.put("query.columns", "participantId, stringField, multiLineField, booleanField, integerField, doubleField, dateTimeField, flagField");
 
         try
         {
             callSelectRows(params);
+            fail("Should not have succeeded: " + task);
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().equals(ERROR_NO_PARTICIPANTID));
+            assertEquals("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage(), errorNoParticipantId);
         }
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     @Test
@@ -687,7 +689,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -730,13 +731,12 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     @Test
     public void validateExecuteSqlNoRows() throws CommandException, IOException
     {
-        Long participantId = ReadResponseTest.participantToSkip.getId();
+        long participantId = ReadResponseTest.participantToSkip.getId();
         String participantAppToken = ReadResponseTest.participantToSkip.getAppToken();
         String sql = "select * from TestListDiffDataTypes";
 
@@ -744,7 +744,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -762,7 +761,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     @Test
     public void validateExecuteSqlJoinAndUnion() throws CommandException, IOException
     {
-
         goToProjectHome();
 
         long participantId = ReadResponseTest.participantWithMultipleRow.getId();
@@ -773,7 +771,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Call the executeSql action with sql: '" + sql + "' and participant " + participantId + " (" + participantAppToken + ").");
 
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -787,7 +784,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the first item returned in the json.");
         Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
 
         JSONObject jsonArrayEntry = (JSONObject)jsonArray.get(0);
@@ -798,7 +795,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the second item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + SECOND_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + SECOND_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(1);
@@ -816,7 +813,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -830,7 +826,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the first item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("stringField", DESCRIPTION_VALUE_THIRD_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
+        expectedValues.put("stringField", DESCRIPTION_VALUE_THIRD_LIST + (participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + FIRST_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(0);
@@ -859,7 +855,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         goToProjectHome();
 
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -873,7 +868,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the first item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + FIRST_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + FIRST_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(0);
@@ -884,7 +879,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         log("Validate the second item returned in the json.");
         expectedValues = new HashMap<>();
         expectedValues.put("participantId", participantId);
-        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + Long.toString(participantId + SECOND_INT_OFFSET));
+        expectedValues.put("Description", DESCRIPTION_VALUE_SECOND_LIST + (participantId + SECOND_INT_OFFSET));
         expectedValues.put("integerField", participantId + SECOND_INT_OFFSET);
 
         jsonArrayEntry = (JSONObject)jsonArray.get(1);
@@ -894,13 +889,11 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     @Test
-    public void validateExecuteSqlErrorConditions() throws CommandException, IOException
+    public void validateExecuteSqlErrorConditions() throws IOException
     {
-
         String sql = "select * from TestListDiffDataTypes";
         final String ERROR_NO_PARTICIPANTID = "ParticipantId not included in request";
         final String ERROR_TABLE_NOT_FOUND = "Query or table not found: core.Users";
@@ -908,27 +901,28 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         goToProjectHome();
 
-        log("Call executeSql without a participantId.");
+        String task = "Call executeSql without a participantId.";
+        log(task);
         Map<String, Object> params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         log("Call the executeSql action with sql: '" + sql + "' and no participant parameter.");
 
         try
         {
             callExecuteSql(params);
+            fail("Should not have succeeded: " + task);
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().equals(ERROR_NO_PARTICIPANTID));
+            assertEquals("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage(), ERROR_NO_PARTICIPANTID);
         }
 
-        log("Call executeSql looking only at an 'external' table.");
+        task = "Call executeSql looking only at an 'external' table.";
+        log(task);
         long participantId = ReadResponseTest.participantWithMultipleRow.getId();
         String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
         sql = "select * from core.Users";
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -937,16 +931,17 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         try
         {
             callExecuteSql(params);
+            fail("Should not have succeeded: " + task);
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
         }
 
-        log("Call the executeSql while joining to an 'external' table.");
+        task = "Call executeSql while joining to an 'external' table.";
+        log(task);
         sql = "select TestListDiffDataTypes.participantId, TestListDiffDataTypes.user, core.Users.email from TestListDiffDataTypes inner join core.Users on TestListDiffDataTypes.user = core.Users.DisplayName";
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -955,16 +950,17 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         try
         {
             callExecuteSql(params);
+            fail("Should not have succeeded: " + task);
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
         }
 
-        log("Call the executeSql with garbage as the sql.");
+        task = "Call executeSql with garbage as the sql.";
+        log(task);
         sql = "select this should never ever ever work!";
         params = new HashMap<>();
-        params.put("schemaName", "MobileAppResponse");
         params.put("sql", sql);
         params.put("participantId", participantAppToken);
 
@@ -973,15 +969,15 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         try
         {
             callExecuteSql(params);
+            fail("Should not have succeeded: " + task);
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message: ", ce.getMessage().contains(ERROR_INVALID_TOKEN));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_INVALID_TOKEN));
         }
 
         log("Looks good. Go home.");
         goToHome();
-
     }
 
     private void confirmBatchInfoCreated(SetupPage setupPage, String batchId, String expectedTokenCount, String expectedUsedCount)
@@ -995,18 +991,19 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
     private CommandResponse callSelectRows(Map<String, Object> params) throws IOException, CommandException
     {
-        return callCommand("mobileAppStudy", "selectRows", params);
+        return callCommand("selectRows", params);
     }
 
     private CommandResponse callExecuteSql(Map<String, Object> params) throws IOException, CommandException
     {
-        return callCommand("mobileAppStudy", "executeSql", params);
+        return callCommand("executeSql", params);
     }
 
-    private CommandResponse callCommand(String controller, String action, Map<String, Object> params)  throws IOException, CommandException
+    private CommandResponse callCommand(String action, Map<String, Object> params)  throws IOException, CommandException
     {
-        Connection cn = createDefaultConnection(false);
-        Command selectCmd = new Command(controller, action);
+        // No cookies, no credentials -- test that participantId authenticates correctly
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), new GuestCredentialsProvider());
+        Command selectCmd = new Command("mobileAppStudy", action);
         selectCmd.setParameters(params);
 
         return selectCmd.execute(cn, getProjectName());
@@ -1018,7 +1015,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         for(String column : columns)
         {
-            Assert.assertTrue("Expected column " + column + " was not in the jsonObject.", jsonObject.keySet().contains(column));
+            Assert.assertTrue("Expected column " + column + " was not in the jsonObject.", jsonObject.containsKey(column));
 
             Object  jsonObjectValue;
             if(jsonObject.get(column).getClass().getSimpleName().equals("JSONObject"))
@@ -1042,7 +1039,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
                     // Not worth worrying about, but will need to account for.
                     if(jsonObjectValue.getClass().getSimpleName().equals("Long"))
                     {
-                        log("Have to do a caste. Expected field is an int, the json returned a long.");
+                        log("Have to do a cast. Expected field is an int, the json returned a long.");
                         long temp = (int)expectedValues.get(column);
                         Assert.assertEquals(column + " not as expected.", temp, jsonObjectValue);
                     }
@@ -1064,42 +1061,41 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
                     Assert.assertEquals(column + " not as expected.", expectedValues.get(column), jsonObjectValue);
                     break;
             }
-
         }
 
         // If we've gotten to this point then we know that all of the expected columns and values were there.
         // Now we need to check that the jsonObject did not return any unexpected columns.
-        String unexpectedJsonColum = "";
+        StringBuilder unexpectedJsonColumn = new StringBuilder();
         boolean pass = true;
         for(Object jsonColumn : jsonObject.keySet())
         {
+            String column = (String)jsonColumn;
             // If the query returned all columns there are a few columns to ignore.
             // Ignore the 'Created', 'Key', 'EntityId', 'lastIndexed' and 'Modified' fields. These fields can be tricky to get an accurate expected value especially the timestamp fields.
-            if((!expectedValues.keySet().contains(jsonColumn)) &&
-                    (!jsonColumn.equals("Key") &&
-                    !jsonColumn.equals("Created") &&
-                    !jsonColumn.equals("Modified") &&
-                    !jsonColumn.equals("lastIndexed") &&
-                    !jsonColumn.equals("EntityId")))
+            if ((!expectedValues.containsKey(column)) &&
+                    (!column.equals("Key") &&
+                    !column.equals("Created") &&
+                    !column.equals("Modified") &&
+                    !column.equals("lastIndexed") &&
+                    !column.equals("EntityId")))
             {
-                unexpectedJsonColum = unexpectedJsonColum + "Found unexpected column '" + jsonColumn.toString() + "' in jsonObject.\r\n";
+                unexpectedJsonColumn.append("Found unexpected column '").append(column).append("' in jsonObject.\r\n");
                 pass = false;
             }
         }
 
-        Assert.assertTrue(unexpectedJsonColum, pass);
-
+        Assert.assertTrue(unexpectedJsonColumn.toString(), pass);
     }
 
-    private SelectRowsResponse getListInfo(String schema, String query) throws IOException, CommandException
+    private SelectRowsResponse getListInfo(String query) throws IOException, CommandException
     {
         Connection cn;
-        SelectRowsCommand selectCmd  = new SelectRowsCommand(schema, query);
+        SelectRowsCommand selectCmd = new SelectRowsCommand("lists", query);
         cn = createDefaultConnection(false);
-        return  selectCmd.execute(cn, getProjectName());
+        return selectCmd.execute(cn, getProjectName());
     }
 
-    private class ParticipantInfo
+    private static class ParticipantInfo
     {
         protected long _participantId;
         protected String _appToken;
@@ -1134,7 +1130,5 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         {
             return _appToken;
         }
-
     }
-
 }

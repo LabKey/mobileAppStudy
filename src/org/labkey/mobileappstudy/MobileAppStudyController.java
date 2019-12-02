@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiQueryResponse;
@@ -403,16 +404,7 @@ public class MobileAppStudyController extends SpringActionController
 
             // Error when binding means null ParticipantForm, #33486
             if (!errors.hasErrors())
-            {
                 form.getParticipantForm().validateForm(errors);
-
-                if (!errors.hasErrors())
-                {
-                    // Set our special, filtered schema on the form so getQuerySettings() works right
-                    UserSchema schema = ReadResponsesQuerySchema.get(form.getParticipant());
-                    form.setSchema(schema);
-                }
-            }
         }
 
         @Override
@@ -519,19 +511,14 @@ public class MobileAppStudyController extends SpringActionController
 
     public static class SelectRowsForm extends QueryForm
     {
-        private UserSchema _userSchema = null;
         private ParticipantForm _participantForm = null;
 
-        void setSchema(UserSchema userSchema)
-        {
-            _userSchema = userSchema;
-        }
-
-        @NotNull
         @Override
-        public UserSchema getSchema()
+        protected @Nullable UserSchema createSchema()
         {
-            return _userSchema;
+            // If this is being called then we've successfully validated and set the ParticipantForm
+            // Return our special, filtered schema so getQuerySettings() works right
+            return ReadResponsesQuerySchema.get(getParticipant());
         }
 
         Participant getParticipant()
