@@ -71,6 +71,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -994,6 +995,12 @@ public class MobileAppStudyController extends SpringActionController
     public static class UpdateStudyMetadataAction extends MutatingApiAction<StudyMetadataForm>
     {
         @Override
+        public void validateForm(StudyMetadataForm form, Errors errors)
+        {
+            form.validateForm(errors, getContainer());
+        }
+
+        @Override
         public Object execute(StudyMetadataForm studyMetadataForm, BindException errors)
         {
             try
@@ -1024,10 +1031,14 @@ public class MobileAppStudyController extends SpringActionController
             return this.studyId;
         }
 
-        public boolean validateForm()
+        public void validateForm(Errors errors, Container container)
         {
-            return StringUtils.isNotBlank(studyId);
+            if (StringUtils.isBlank(studyId))
+                errors.reject(ERROR_REQUIRED, new String[] {studyId}, "StudyId required");
+            else if (!MobileAppStudyManager.get().studyExists(studyId))
+                errors.reject(ERROR_MSG, new String[] {studyId}, "StudyId provided does not match any known study");
+            else if (!MobileAppStudyManager.get().getStudyContainers(studyId).contains(container))
+                errors.reject(ERROR_MSG, new String[] {studyId}, "StudyId does not match study container requested");
         }
     }
-
 }
