@@ -177,7 +177,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     @LogMethod
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
     {
-        Connection connection = createDefaultConnection(false);
+        Connection connection = createGuestConnection();  // No credentials, just the token -- mimic the mobile app
         for(String token : tokensToAssign)
         {
             try
@@ -296,12 +296,19 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
 
     protected CommandResponse callCommand(String action, Map<String, Object> params)  throws IOException, CommandException
     {
-        // No cookies, no credentials -- test that participantId authenticates correctly
-        Connection cn = new Connection(WebTestHelper.getBaseURL(), new GuestCredentialsProvider());
         Command selectCmd = new Command("mobileAppStudy", action);
         selectCmd.setParameters(params);
 
-        return selectCmd.execute(cn, getProjectName());
+        return selectCmd.execute(createGuestConnection(), getProjectName());
+    }
+
+    /**
+     * Returns a remoteapi Connection that uses no credentials and no cookies -- to mimic the mobile app that uses
+     * participantId or enrollment token to authenticate
+     */
+    protected Connection createGuestConnection()
+    {
+        return new Connection(WebTestHelper.getBaseURL(), new GuestCredentialsProvider());
     }
 
     protected void checkJsonObjectAgainstExpectedValues(Map<String, Object> expectedValues, JSONObject jsonObject)
