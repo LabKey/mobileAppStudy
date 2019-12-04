@@ -43,7 +43,8 @@ public class ParticipantProperty implements IDynamicListField
     public enum ParticipantPropertyDataType {
         Boolean ("boolean", JdbcType.BOOLEAN),
         Date("date", JdbcType.TIMESTAMP),
-        Numeric ("numeric", JdbcType.DOUBLE),
+        Integer ("integer", JdbcType.INTEGER),
+        Decimal ("decimal", JdbcType.DOUBLE),
         String("string", JdbcType.VARCHAR),
         Time("time", JdbcType.VARCHAR),
         UNKNOWN("Unknown", JdbcType.VARCHAR);

@@ -65,10 +65,10 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
     private final static String MOCKSERVER_CALL_MATCHER_CLASS = "org.labkey.test.mockserver.mobileappstudy.ParticipantPropertiesSeverGetCallback";
     private final static String PARTICIPANT_PROPERTIES_LIST_NAME = "ParticipantProperties";
     private final static String ENROLLMENTTOKEN_FIELD_KEY = "EnrollmentToken";
-    private final static List<String> POSTENROLLMENT_FIELD_NAMES = Arrays.asList("EnrollmentToken", "stringPostEnroll", "numeric1PostEnroll",
-            "numeric2PostEnroll", "datePostEnroll", "timePostEnroll", "booleanPostEnroll");
-    private final static List<String> PREENROLLMENT_FIELD_NAMES = Arrays.asList("stringPreEnroll", "numeric1PreEnroll",
-            "numeric2PreEnroll", "datePreEnroll", "timePreEnroll", "booleanPreEnroll");
+    private final static List<String> POSTENROLLMENT_FIELD_NAMES = Arrays.asList("EnrollmentToken", "stringPostEnroll", "integerPostEnroll",
+            "decimalPostEnroll", "datePostEnroll", "timePostEnroll", "booleanPostEnroll");
+    private final static List<String> PREENROLLMENT_FIELD_NAMES = Arrays.asList("stringPreEnroll", "integerPreEnroll",
+            "decimalPreEnroll", "datePreEnroll", "timePreEnroll", "booleanPreEnroll");
     private final static List<String> STANDARD_FIELD_NAMES = Arrays.asList("Modified", "lastIndexed",
             "ModifiedBy", "Created", "CreatedBy", "container", "EntityId");
     private final static List<String> ALL_FIELDS = Stream.of(PREENROLLMENT_FIELD_NAMES, POSTENROLLMENT_FIELD_NAMES, STANDARD_FIELD_NAMES).flatMap(x->x.stream()).collect(Collectors.toList());
