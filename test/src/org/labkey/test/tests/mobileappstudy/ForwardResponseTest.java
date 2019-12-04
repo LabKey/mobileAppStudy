@@ -89,6 +89,7 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
     private static final String[] PROJECTS = new String[]{PROJECT_NAME01, PROJECT_NAME02, PROJECT_NAME03, PROJECT_NAME04, PROJECT_NAME05};
     private final static String SURVEY_NAME = "FakeForwardingSurvey";
     private final static String FORWARDING_PIPELINE_JOB_FORMAT = "Survey Response forwarding for %1$s";
+    private final static String MOCKSERVER_CALL_MATCHER_CLASS = "org.labkey.test.mockserver.mobileappstudy.MockServerPostCallback";
 
 
     @Override
@@ -138,14 +139,9 @@ public class ForwardResponseTest extends BaseMobileAppStudyTest
         }
     }
 
-    private static void addRequestMatcher(ClientAndServer mockServer, String requestPath, Consumer<String> log )
+    protected static void addRequestMatcher(ClientAndServer mockServer, String requestPath, Consumer<String> log)
     {
-        log.accept(String.format("Adding a response for %1$s requests.", requestPath));
-        mockServer.when(
-                request()
-                        .withMethod("POST")
-                        .withPath("/" + requestPath)
-        ).respond(HttpClassCallback.callback("org.labkey.test.mockserver.mobileappstudy.MockServerPostCallback"));
+        addRequestMatcher(mockServer, requestPath, log, "POST", MOCKSERVER_CALL_MATCHER_CLASS);
     }
 
     @Override

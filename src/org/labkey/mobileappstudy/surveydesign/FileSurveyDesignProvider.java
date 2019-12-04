@@ -20,6 +20,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,6 +52,25 @@ public class FileSurveyDesignProvider extends AbstractSurveyDesignProviderImpl
         catch (IOException x)
         {
             throw new InvalidDesignException("Unable to read from SurveyDesign file", x);
+        }
+    }
+
+    @Override
+    public ParticipantPropertiesDesign getParticipantPropertiesDesign(Container c, String shortName) throws Exception
+    {
+        try
+        {
+            StringBuilder sb = new StringBuilder();
+            Path filePath = Paths.get(getBasePath(c), String.join("_", shortName, "ParticipantProperties") + ".json");
+            if (!Files.exists(filePath))
+                return null; // No test file present
+
+            Files.readAllLines(filePath).forEach(sb::append);
+            return getParticipantPropertiesDesign(sb.toString());
+        }
+        catch (IOException x)
+        {
+            throw new InvalidDesignException("Invalid participant properties design file.");
         }
     }
 

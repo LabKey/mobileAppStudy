@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.JdbcType;
+import org.labkey.mobileappstudy.IDynamicListField;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +33,7 @@ import java.util.Map;
  * Created by iansigmon on 2/2/17.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SurveyStep
+public class SurveyStep implements IDynamicListField
 {
     private static final int VARCHAR_TEXT_BOUNDARY = 4000;
 
@@ -299,19 +300,19 @@ public class SurveyStep
             jsonString = val;
         }
 
-         public static PHIClassification getClassicication(String key)
-         {
-             if (StringUtils.isNotBlank(key))
-                 return CONVERTER.get(key);
-             else
-                 //TODO: not sure what default should be, so defaulting to most limited
-                 return PHIClassification.PHI;
-         }
+        public static PHIClassification getClassicication(String key)
+        {
+            if (StringUtils.isNotBlank(key))
+                return CONVERTER.get(key);
+            else
+                //not sure what default should be, so defaulting to most limited
+                return PHIClassification.PHI;
+        }
 
-         public String getJsonValue()
-         {
-             return jsonString;
-         }
+        public String getJsonValue()
+        {
+            return jsonString;
+        }
     }
 
     private String type;
@@ -436,6 +437,15 @@ public class SurveyStep
         return title;
     }
 
+    @JsonIgnore @Override
+    public String getDescription() { return getTitle(); }
+
+    @JsonIgnore @Override
+    public String getLabel()
+    {
+        return null;
+    }
+
     @JsonIgnore
     @Nullable
     public Integer getMaxLength()
@@ -472,7 +482,7 @@ public class SurveyStep
     }
 
     @JsonIgnore
-    public JdbcType getPropertyType()
+    public JdbcType getPropertyStorageType()
     {
         return StepResultType.getStepResultType(getResultType()).getPropertyType(this);
     }

@@ -23,9 +23,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.PropertyStorageSpec;
 import org.labkey.api.exp.ChangePropertyDescriptorException;
-import org.labkey.api.exp.PropertyType;
 import org.labkey.api.exp.list.ListDefinition;
-import org.labkey.api.exp.list.ListService;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.exp.property.Lookup;
@@ -42,7 +40,6 @@ import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep.StepResultType;
 
-import java.sql.JDBCType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -51,23 +48,21 @@ import java.util.TreeSet;
 /**
  * Class to process and apply a survey design to the underlying lists
  */
-public class SurveyDesignProcessor
+public class SurveyDesignProcessor extends DynamicListProcessor
 {
-    private Logger logger;
-
     /**
      * List properties that are needed for survey relationships
      */
     private enum StandardProperties
     {
-        Key("Key", JDBCType.INTEGER),
-        ParticipantId("ParticipantId", JDBCType.INTEGER),
-        ParentId("ParentId", JDBCType.INTEGER);
+        Key("Key", JdbcType.INTEGER),
+        ParticipantId("ParticipantId", JdbcType.INTEGER),
+        ParentId("ParentId", JdbcType.INTEGER);
 
         private String key;
-        private JDBCType type;
+        private JdbcType type;
 
-        StandardProperties(String key, JDBCType type)
+        StandardProperties(String key, JdbcType type)
         {
             this.key = key;
             this.type = type;
@@ -106,16 +101,17 @@ public class SurveyDesignProcessor
             switch (propName)
             {
                 case Key:
-                    prop = listDomain.addProperty(new PropertyStorageSpec(propName.key, JdbcType.INTEGER));
+                    prop = listDomain.addProperty(new PropertyStorageSpec(propName.key, propName.type));
                     break;
                 case ParticipantId:
-                    prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, JdbcType.INTEGER));
+                    //Most lists use participantId
+                    prop = listDomain.addProperty(new PropertyStorageSpec(ParticipantId.key, propName.type));
                     prop.setLookup(new Lookup(container, MobileAppStudySchema.NAME, MobileAppStudySchema.PARTICIPANT_TABLE));
                     break;
                 case ParentId:
                     if (StringUtils.isNotBlank(parentListName))
                     {
-                        prop = listDomain.addProperty(new PropertyStorageSpec( getParentListKey(parentListName), JdbcType.INTEGER));
+                        prop = listDomain.addProperty(new PropertyStorageSpec( getParentListKey(parentListName), propName.type));
                         prop.setLookup(new Lookup(container, "lists", parentListName));
                     }
                     break;
@@ -130,9 +126,10 @@ public class SurveyDesignProcessor
         }
     }
 
+
     public SurveyDesignProcessor(Logger logger)
     {
-        this.logger = logger != null ? logger : Logger.getLogger(MobileAppStudy.class);
+        super(logger);
     }
 
     public void updateSurveyDesign(@NotNull SurveyResponse surveyResponse, User user) throws Exception
@@ -159,42 +156,6 @@ public class SurveyDesignProcessor
 
         ListDefinition listDef = ensureList(study.getContainer(), insertUser, design.getSurveyName(), null);
         applySurveyUpdate(study.getContainer(), insertUser, listDef.getDomain(), design.getSteps(), design.getSurveyName(), "");
-    }
-
-    /**
-     * Get existing list or create new one
-     *
-     * @param listName name of list
-     * @param container where list resides
-     * @param user accessing/creating list
-     * @return ListDefinition representing list
-     * @throws InvalidDesignException if list is not able to be created, this is a wrapper of any other exception
-     */
-    private ListDefinition ensureList(Container container, User user, String listName, String parentListName) throws InvalidDesignException
-    {
-        ListDefinition listDef = ListService.get().getList(container, listName);
-        return listDef != null ?
-               listDef :
-               newSurveyListDefinition(container, user, listName, parentListName);
-    }
-
-    private ListDefinition newSurveyListDefinition(Container container, User user, String listName, String parentListName) throws InvalidDesignException
-    {
-        try
-        {
-            ListDefinition list = ListService.get().createList(container, listName, ListDefinition.KeyType.AutoIncrementInteger);
-            list.setKeyName("Key");
-            list.save(user);
-
-            logger.info(String.format(LogMessageFormats.LIST_CREATED, listName));
-
-            //Return a refreshed version of listDefinition
-            return ListService.get().getList(container, listName);
-        }
-        catch (Exception e)
-        {
-            throw new InvalidDesignException(String.format(LogMessageFormats.UNABLE_CREATE_LIST, listName), e);
-        }
     }
 
     private void applySurveyUpdate(Container container, User user, Domain listDomain, List<SurveyStep> steps, String listName, String parentListName) throws InvalidDesignException
@@ -267,29 +228,6 @@ public class SurveyDesignProcessor
         applySurveyUpdate(container, user, listDef.getDomain(), step.getSteps(), subListName, parentListName);
     }
 
-    private void ensureStepProperty(Domain listDomain, SurveyStep step) throws InvalidDesignException
-    {
-        DomainProperty prop = listDomain.getPropertyByName(step.getKey());
-        if (prop != null)
-        {
-            //existing property
-            if (prop.getPropertyDescriptor().getJdbcType() != step.getPropertyType())
-                throw new InvalidDesignException(String.format(LogMessageFormats.RESULT_TYPE_MISMATCH, step.getKey()));
-
-            //Update a string field's size. Increase only.
-            if (prop.getPropertyType() == PropertyType.STRING && step.getMaxLength() != null)
-            {
-                //Logged in List audit log
-                if (step.getMaxLength() > prop.getScale())
-                    prop.setScale(step.getMaxLength());
-            }
-        }
-        else
-        {
-            //New property
-            getNewDomainProperty(listDomain, step);
-        }
-    }
 
     private void updateChoiceList(Container container, User user, String parentSurveyName, SurveyStep step) throws InvalidDesignException, ChangePropertyDescriptorException
     {
@@ -329,47 +267,8 @@ public class SurveyDesignProcessor
         if (prop == null)
         {
             //New property
-            getNewDomainProperty(listDomain, otherTextKey, propType, OTHER_OPTION_BASE_DESCRIPTION, OTHER_OPTION_MAX_LENGTH );
+            getNewDomainProperty(listDomain, otherTextKey, propType, null, OTHER_OPTION_BASE_DESCRIPTION, OTHER_OPTION_MAX_LENGTH );
         }
         // Else field already exists, no need to generate it...
-    }
-
-    private static DomainProperty getNewDomainProperty(Domain domain, SurveyStep step)
-    {
-        return getNewDomainProperty(domain, step.getKey(), step.getPropertyType(), step.getTitle(), step.getMaxLength());
-    }
-
-    private static DomainProperty getNewDomainProperty(Domain domain, String key, JdbcType propertyType, String description, Integer length)
-    {
-        DomainProperty prop = domain.addProperty(new PropertyStorageSpec(key, propertyType));
-        prop.setName(key);
-        prop.setDescription(description);
-        prop.setPropertyURI(domain.getTypeURI() + "#" + key);
-        if (prop.getPropertyType() == PropertyType.STRING && length != null)
-            prop.setScale(length);
-
-        prop.setMeasure(false);
-        prop.setDimension(false);
-        prop.setRequired(false);
-
-        return prop;
-    }
-
-    private static class LogMessageFormats
-    {
-        public static final String UNABLE_TO_APPLY_SURVEY = "Unable to apply survey changes";
-        public static final String STEP_IS_NULL = "Step is null";
-        public static final String RESULT_TYPE_MISMATCH = "Can not change question result types. Field: %1$s";
-        public static final String INVALID_RESULT_TYPE = "Unknown step result type for key: %1$s";
-        public static final String PROVIDER_NULL = "No SurveyDesignProvider configured.";
-        public static final String DESIGN_NULL = "Unable to parse design metadata";
-        public static final String MISSING_METADATA = "Design document does not contain all the required fields (activityId, steps)";
-        public static final String START_UPDATE_SURVEY = "Getting new survey version: Study: %1$s, Survey: %2$s, Version: %3$s";
-        public static final String END_SURVEY_UPDATE = "Survey update completed";
-        public static final String UNABLE_CREATE_LIST = "Unable to create new list. List: %1$s";
-        public static final String LIST_CREATED = "Survey list [%1$s] successfully created.";
-        public static final String SUBLIST_PROPERTY_ERROR = "Unable to add sub-list property: %1$s";
-        public static final String NO_GROUP_STEPS = "Form contains no steps: Step: %1$s";
-        public static final String DUPLICATE_FIELD_KEY = "Design schema contains duplicate field keys: %1$s";
     }
 }

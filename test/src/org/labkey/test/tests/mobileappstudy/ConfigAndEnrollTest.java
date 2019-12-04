@@ -414,7 +414,7 @@ public class ConfigAndEnrollTest extends BaseMobileAppStudyTest
     @LogMethod
     private String assignTokenAndFail(@LoggedParam String token, @LoggedParam String projectName, @LoggedParam String studyName)
     {
-        Connection connection = createDefaultConnection(false);
+        Connection connection = createGuestConnection();
         try
         {
             CommandResponse response = assignToken(connection, token, projectName, studyName);

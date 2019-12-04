@@ -30,9 +30,11 @@ import org.labkey.api.security.User;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
 import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyResponse;
+import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE;
+import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_PROPERTIES_TYPE_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_STATUS_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_STATUS_TABLE;
 
@@ -86,6 +88,16 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
                     Participant.ParticipantStatus.class,
                     this,
                     Participant.ParticipantStatus::getPkId,
+                    true,
+                    "Possible states a Participant might be in"
+            );
+        }
+        else if (PARTICIPANT_PROPERTIES_TYPE_TABLE.equalsIgnoreCase(name))
+        {
+            return new EnumTableInfo<>(
+                    ParticipantProperty.ParticipantPropertyType.class,
+                    this,
+                    ParticipantProperty.ParticipantPropertyType::getId,
                     true,
                     "Possible states a Participant might be in"
             );

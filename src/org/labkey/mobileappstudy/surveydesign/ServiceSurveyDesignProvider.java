@@ -30,8 +30,10 @@ import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 
 import java.net.URI;
+import java.util.function.Function;
 
 /**
  * Created by susanh on 3/10/17.
@@ -41,6 +43,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static final String STUDY_ID_PARAM = "studyId";
     private static final String ACTIVITY_ID_PARAM = "activityId";
     private static final String VERSION_PARAM = "activityVersion";
+    private static final String PARTICIPANT_PROPERTIES_ACTION = "participantProperties";
 
     public ServiceSurveyDesignProvider(Container container, Logger logger)
     {
@@ -54,6 +57,21 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
         uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
         uriBuilder.setParameter(ACTIVITY_ID_PARAM, activityId);
         uriBuilder.setParameter(VERSION_PARAM, version);
+
+        return getDesign(c, uriBuilder, this::getSurveyDesign);
+    }
+
+    @Override
+    public ParticipantPropertiesDesign getParticipantPropertiesDesign(Container c, String shortName) throws Exception
+    {
+        URIBuilder uriBuilder = new URIBuilder(String.join("/", getServiceUrl(c), PARTICIPANT_PROPERTIES_ACTION));
+        uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
+
+        return getDesign(c, uriBuilder, this::getParticipantPropertiesDesign);
+    }
+
+    private <DESIGN> DESIGN getDesign(Container c, URIBuilder uriBuilder, Function<String, DESIGN> designProcessor) throws Exception
+    {
         URI uri = uriBuilder.build();
         try (CloseableHttpClient httpclient = HttpClients.createDefault())
         {
@@ -67,11 +85,11 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
 
                 if (status.getStatusCode() == HttpStatus.SC_OK || status.getStatusCode() == HttpStatus.SC_CREATED)
                 {
-                    return getSurveyDesign(handler.handleResponse(response));
+                    return designProcessor.apply(handler.handleResponse(response));
                 }
                 else
                 {
-                    throw new Exception(String.format("Received response status %d using uri %s",  status.getStatusCode(), uri));
+                    throw new Exception(String.format("Received response status %d using uri %s", status.getStatusCode(), uri));
                 }
             }
         }

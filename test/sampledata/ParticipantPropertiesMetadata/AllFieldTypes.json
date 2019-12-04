@@ -1,0 +1,116 @@
+{
+  "message": "SUCCESS",
+  "metadata": {
+    "studyId": "%1$s",
+    "studyVersion": "5.999"
+  },
+  "participantProperties": [{
+    "propertyId": "stringPreEnroll",
+    "propertyName": "stringName",
+    "propertyType": "preenrollment",
+    "propertyDataType": "string",
+    "shouldRefresh": true,
+    "dataSource": "ExternalSystem",
+    "status": "active",
+    "version": "1.0"
+  },{
+    "propertyId": "numeric1PreEnroll",
+    "propertyName": "Numeric Int preenroll",
+    "propertyType": "preenrollment",
+    "propertyDataType": "numeric",
+    "shouldRefresh": false,
+    "dataSource": "ExternalSystem",
+    "status": "active",
+    "version": "1.0"
+  },{
+    "propertyId": "numeric2PreEnroll",
+    "propertyName": "Numeric Double preenroll",
+    "propertyType": "preenrollment",
+    "propertyDataType": "numeric",
+    "shouldRefresh": true,
+    "dataSource": "Other",
+    "status": "deactivated",
+    "version": "1.0"
+  },{
+    "propertyId": "datePreEnroll",
+    "propertyName": "date preenrollment",
+    "propertyType": "preenrollment",
+    "propertyDataType": "date",
+    "shouldRefresh": false,
+    "dataSource": "other",
+    "status": "active",
+    "version": "1"
+  },{
+    "propertyId": "timePreEnroll",
+    "propertyName": "time preenrollment",
+    "propertyType": "preenrollment",
+    "propertyDataType": "time",
+    "shouldRefresh": true,
+    "dataSource": "ExternalSystem",
+    "status": "deactivated",
+    "version": "ab"
+  },{
+    "propertyId": "booleanPreEnroll",
+    "propertyName": "boolean preenrollment",
+    "propertyType": "preenrollment",
+    "propertyDataType": "boolean",
+    "shouldRefresh": false,
+    "dataSource": "ExternalSystem",
+    "status": "active",
+    "version": "1.0"
+  },{
+    "propertyId": "stringPostEnroll",
+    "propertyName": "stringName",
+    "propertyType": "postenrollment",
+    "propertyDataType": "string",
+    "shouldRefresh": true,
+    "dataSource": "other",
+    "status": "deactivated",
+    "version": "1.0"
+  },{
+    "propertyId": "numeric1PostEnroll",
+    "propertyName": "Numeric Int postenroll",
+    "propertyType": "postenrollment",
+    "propertyDataType": "numeric",
+    "shouldRefresh": false,
+    "dataSource": "Other",
+    "status": "active",
+    "version": "1.0"
+  },{
+    "propertyId": "numeric2PostEnroll",
+    "propertyName": "Numeric Double postenroll",
+    "propertyType": "PostEnrollment",
+    "propertyDataType": "numeric",
+    "shouldRefresh": true,
+    "dataSource": "externalsystem",
+    "status": "active",
+    "version": "1.0"
+  },{
+    "propertyId": "datePostEnroll",
+    "propertyName": "date postenrollment",
+    "propertyType": "postenrollment",
+    "propertyDataType": "date",
+    "shouldRefresh": false,
+    "dataSource": "ExternalSystem",
+    "status": "active",
+    "version": "1.0"
+  },{
+    "propertyId": "timePostEnroll",
+    "propertyName": "time postenrollment",
+    "propertyType": "PostEnrollment",
+    "propertyDataType": "time",
+    "shouldRefresh": true,
+    "dataSource": "other",
+    "status": "deactivated",
+    "version": "1.0"
+  },{
+    "propertyId": "booleanPostEnroll",
+    "propertyName": "boolean postenrollment",
+    "propertyType": "postenrollment",
+    "propertyDataType": "boolean",
+    "shouldRefresh": false,
+    "dataSource": "Other",
+    "status": "active",
+    "version": "1.0"
+  }]
+}

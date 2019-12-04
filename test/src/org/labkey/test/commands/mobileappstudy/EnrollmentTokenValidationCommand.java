@@ -15,11 +15,17 @@
  */
 package org.labkey.test.commands.mobileappstudy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.json.simple.JSONObject;
 import org.labkey.test.WebTestHelper;
+import org.labkey.test.data.mobileappstudy.ParticipantPropertiesResponse;
+import org.labkey.test.data.mobileappstudy.ParticipantProperty;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -37,6 +43,18 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
     private String _batchToken;
     private String _studyName;
     private String _projectName;
+
+    private Collection<ParticipantProperty> _preEnrollmentParticipantProperties;
+
+    public void setPreEnrollmentParticipantProperties(Collection<ParticipantProperty> preEnrollmentParticipantProperties)
+    {
+        _preEnrollmentParticipantProperties = preEnrollmentParticipantProperties;
+    }
+
+    public Collection<ParticipantProperty> getPreEnrollmentParticipantProperties()
+    {
+        return _preEnrollmentParticipantProperties;
+    }
 
     public String getProjectName()
     {
@@ -95,5 +113,21 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
     public String getBody()
     {
         return "";
+    }
+
+    @Override
+    protected void parseSuccessfulResponse(JSONObject response)
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            ParticipantPropertiesResponse ppResponse = mapper.readValue(response.toJSONString(), ParticipantPropertiesResponse.class);
+            if (ppResponse != null)
+                _preEnrollmentParticipantProperties = ppResponse.getPreEnrollmentParticipantProperties();
+        }
+        catch (IOException e)
+        {
+            //TODO: do something here...
+        }
     }
 }

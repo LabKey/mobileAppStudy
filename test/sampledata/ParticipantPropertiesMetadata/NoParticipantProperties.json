@@ -1,0 +1,9 @@
+{
+  "message": "SUCCESS",
+  "metadata": {
+    "studyId": "%1$s",
+    "studyVersion": "1"
+  },
+  "participantProperties": [{
+  }]
+}
