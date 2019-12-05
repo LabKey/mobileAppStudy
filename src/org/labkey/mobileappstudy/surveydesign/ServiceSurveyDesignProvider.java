@@ -44,6 +44,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static final String ACTIVITY_ID_PARAM = "activityId";
     private static final String VERSION_PARAM = "activityVersion";
     private static final String PARTICIPANT_PROPERTIES_ACTION = "participantProperties";
+    private static final String ACTIVITY_ACTION = "activity";
 
     public ServiceSurveyDesignProvider(Container container, Logger logger)
     {
@@ -53,7 +54,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     @Override
     public SurveyDesign getSurveyDesign(Container c, String shortName, String activityId, String version) throws Exception
     {
-        URIBuilder uriBuilder = new URIBuilder(getServiceUrl(c));
+        URIBuilder uriBuilder = new URIBuilder(String.join("/", getServiceUrl(c), ACTIVITY_ACTION));
         uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
         uriBuilder.setParameter(ACTIVITY_ID_PARAM, activityId);
         uriBuilder.setParameter(VERSION_PARAM, version);
@@ -105,7 +106,14 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     {
         Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
         String value = module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container);
-        return value == null ? null : value.trim();
+        if (StringUtils.isBlank(value))
+            return null;
+        value = value.trim();
+
+        //Allow backwards compatibility to baseUrl parameter, truncate /activity from the configured url if present
+        return StringUtils.endsWithIgnoreCase(value, ACTIVITY_ACTION) ?
+                value.substring(0, value.length() - ACTIVITY_ACTION.length()):
+                value;
     }
 
     public static Boolean isConfigured(Container c)
