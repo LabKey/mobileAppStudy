@@ -110,7 +110,7 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
             return null;
         value = value.trim();
 
-        //Allow backwards compatibility to baseUrl parameter, truncate /activity from the configured url if present
+        //Allow backwards compatibility to baseUrl parameter, truncate /activity from the configured url if present Issue #39137
         return StringUtils.endsWithIgnoreCase(value, "/" + ACTIVITY_ACTION) ?
                 value.substring(0, value.length() - ACTIVITY_ACTION.length() - 1): //Truncate the action and the preceding '/'
                 value;
