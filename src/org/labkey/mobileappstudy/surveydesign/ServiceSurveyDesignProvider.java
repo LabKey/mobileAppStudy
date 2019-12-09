@@ -105,15 +105,10 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static String getServiceUrl(Container container)
     {
         Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
-        String value = module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container);
-        if (StringUtils.isBlank(value))
-            return null;
-        value = value.trim();
+        String value = StringUtils.trimToNull(module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container));
 
         //Allow backwards compatibility to baseUrl parameter, truncate /activity from the configured url if present Issue #39137
-        return StringUtils.endsWithIgnoreCase(value, "/" + ACTIVITY_ACTION) ?
-                value.substring(0, value.length() - ACTIVITY_ACTION.length() - 1): //Truncate the action and the preceding '/'
-                value;
+        return StringUtils.removeEndIgnoreCase(value, "/" + ACTIVITY_ACTION);
     }
 
     public static Boolean isConfigured(Container c)

@@ -78,6 +78,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
     private final static int XSTUDY_TOKEN_INDEX = 1;
     private static final int INSERT_ROW_TOKEN_INDEX = 2;
 
+    public final static String WCP_SURVEY_METHOD = "activity";
     public final static String WCP_API_METHOD = "participantProperties";
     public final static String ADD_PATH = "AddPropertyPath";
     public final static String UPDATE_PATH = "UpdatePropertyPath";
@@ -163,7 +164,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
             addRequestMatcher(mockServer, String.join("/", UPDATE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
             addRequestMatcher(mockServer, String.join("/", DELETE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
             addRequestMatcher(mockServer, String.join("/", SURVEY_UPDATE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
-            addRequestMatcher(mockServer, SURVEY_UPDATE_PATH, this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
+            addRequestMatcher(mockServer, String.join("/", SURVEY_UPDATE_PATH, WCP_SURVEY_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
         }
         else {
             log("Mockserver is not running, could not add RequestMatcher.");

@@ -63,7 +63,7 @@ public class ParticipantPropertiesSeverGetCallback implements ExpectationRespons
 
     private HttpResponse getSurveyUpdateResponse(HttpRequest httpRequest, String studyId)
     {
-        if (httpRequest.getPath().getValue().endsWith(ParticipantPropertiesTest.SURVEY_UPDATE_PATH))
+        if (httpRequest.getPath().getValue().endsWith(ParticipantPropertiesTest.WCP_SURVEY_METHOD))
             return readFileResponse(SURVEY_RESPONSE_FILENAME, studyId);
         else if (httpRequest.getPath().getValue().contains(ParticipantPropertiesTest.SURVEY_UPDATE_PATH))
             return readFileResponse(ADD_PROPERTY_FILENAME, studyId);
