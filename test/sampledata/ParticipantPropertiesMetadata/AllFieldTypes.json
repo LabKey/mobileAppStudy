@@ -14,19 +14,19 @@
     "status": "active",
     "version": "1.0"
   },{
-    "propertyId": "numeric1PreEnroll",
-    "propertyName": "Numeric Int preenroll",
+    "propertyId": "integerPreEnroll",
+    "propertyName": "Int preenroll",
     "propertyType": "preenrollment",
-    "propertyDataType": "numeric",
+    "propertyDataType": "integer",
     "shouldRefresh": false,
     "dataSource": "ExternalSystem",
     "status": "active",
     "version": "1.0"
   },{
-    "propertyId": "numeric2PreEnroll",
-    "propertyName": "Numeric Double preenroll",
+    "propertyId": "decimalPreEnroll",
+    "propertyName": "Decimal preenroll",
     "propertyType": "preenrollment",
-    "propertyDataType": "numeric",
+    "propertyDataType": "decimal",
     "shouldRefresh": true,
     "dataSource": "Other",
     "status": "deactivated",
@@ -68,19 +68,19 @@
     "status": "deactivated",
     "version": "1.0"
   },{
-    "propertyId": "numeric1PostEnroll",
-    "propertyName": "Numeric Int postenroll",
+    "propertyId": "integerPostEnroll",
+    "propertyName": "Int postenroll",
     "propertyType": "postenrollment",
-    "propertyDataType": "numeric",
+    "propertyDataType": "integer",
     "shouldRefresh": false,
     "dataSource": "Other",
     "status": "active",
     "version": "1.0"
   },{
-    "propertyId": "numeric2PostEnroll",
-    "propertyName": "Numeric Double postenroll",
+    "propertyId": "decimalPostEnroll",
+    "propertyName": "Double postenroll",
     "propertyType": "PostEnrollment",
-    "propertyDataType": "numeric",
+    "propertyDataType": "decimal",
     "shouldRefresh": true,
     "dataSource": "externalsystem",
     "status": "active",

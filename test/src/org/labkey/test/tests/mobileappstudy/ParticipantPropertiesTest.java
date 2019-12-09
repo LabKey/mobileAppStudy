@@ -65,10 +65,10 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
     private final static String MOCKSERVER_CALL_MATCHER_CLASS = "org.labkey.test.mockserver.mobileappstudy.ParticipantPropertiesSeverGetCallback";
     private final static String PARTICIPANT_PROPERTIES_LIST_NAME = "ParticipantProperties";
     private final static String ENROLLMENTTOKEN_FIELD_KEY = "EnrollmentToken";
-    private final static List<String> POSTENROLLMENT_FIELD_NAMES = Arrays.asList("EnrollmentToken", "stringPostEnroll", "numeric1PostEnroll",
-            "numeric2PostEnroll", "datePostEnroll", "timePostEnroll", "booleanPostEnroll");
-    private final static List<String> PREENROLLMENT_FIELD_NAMES = Arrays.asList("stringPreEnroll", "numeric1PreEnroll",
-            "numeric2PreEnroll", "datePreEnroll", "timePreEnroll", "booleanPreEnroll");
+    private final static List<String> POSTENROLLMENT_FIELD_NAMES = Arrays.asList("EnrollmentToken", "stringPostEnroll", "integerPostEnroll",
+            "decimalPostEnroll", "datePostEnroll", "timePostEnroll", "booleanPostEnroll");
+    private final static List<String> PREENROLLMENT_FIELD_NAMES = Arrays.asList("stringPreEnroll", "integerPreEnroll",
+            "decimalPreEnroll", "datePreEnroll", "timePreEnroll", "booleanPreEnroll");
     private final static List<String> STANDARD_FIELD_NAMES = Arrays.asList("Modified", "lastIndexed",
             "ModifiedBy", "Created", "CreatedBy", "container", "EntityId");
     private final static List<String> ALL_FIELDS = Stream.of(PREENROLLMENT_FIELD_NAMES, POSTENROLLMENT_FIELD_NAMES, STANDARD_FIELD_NAMES).flatMap(x->x.stream()).collect(Collectors.toList());
@@ -78,6 +78,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
     private final static int XSTUDY_TOKEN_INDEX = 1;
     private static final int INSERT_ROW_TOKEN_INDEX = 2;
 
+    public final static String WCP_SURVEY_METHOD = "activity";
     public final static String WCP_API_METHOD = "participantProperties";
     public final static String ADD_PATH = "AddPropertyPath";
     public final static String UPDATE_PATH = "UpdatePropertyPath";
@@ -163,7 +164,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
             addRequestMatcher(mockServer, String.join("/", UPDATE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
             addRequestMatcher(mockServer, String.join("/", DELETE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
             addRequestMatcher(mockServer, String.join("/", SURVEY_UPDATE_PATH, WCP_API_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
-            addRequestMatcher(mockServer, SURVEY_UPDATE_PATH, this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
+            addRequestMatcher(mockServer, String.join("/", SURVEY_UPDATE_PATH, WCP_SURVEY_METHOD), this::log,"GET", MOCKSERVER_CALL_MATCHER_CLASS);
         }
         else {
             log("Mockserver is not running, could not add RequestMatcher.");
