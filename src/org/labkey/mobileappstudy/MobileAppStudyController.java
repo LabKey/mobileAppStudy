@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiQueryResponse;
+import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.MutatingApiAction;
@@ -32,8 +33,10 @@ import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
@@ -57,6 +60,7 @@ import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyMetadata;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
+import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
@@ -67,10 +71,13 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.labkey.api.util.Result.failure;
 
 @Marshal(Marshaller.Jackson)
 public class MobileAppStudyController extends SpringActionController
@@ -175,9 +182,16 @@ public class MobileAppStudyController extends SpringActionController
         @Override
         public Object execute(GenerateTokensForm form, BindException errors)
         {
-            EnrollmentTokenBatch batch = MobileAppStudyManager.get().createTokenBatch(form.getCount(), getUser(), getContainer());
-
-            return success(PageFlowUtil.map("batchId", batch.getRowId()));
+            try
+            {
+                EnrollmentTokenBatch batch = MobileAppStudyManager.get().createTokenBatch(form.getCount(), getUser(), getContainer());
+                return success(PageFlowUtil.map("batchId", batch.getRowId()));
+            }
+            catch (Exception e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return failure(errors);
+            }
         }
     }
 
@@ -330,10 +344,14 @@ public class MobileAppStudyController extends SpringActionController
     public class ValidateEnrollmentTokenAction extends BaseEnrollmentAction
     {
         @Override
-        public Object execute(EnrollmentForm enrollmentForm, BindException errors)
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors) throws InvalidKeyException
         {
-            //If action passes validation then it was successful
-            return success();
+            //If action passes validation then Token is valid for container
+            Collection<ParticipantProperty> participantProperties = enrollmentForm.getParticipantProperties(User.getSearchUser(), getContainer());
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("success", true);
+            response.put("preEnrollmentParticipantProperties", participantProperties);
+            return response;
         }
     }
 
@@ -634,6 +652,11 @@ public class MobileAppStudyController extends SpringActionController
         public String getStudyId()
         {
             return _shortName;
+        }
+
+        public @NotNull Collection<ParticipantProperty> getParticipantProperties(User user, Container container) throws InvalidKeyException
+        {
+            return MobileAppStudyManager.get().getParticipantProperties(container, user, getToken(), getShortName(), true);
         }
     }
 
@@ -962,5 +985,60 @@ public class MobileAppStudyController extends SpringActionController
             this.oauthURL = oauthURL;
         }
 
+    }
+
+
+    /**
+     * Admin action to allow immediate updating of study metadata
+     */
+    @RequiresPermission(AdminPermission.class)
+    public static class UpdateStudyMetadataAction extends MutatingApiAction<StudyMetadataForm>
+    {
+        @Override
+        public void validateForm(StudyMetadataForm form, Errors errors)
+        {
+            form.validateForm(errors, getContainer());
+        }
+
+        @Override
+        public Object execute(StudyMetadataForm studyMetadataForm, BindException errors)
+        {
+            try
+            {
+                MobileAppStudyManager.get().updateStudyDesign(getContainer(), getUser());
+            }
+            catch (Exception e)
+            {
+                logger.error("Unable to update study metadata: " + e.getMessage(), e);
+                errors.reject(ERROR_MSG, e.getMessage());
+            }
+
+            return errors.hasErrors() ? failure(errors) : success();
+        }
+    }
+
+    public static class StudyMetadataForm
+    {
+        private String studyId;
+
+        public void setStudyId(String studyId)
+        {
+            this.studyId = studyId;
+        }
+
+        public String getStudyId()
+        {
+            return this.studyId;
+        }
+
+        public void validateForm(Errors errors, Container container)
+        {
+            if (StringUtils.isBlank(studyId))
+                errors.reject(ERROR_REQUIRED, new String[] {studyId}, "StudyId required");
+            else if (!MobileAppStudyManager.get().studyExists(studyId))
+                errors.reject(ERROR_MSG, new String[] {studyId}, "StudyId provided does not match any known study");
+            else if (!MobileAppStudyManager.get().getStudyContainers(studyId).contains(container))
+                errors.reject(ERROR_MSG, new String[] {studyId}, "StudyId does not match study container requested");
+        }
     }
 }

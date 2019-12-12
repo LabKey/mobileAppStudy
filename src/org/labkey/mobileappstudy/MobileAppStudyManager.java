@@ -36,10 +36,13 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.ObjectProperty;
 import org.labkey.api.exp.list.ListDefinition;
+import org.labkey.api.exp.list.ListItem;
 import org.labkey.api.exp.list.ListService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RuntimeValidationException;
 import org.labkey.api.security.LimitedUser;
@@ -53,7 +56,6 @@ import org.labkey.api.util.ContainerUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.Pair;
-import org.labkey.api.view.NotFoundException;
 import org.labkey.mobileappstudy.data.EnrollmentToken;
 import org.labkey.mobileappstudy.data.EnrollmentTokenBatch;
 import org.labkey.mobileappstudy.data.MobileAppStudy;
@@ -68,6 +70,8 @@ import org.labkey.mobileappstudy.forwarder.ForwarderProperties;
 import org.labkey.mobileappstudy.forwarder.ForwardingScheduler;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
 import org.labkey.mobileappstudy.forwarder.SurveyResponseForwardingJob;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesProcessor;
+import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.surveydesign.ServiceSurveyDesignProvider;
@@ -75,10 +79,12 @@ import org.labkey.mobileappstudy.surveydesign.SurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.SurveyStep;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,6 +94,7 @@ import java.util.stream.Collectors;
 
 public class MobileAppStudyManager
 {
+    public static final String PARTICIPANT_PROPERTIES_LIST_NAME = "ParticipantProperties";
     private static final String TRUNCATED_MESSAGE_SUFFIX =  "... (message truncated)";
     private static final Integer ERROR_MESSAGE_MAX_SIZE = 1000 - TRUNCATED_MESSAGE_SUFFIX.length();
     private static final Integer TOKEN_SIZE = 8;
@@ -95,7 +102,7 @@ public class MobileAppStudyManager
     private static final MobileAppStudyManager _instance = new MobileAppStudyManager();
     private static final ChecksumUtil _checksumUtil = new ChecksumUtil(TOKEN_CHARS);
 
-    private static final int THREAD_COUNT = 10; //TODO: Verify this is an appropriate number
+    private static final int THREAD_COUNT = 10;
     private static JobRunner _shredder;
     private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
 
@@ -286,7 +293,7 @@ public class MobileAppStudyManager
      * @param container container in which the tokens are being generated
      * @return an enrollment token batch object representing the newly created batch.
      */
-    public EnrollmentTokenBatch createTokenBatch(@NotNull Integer count, @NotNull User user, @NotNull Container container)
+    public EnrollmentTokenBatch createTokenBatch(@NotNull Integer count, @NotNull User user, @NotNull Container container) throws Exception
     {
         DbScope scope = MobileAppStudySchema.getInstance().getSchema().getScope();
 
@@ -318,6 +325,11 @@ public class MobileAppStudyManager
             }
 
             transaction.commit();
+
+            ListDefinition participantProperties = ListService.get().getList(container, PARTICIPANT_PROPERTIES_LIST_NAME);
+            if (participantProperties != null)
+                insertParticipantPropertiesEnrollmentTokens(container, user, participantProperties);
+
             return batch;
         }
     }
@@ -555,7 +567,7 @@ public class MobileAppStudyManager
         {
             try
             {
-                updateSurveys(surveyResponse, user);
+                updateDesign(study, surveyResponse, user);
                 logger.info(String.format("Processing response %1$s in container %2$s", rowId, surveyResponse.getContainer().getName()));
 
                 this.store(surveyResponse, rowId, user);
@@ -580,24 +592,48 @@ public class MobileAppStudyManager
         }
     }
 
+
+    /**
+     * Provide common synchronization block for updating study's survey & properties lists
+     * @param study study to update
+     * @param surveyResponse (can be null) if provided use to update activity's survey lists
+     * @param user executing response (can be null)
+     * @throws Exception
+     */
+    private synchronized void updateDesign(@Nullable MobileAppStudy study, @Nullable SurveyResponse surveyResponse, @Nullable User user) throws Exception
+    {
+        try (DbScope.Transaction transaction = MobileAppStudySchema.getInstance().getSchema().getScope().ensureTransaction())
+        {
+            updateParticipantProperties(study, user);
+
+            if (surveyResponse != null)
+                updateSurveys(surveyResponse, user);
+
+            transaction.commit();
+        }
+    }
+
+    private void updateParticipantProperties(MobileAppStudy study, User user) throws Exception
+    {
+        new ParticipantPropertiesProcessor(logger).updateParticipantPropertiesDesign(study, user);
+    }
+
     /**
      * Check if survey was previously seen, if not retrieve schema and apply
+     *
+     * note: assumes caller has synchronized access and opened transaction
      * @param surveyResponse that was sent, includes SurveyId and Version
      * @param user executing response (can be null)
      * @throws InvalidDesignException If design schema cannot be applied
      */
-    private synchronized void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws Exception
+    private void updateSurveys(@NotNull SurveyResponse surveyResponse, @Nullable User user) throws Exception
     {
         //If we've seen this activity metadata before continue
         if (isKnownVersion(surveyResponse.getAppToken(), surveyResponse.getActivityId(), surveyResponse.getSurveyVersion(), surveyResponse.getRowId()))
             return;
 
         //Else retrieve and apply any changes
-        try (DbScope.Transaction transaction = MobileAppStudySchema.getInstance().getSchema().getScope().ensureTransaction())
-        {
-            new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
-            transaction.commit();
-        }
+        new SurveyDesignProcessor(logger).updateSurveyDesign(surveyResponse, user);
     }
 
     /**
@@ -662,7 +698,7 @@ public class MobileAppStudyManager
             getResultTable(activityId, container, user);
             return true;
         }
-        catch (NotFoundException e)
+        catch (IllegalStateException e)
         {
             return false;
         }
@@ -906,17 +942,17 @@ public class MobileAppStudyManager
      * @param container container for the list
      * @param user user for retrieving the table from the list
      * @return the table
-     * @throws NotFoundException if the list or table info cannot be found
+     * @throws IllegalStateException if the list or table info cannot be found
      */
-    private TableInfo getResultTable(@NotNull String listName, @NotNull Container container, @Nullable User user) throws NotFoundException
+    private TableInfo getResultTable(@NotNull String listName, @NotNull Container container, @Nullable User user) throws IllegalStateException
     {
         ListDefinition listDef = ListService.get().getList(container, listName);
         if (listDef == null)
-            throw new NotFoundException("Invalid list '" + listName + "' for container '" + container.getName() + "'");
+            throw new IllegalStateException("Invalid list '" + listName + "' for container '" + container.getName() + "'");
 
         TableInfo resultTable = listDef.getTable(user, container);
         if (resultTable == null)
-            throw new NotFoundException("Unable to find table for list '" + listDef.getName() + "' in container '" + container.getName() + "'");
+            throw new IllegalStateException("Unable to find table for list '" + listDef.getName() + "' in container '" + container.getName() + "'");
 
         return resultTable;
     }
@@ -966,7 +1002,7 @@ public class MobileAppStudyManager
         BatchValidationException exception = new BatchValidationException();
 
         if (table.getUpdateService() == null)
-            throw new NotFoundException("Unable to get update service for table " + table.getName());
+            throw new IllegalStateException("Unable to get update service for table " + table.getName());
         List<Map<String, Object>> rows = table.getUpdateService().insertRows(user, container, Collections.singletonList(data), exception, null, null);
         if (exception.hasErrors())
             throw exception;
@@ -1238,7 +1274,36 @@ public class MobileAppStudyManager
         Collection<ListDefinition> lists = ListService.get().getLists(participant.getContainer()).values();
 
         for (ListDefinition list :lists)
-            deleteParticipantFromList(list, participant.getContainer(), participant.getRowId(), user);
+        {
+            Container container = participant.getContainer();
+
+            if (list.getName().equalsIgnoreCase(PARTICIPANT_PROPERTIES_LIST_NAME))
+                deleteParticipantPropertiesFromList(list, container, getEnrollmentToken(container, participant.getRowId()), user);
+            else
+                deleteParticipantFromList(list, container, participant.getRowId(), user);
+        }
+    }
+
+    /**
+     * Delete participant data from ParticipantProperties list using EnrollmentToken
+     * @param list participantProperties ListDefinition
+     * @param container hosting study
+     * @param enrollmentToken token associated to participant
+     * @param user authorized for delete permissions
+     * @throws Exception
+     */
+    private void deleteParticipantPropertiesFromList(ListDefinition list, Container container, String enrollmentToken, User user) throws Exception
+    {
+        //Get the table
+        TableInfo table = list.getTable(user, container);
+        if (table == null)
+            throw new IllegalStateException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
+
+        QueryUpdateService qus = table.getUpdateService();
+        if (qus == null)
+            throw new IllegalStateException("Unable to delete participant data because update service for list " + table.getName() + " was null");
+
+        qus.deleteRows(user, container, Arrays.asList(Collections.singletonMap("EnrollmentToken", enrollmentToken)), null,null);
     }
 
     /**
@@ -1254,7 +1319,7 @@ public class MobileAppStudyManager
         //Get the table
         TableInfo table = list.getTable(user, container);
         if (table == null)
-            throw new NotFoundException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
+            throw new IllegalStateException("Unable to find table for list '" + list.getName() + "' in container '" + container.getName() + "'");
 
         List<ColumnInfo> piCols = table.getColumns("ParticipantId");
         if (piCols == null || piCols.size() == 0)
@@ -1262,7 +1327,7 @@ public class MobileAppStudyManager
 
         QueryUpdateService qus = table.getUpdateService();
         if (qus == null)
-            throw new NotFoundException("Unable to delete participant data because update service for list " + table.getName() + " was null");
+            throw new IllegalStateException("Unable to delete participant data because update service for list " + table.getName() + " was null");
 
         //Get rowIds associated to this participant
         List<Map<String, Object>> rows = getListRowKeys(table, participantId);
@@ -1421,5 +1486,99 @@ public class MobileAppStudyManager
     public boolean isForwardingEnabled(Container container)
     {
         return ForwardingType.Disabled != ForwarderProperties.getForwardingType(container);
+    }
+
+    public void updateStudyDesign(Container container, User user) throws Exception
+    {
+        updateDesign(getStudy(container), null, user);
+    }
+
+    public @NotNull Collection<ParticipantProperty> getParticipantProperties(Container container, User user, String token, String shortName, boolean preEnrollmentOnly) throws InvalidKeyException
+    {
+        List<Container> containers = getStudyContainers(shortName);
+        if (containers.isEmpty())
+            return new ArrayList<>();
+
+        ListDefinition listDef = ListService.get().getList(container, PARTICIPANT_PROPERTIES_LIST_NAME);
+        if (listDef == null) //ParticipantProperties list doesn't exist
+            return new ArrayList<>();
+
+        ListItem row = getParticipantPropertiesListItem(container, user, token, listDef);
+        if (row == null) //Properties for token not found
+            throw new InvalidKeyException("Enrollment token not found in ParticipantProperties list.", Collections.singletonMap("Token", token));
+
+        Set<String> filteredProperties = getParticipantPropertyMetadata(container, user, listDef.getListId(), preEnrollmentOnly);
+        List<ParticipantProperty> properties = new ArrayList<>();
+        for (ObjectProperty prop : row.getProperties().values())
+        {
+            if (filteredProperties.contains(prop.getPropertyURI()))
+                properties.add(new ParticipantProperty(prop.getName(), prop.value()));
+        }
+
+        return properties;
+    }
+
+    private Set<String> getParticipantPropertyMetadata(Container container, User user, int listId, boolean preEnrollmentOnly)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        TableInfo ti = schema.getTableInfoParticipantPropertyMetadata();
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        filter.addCondition(FieldKey.fromParts("ListId"), listId);
+        if (preEnrollmentOnly)
+            filter.addCondition(FieldKey.fromParts("PropertyType"), ParticipantProperty.ParticipantPropertyType.PreEnrollment.getId());
+
+        ColumnInfo col = ti.getColumn(FieldKey.fromParts("PropertyURI"));
+        return new HashSet<>(new TableSelector(col, filter, null).getCollection(String.class));
+    }
+
+    private @Nullable ListItem getParticipantPropertiesListItem(Container container, User user, String token, ListDefinition listDef)
+    {
+        if (listDef == null)
+            return null;
+
+        return listDef.getListItem(token, user, container);
+    }
+
+    /**
+     * Insert any existing enrollment tokens for study into list
+     * @param container hosting study
+     * @param user user with insert permissions
+     * @param listDef ListDefinition for list to insert tokens into
+     */
+    public void insertParticipantPropertiesEnrollmentTokens(Container container, User user, ListDefinition listDef) throws Exception
+    {
+        if (listDef == null)
+        {
+            logger.debug("ListDefinition was null, no tokens inserted.");
+            return;
+        }
+
+        List<ListItem> participantProperties = new ArrayList<>();
+
+        Collection<EnrollmentToken> tokens = getEnrollmentTokens(container, user);
+        for (EnrollmentToken token : tokens)
+            if (listDef.getListItem(token.getToken(), user, container) == null)
+            {
+                ListItem row = listDef.createListItem();
+                row.setKey(token.getToken());
+                row.setProperty(listDef.getDomain().getPropertyByName("EnrollmentToken"), token.getToken());
+                participantProperties.add(row);
+            }
+
+        if (participantProperties.size() > 0)
+        {
+            listDef.insertListItems(user, container, participantProperties);
+            listDef.save(user);
+            logger.debug(String.format("Inserted [%1$s] enrollment tokens into list", participantProperties.size()));
+        }
+        else logger.debug("No enrollment tokens to insert.");
+    }
+
+    private Collection<EnrollmentToken> getEnrollmentTokens(Container container, User user)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        SimpleFilter filter = SimpleFilter.createContainerFilter(container);
+        TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
+        return selector.getCollection(EnrollmentToken.class);
     }
 }

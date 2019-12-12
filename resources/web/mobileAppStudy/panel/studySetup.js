@@ -34,7 +34,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                 xtype: 'toolbar',
                 dock: 'bottom',
                 ui: 'footer',
-                items: [this.getSubmitButton(), this.getSuccessMessage()]
+                items: [this.getSubmitButton(), this.getUpdateMetadataButton(), this.getSuccessMessage()]
             }];
 
             this.callParent();
@@ -54,7 +54,7 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
                     xtype: 'toolbar',
                     dock: 'bottom',
                     ui: 'footer',
-                    items: [this.getSubmitButton(), this.getSuccessMessage()]
+                    items: [this.getSubmitButton(),  this.getUpdateMetadataButton(), this.getSuccessMessage()]
                 }];
             }
 
@@ -86,6 +86,68 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
             })
         }
         return this.submitButton;
+    },
+
+    getUpdateMetadataButton: function() {
+        if (!this.updateMetadataButton)
+        {
+            this.updateMetadataButton = Ext4.create('Ext.button.Button', {
+                text: 'Update Metadata',
+                itemId: 'metadataBtn',
+                disabled: !this.getStudyIdField().value,
+                handler: function (btn) {
+                    //TODO: mark disabled based on studyId being readOnly...
+                    btn.up('form').doUpdateMetadata(btn)
+                }
+            });
+        }
+
+        return this.updateMetadataButton;
+    },
+
+    doUpdateMetadata: function(btn) {
+        function onSuccess(response, options) {
+            btn.setDisabled(false);
+
+            var obj = Ext4.decode(response.responseText);
+            if (obj.success) {
+                //Set panel values
+                this.getSuccessMessage().show();
+                new Ext4.util.DelayedTask(hideSuccess, this).delay(5000);
+            }
+            else
+            {
+                Ext4.Msg.alert("Error", "There was a problem updating the study metadata.  Please check the logs or contact an administrator.");
+            }
+        }
+
+        function onError(response, options){
+            btn.setDisabled(false);
+
+            var obj = Ext4.decode(response.responseText);
+            if (obj.errors)
+            {
+                //StudyId typically refers to the Study.rowId, however in this context it is the Study.shortName
+                Ext4.Msg.alert("Error", "There were problems storing the configuration. " + obj.errors[0].message);
+            }
+        }
+
+        function hideSuccess()
+        {
+            this.getSuccessMessage().hide();
+        }
+
+        btn.setDisabled(true);
+        Ext4.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('mobileappstudy', 'updateStudyMetadata.api'),
+            method: 'POST',
+            jsonData: {
+                studyId: this.studyIdField.value
+            },
+            success: onSuccess,
+            failure: onError,
+            scope: this
+        });
     },
 
     getStudyIdField: function() {
@@ -219,6 +281,9 @@ Ext4.define('LABKEY.MobileAppStudy.StudySetupPanel', {
         var saveBtn = form.getSubmitButton();
         if (saveBtn.hidden)
             saveBtn.show();
+
+        let updateButton = form.getUpdateMetadataButton();
+        updateButton.setDisabled(form.getStudyIdField().isDirty() || !form.isValid());    //dirty studyId may not match what is retrieved
 
         saveBtn.setDisabled(!(form.isDirty() && form.isValid()));
     }

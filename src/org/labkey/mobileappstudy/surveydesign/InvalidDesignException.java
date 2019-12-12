@@ -21,8 +21,10 @@ package org.labkey.mobileappstudy.surveydesign;
 
 /**
  * Exception thrown if survey design metadata is invalid
+ *
+ * note: runtime exception used due to method references and lambda expressions
  */
-public class InvalidDesignException extends Exception
+public class InvalidDesignException extends RuntimeException
 {
     public InvalidDesignException(String message)
     {

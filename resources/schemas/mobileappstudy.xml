@@ -149,4 +149,16 @@
             </ns:column>
         </ns:columns>
     </ns:table>
+    <ns:table tableName="ParticipantPropertyMetadata" tableDbType="TABLE">
+        <ns:titleColumn>RowId</ns:titleColumn>
+        <ns:columns>
+            <ns:column columnName="RowId"/>
+            <ns:column columnName="ListId"/>
+            <ns:column columnName="PropertyURI"/>
+            <ns:column columnName="PropertyType"/>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="Container"/>
+        </ns:columns>
+    </ns:table>
 </ns:tables>

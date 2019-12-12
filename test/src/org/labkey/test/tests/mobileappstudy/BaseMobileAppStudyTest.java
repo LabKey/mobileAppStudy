@@ -15,18 +15,23 @@
  */
 package org.labkey.test.tests.mobileappstudy;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.json.simple.JSONObject;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.GuestCredentialsProvider;
 import org.labkey.remoteapi.PostCommand;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.TestFileUtils;
+import org.labkey.test.WebTestHelper;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.data.mobileappstudy.InitialSurvey;
@@ -38,6 +43,8 @@ import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.Maps;
 import org.labkey.test.util.PostgresOnlyTest;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.HttpClassCallback;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,9 +52,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * Created by iansigmon on 12/9/16.
@@ -166,7 +177,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     @LogMethod
     protected void assignTokens(List<String> tokensToAssign, String projectName, String studyName)
     {
-        Connection connection = createDefaultConnection(false);
+        Connection connection = createGuestConnection();  // No credentials, just the token -- mimic the mobile app
         for(String token : tokensToAssign)
         {
             try
@@ -251,6 +262,129 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
             setupPage.getStudySetupWebPart().checkResponseCollection();
         setupPage.validateSubmitButtonEnabled();
         setupPage.getStudySetupWebPart().clickSubmit();
-        _listHelper.createList(projectName, surveyName, ListHelper.ListColumnType.AutoInteger, "Key");
+        if (StringUtils.isNotBlank(surveyName))
+            _listHelper.createList(projectName, surveyName, ListHelper.ListColumnType.AutoInteger, "Key");
+    }
+
+    /**
+     * Adds a Request matcher to the mockserver
+     * @param mockServer to add matcher to
+     * @param requestPath to add matcher for
+     * @param log logging method
+     * @param method HTTP request type, e.g., GET, POST, etc.
+     * @param matcher Fully qualified class name String to request handler that implements ExpectationResponseCallback
+     */
+    protected static void addRequestMatcher(ClientAndServer mockServer, String requestPath, Consumer<String> log, String method, String matcher )
+    {
+        log.accept(String.format("Adding a response for %1$s requests.", requestPath));
+        mockServer.when(
+                request()
+                        .withMethod(method)
+                        .withPath("/" + requestPath)
+        ).respond(HttpClassCallback.callback(matcher));
+    }
+
+    protected CommandResponse callSelectRows(Map<String, Object> params) throws IOException, CommandException
+    {
+        return callCommand("selectRows", params);
+    }
+
+    protected CommandResponse callExecuteSql(Map<String, Object> params) throws IOException, CommandException
+    {
+        return callCommand("executeSql", params);
+    }
+
+    protected CommandResponse callCommand(String action, Map<String, Object> params)  throws IOException, CommandException
+    {
+        Command selectCmd = new Command("mobileAppStudy", action);
+        selectCmd.setParameters(params);
+
+        return selectCmd.execute(createGuestConnection(), getProjectName());
+    }
+
+    /**
+     * Returns a remoteapi Connection that uses no credentials and no cookies -- to mimic the mobile app that uses
+     * participantId or enrollment token to authenticate
+     */
+    protected Connection createGuestConnection()
+    {
+        return new Connection(WebTestHelper.getBaseURL(), new GuestCredentialsProvider());
+    }
+
+    protected void checkJsonObjectAgainstExpectedValues(Map<String, Object> expectedValues, JSONObject jsonObject)
+    {
+        Set<String> columns = expectedValues.keySet();
+
+        for(String column : columns)
+        {
+            Assert.assertTrue("Expected column " + column + " was not in the jsonObject.", jsonObject.containsKey(column));
+
+            Object  jsonObjectValue;
+            if(jsonObject.get(column).getClass().getSimpleName().equals("JSONObject"))
+            {
+                // Need to do this if the object that is being compared came from an executeSql call.
+                JSONObject jObject = (JSONObject)jsonObject.get(column);
+                jsonObjectValue = jObject.get("value");
+            }
+            else
+                jsonObjectValue = jsonObject.get(column);
+
+            log("Validating column '" + column + "' which is a '" + jsonObjectValue.getClass().getName() + "' data type.");
+//            log("Type of value returned by json: " + jsonObjectValue.getClass().getName());
+//            log("Type of value expected: " + expectedValues.get(column).getClass().getName());
+
+            switch(expectedValues.get(column).getClass().getSimpleName())
+            {
+                case "Integer":
+
+                    // There is this odd case where the field is an integer but the json returns a long.
+                    // Not worth worrying about, but will need to account for.
+                    Assert.assertEquals(column + " not as expected.", expectedValues.get(column), ((Number)jsonObjectValue).intValue());
+                    break;
+                case "Double":
+                    Assert.assertEquals(column + " not as expected.", Double.parseDouble(expectedValues.get(column).toString()), (double)jsonObjectValue, 0.0);
+                    break;
+                case "Number":
+                    Assert.assertEquals(column + " not as expected.", expectedValues.get(column), jsonObjectValue);
+                case "Boolean":
+                    if ((boolean)expectedValues.get(column))
+                        Assert.assertTrue(column + " was not true (as expected).",(boolean)jsonObjectValue);
+                    else
+                        Assert.assertFalse(column + " was not false (as expected).",(boolean)jsonObjectValue);
+                    break;
+                default:
+                    // Long and String are the only types that don't need some kind of special casting.
+                    Assert.assertEquals(column + " not as expected.", expectedValues.get(column), jsonObjectValue);
+                    break;
+            }
+        }
+
+        // If we've gotten to this point then we know that all of the expected columns and values were there.
+        // Now we need to check that the jsonObject did not return any unexpected columns.
+        StringBuilder unexpectedJsonColumn = new StringBuilder();
+        boolean pass = true;
+        for(Object jsonColumn : jsonObject.keySet())
+        {
+            String column = (String)jsonColumn;
+            // If the query returned all columns there are a few columns to ignore.
+            // Ignore the 'Created', 'Key', 'EntityId', 'lastIndexed' and 'Modified' fields. These fields can be tricky to get an accurate expected value especially the timestamp fields.
+            if ((!expectedValues.containsKey(column)) &&
+                    (!column.equals("Key") &&
+                            !column.equals("Created") &&
+                            !column.equals("Modified") &&
+                            !column.equals("lastIndexed") &&
+                            !column.equals("EntityId")))
+            {
+                unexpectedJsonColumn.append("Found unexpected column '").append(column).append("' in jsonObject.\r\n");
+                pass = false;
+            }
+        }
+
+        Assert.assertTrue(unexpectedJsonColumn.toString(), pass);
+    }
+
+    protected String getResponseFromFile(String dir, String filename)
+    {
+        return TestFileUtils.getFileContents(TestFileUtils.getSampleData(String.join("/", dir, filename)));
     }
 }

@@ -32,6 +32,12 @@ public class SetupPage extends LabKeyPage<SetupPage.ElementCache> implements Web
         addPageLoadListener(this);
     }
 
+    public static SetupPage beginAt(BaseWebDriverTest test, String project)
+    {
+        test.goToProjectHome(project);
+        return new SetupPage(test);
+    }
+
     @Override
     public void beforePageLoad()
     {

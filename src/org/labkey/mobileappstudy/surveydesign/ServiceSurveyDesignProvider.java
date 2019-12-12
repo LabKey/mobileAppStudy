@@ -30,8 +30,10 @@ import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.mobileappstudy.MobileAppStudyModule;
+import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
 
 import java.net.URI;
+import java.util.function.Function;
 
 /**
  * Created by susanh on 3/10/17.
@@ -41,6 +43,8 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static final String STUDY_ID_PARAM = "studyId";
     private static final String ACTIVITY_ID_PARAM = "activityId";
     private static final String VERSION_PARAM = "activityVersion";
+    private static final String PARTICIPANT_PROPERTIES_ACTION = "participantProperties";
+    private static final String ACTIVITY_ACTION = "activity";
 
     public ServiceSurveyDesignProvider(Container container, Logger logger)
     {
@@ -50,10 +54,25 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     @Override
     public SurveyDesign getSurveyDesign(Container c, String shortName, String activityId, String version) throws Exception
     {
-        URIBuilder uriBuilder = new URIBuilder(getServiceUrl(c));
+        URIBuilder uriBuilder = new URIBuilder(String.join("/", getServiceUrl(c), ACTIVITY_ACTION));
         uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
         uriBuilder.setParameter(ACTIVITY_ID_PARAM, activityId);
         uriBuilder.setParameter(VERSION_PARAM, version);
+
+        return getDesign(c, uriBuilder, this::getSurveyDesign);
+    }
+
+    @Override
+    public ParticipantPropertiesDesign getParticipantPropertiesDesign(Container c, String shortName) throws Exception
+    {
+        URIBuilder uriBuilder = new URIBuilder(String.join("/", getServiceUrl(c), PARTICIPANT_PROPERTIES_ACTION));
+        uriBuilder.setParameter(STUDY_ID_PARAM, shortName);
+
+        return getDesign(c, uriBuilder, this::getParticipantPropertiesDesign);
+    }
+
+    private <DESIGN> DESIGN getDesign(Container c, URIBuilder uriBuilder, Function<String, DESIGN> designProcessor) throws Exception
+    {
         URI uri = uriBuilder.build();
         try (CloseableHttpClient httpclient = HttpClients.createDefault())
         {
@@ -67,11 +86,11 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
 
                 if (status.getStatusCode() == HttpStatus.SC_OK || status.getStatusCode() == HttpStatus.SC_CREATED)
                 {
-                    return getSurveyDesign(handler.handleResponse(response));
+                    return designProcessor.apply(handler.handleResponse(response));
                 }
                 else
                 {
-                    throw new Exception(String.format("Received response status %d using uri %s",  status.getStatusCode(), uri));
+                    throw new Exception(String.format("Received response status %d using uri %s", status.getStatusCode(), uri));
                 }
             }
         }
@@ -86,8 +105,10 @@ public class ServiceSurveyDesignProvider extends AbstractSurveyDesignProviderImp
     private static String getServiceUrl(Container container)
     {
         Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
-        String value = module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container);
-        return value == null ? null : value.trim();
+        String value = StringUtils.trimToNull(module.getModuleProperties().get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL).getEffectiveValue(container));
+
+        //Allow backwards compatibility to baseUrl parameter, truncate /activity from the configured url if present Issue #39137
+        return StringUtils.removeEndIgnoreCase(value, "/" + ACTIVITY_ACTION);
     }
 
     public static Boolean isConfigured(Container c)

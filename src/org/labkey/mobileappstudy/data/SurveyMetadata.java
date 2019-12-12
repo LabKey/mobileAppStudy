@@ -26,6 +26,7 @@ public class SurveyMetadata
     private String _studyId;
     private String _activityId;
     private String _version;
+    private String _studyVersion;
 
     public String getVersion()
     {
@@ -52,5 +53,16 @@ public class SurveyMetadata
     public void setStudyId(String studyId)
     {
         _studyId = studyId;
+    }
+
+    //TODO: confirm BTC on JSON field's name change vs Version above
+    public String getStudyVersion()
+    {
+        return _studyVersion;
+    }
+
+    public void setStudyVersion(String studyVersion)
+    {
+        _studyVersion = studyVersion;
     }
 }

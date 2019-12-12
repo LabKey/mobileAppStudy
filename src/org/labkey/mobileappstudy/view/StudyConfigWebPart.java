@@ -34,7 +34,6 @@ public class StudyConfigWebPart extends JspView<MobileAppStudy>
         MobileAppStudy bean = MobileAppStudyManager.get().getStudy(viewContext.getContainer());
         bean = bean != null ? bean : new MobileAppStudy();
 
-        //TODO: Determine permission level needed
         bean.setEditable(!MobileAppStudyManager.get().hasStudyParticipants(viewContext.getContainer()));
         bean.setCanChangeCollection(viewContext.getContainer().hasPermission(viewContext.getUser(), AdminPermission.class));
 

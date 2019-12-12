@@ -674,7 +674,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
 
     private String getResponseFromFile(String filename)
     {
-        return TestFileUtils.getFileContents(TestFileUtils.getSampleData("SurveyMetadata/"+filename));
+        return getResponseFromFile("SurveyMetadata", filename);
     }
 
     private int getNewRowCount(List<Map<String,Object>> tableBefore,List<Map<String,Object>> tableAfter)
