@@ -499,9 +499,12 @@ public class MobileAppStudyController extends SpringActionController
         {
             super.validateForm(form, errors);
 
-            _sql = StringUtils.trimToNull(form.getSql());
-            if (null == _sql)
-                errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'sql'");
+            if (!errors.hasErrors())
+            {
+                _sql = StringUtils.trimToNull(form.getSql());
+                if (null == _sql)
+                    errors.reject(ERROR_REQUIRED, "No value was supplied for the required parameter 'sql'");
+            }
         }
 
         @Override
