@@ -197,7 +197,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
 
         assertTrue("ParticipantProperties list not created", lists.contains(PARTICIPANT_PROPERTIES_LIST_NAME));
         clickAndWait(Locator.linkWithText(PARTICIPANT_PROPERTIES_LIST_NAME));
-        List<String> propNames = _listHelper.getColumnNames();
+        List<String> propNames = _listHelper.goToEditDesign(PARTICIPANT_PROPERTIES_LIST_NAME).expandFieldsPanel().fieldNames();
         assertTrue("Not all properties added to the ParticipantProperties list: " + String.join(", ", propNames), ALL_FIELDS.containsAll(propNames));
     }
 

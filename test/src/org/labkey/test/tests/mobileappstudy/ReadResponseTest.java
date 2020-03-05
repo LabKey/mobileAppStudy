@@ -154,14 +154,12 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         ListHelper.ListColumn multiLineTypeColumn = new ListHelper.ListColumn("multiLineField", "multiLineField", ListHelper.ListColumnType.MultiLine, "");
         ListHelper.ListColumn booleanTypeColumn = new ListHelper.ListColumn("booleanField", "booleanField", ListHelper.ListColumnType.Boolean, "");
         ListHelper.ListColumn integerTypeColumn = new ListHelper.ListColumn("integerField", "integerField", ListHelper.ListColumnType.Integer, "");
-        ListHelper.ListColumn doubleTypeColumn = new ListHelper.ListColumn("doubleField", "doubleField", ListHelper.ListColumnType.Double, "");
-        ListHelper.ListColumn dateTimeTypeColumn = new ListHelper.ListColumn("dateTimeField", "dateTimeField", ListHelper.ListColumnType.DateTime, "");
+        ListHelper.ListColumn doubleTypeColumn = new ListHelper.ListColumn("doubleField", "doubleField", ListHelper.ListColumnType.Decimal, "");
+        ListHelper.ListColumn dateTimeTypeColumn = new ListHelper.ListColumn("dateTimeField", "dateTimeField", ListHelper.ListColumnType.DateAndTime, "");
         ListHelper.ListColumn flagTypeColumn = new ListHelper.ListColumn("flagField", "flagField", ListHelper.ListColumnType.Flag, "");
         ListHelper.ListColumn userColumn = new ListHelper.ListColumn("user", "user", ListHelper.ListColumnType.String, "", new ListHelper.LookupInfo(getProjectName(), "core", "Users"));
 
         _listHelper.createList(getProjectName(), LIST_DIFF_DATATYPES, ListHelper.ListColumnType.AutoInteger, "Key", participantIdColumn, stringTypeColumn, multiLineTypeColumn, booleanTypeColumn, integerTypeColumn, doubleTypeColumn, dateTimeTypeColumn, flagTypeColumn, userColumn);
-        clickButton("Done");
-
         clickAndWait(Locator.linkWithText(LIST_DIFF_DATATYPES));
 
         int index = participantsInfo.size()/2;
@@ -246,8 +244,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         stringTypeColumn = new ListHelper.ListColumn("Description", "Description", ListHelper.ListColumnType.String, "");
 
         _listHelper.createList(getProjectName(), LIST_SECOND, ListHelper.ListColumnType.AutoInteger, "Key", integerTypeColumn, stringTypeColumn);
-        clickButton("Done");
-
         clickAndWait(Locator.linkWithText(LIST_SECOND));
 
         log("Now add two rows to " + LIST_SECOND);
@@ -271,8 +267,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         stringTypeColumn = new ListHelper.ListColumn("Description", "Description", ListHelper.ListColumnType.String, "");
 
         _listHelper.createList(getProjectName(), LIST_THIRD, ListHelper.ListColumnType.AutoInteger, "Key", participantIdColumn, integerTypeColumn, stringTypeColumn);
-        clickButton("Done");
-
         clickAndWait(Locator.linkWithText(LIST_THIRD));
 
         log("Now add a couple of rows to " + LIST_THIRD);
