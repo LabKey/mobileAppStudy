@@ -158,7 +158,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         ListHelper.ListColumn doubleTypeColumn = new ListHelper.ListColumn("doubleField", "doubleField", ListHelper.ListColumnType.Decimal, "");
         ListHelper.ListColumn dateTimeTypeColumn = new ListHelper.ListColumn("dateTimeField", "dateTimeField", ListHelper.ListColumnType.DateAndTime, "");
         ListHelper.ListColumn flagTypeColumn = new ListHelper.ListColumn("flagField", "flagField", ListHelper.ListColumnType.Flag, "");
-        ListHelper.ListColumn userColumn = new ListHelper.ListColumn("user", "user", ListHelper.ListColumnType.String, "", new ListHelper.LookupInfo(getProjectName(), "core", "Users").setTableType(FieldDefinition.ColumnType.LookupToString));
+        ListHelper.ListColumn userColumn = new ListHelper.ListColumn("user", "user", ListHelper.ListColumnType.Integer, "", new ListHelper.LookupInfo(getProjectName(), "core", "Users").setTableType(FieldDefinition.ColumnType.LookupToInteger));
 
         _listHelper.createList(getProjectName(), LIST_DIFF_DATATYPES, ListHelper.ListColumnType.AutoInteger, "Key", participantIdColumn, stringTypeColumn, multiLineTypeColumn, booleanTypeColumn, integerTypeColumn, doubleTypeColumn, dateTimeTypeColumn, flagTypeColumn, userColumn);
         clickAndWait(Locator.linkWithText(LIST_DIFF_DATATYPES));
