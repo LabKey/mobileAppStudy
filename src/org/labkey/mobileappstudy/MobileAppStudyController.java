@@ -26,6 +26,7 @@ import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiQueryResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.MutatingApiAction;
@@ -34,8 +35,14 @@ import org.labkey.api.action.ReportingApiQueryResponse;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.data.NormalContainerType;
+import org.labkey.api.module.FolderTypeManager;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QuerySettings;
@@ -45,6 +52,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresNoPermission;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
@@ -71,8 +79,8 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -1042,6 +1050,81 @@ public class MobileAppStudyController extends SpringActionController
                 errors.reject(ERROR_MSG, new String[] {studyId}, "StudyId provided does not match any known study");
             else if (!MobileAppStudyManager.get().getStudyContainers(studyId).contains(container))
                 errors.reject(ERROR_MSG, new String[] {studyId}, "StudyId does not match study container requested");
+        }
+    }
+
+    // This action was developed as sample code for BTC and as a starting point for an eventual API that will automate
+    // the registration of new evaluators of the FDA MyStudies demo environment. See CreateFolderCommand.java as well.
+    @RequiresSiteAdmin
+    public static class CreateFolderAction extends MutatingApiAction<CreateFolderForm>
+    {
+        @Override
+        public Object execute(CreateFolderForm form, BindException errors)
+        {
+            Container parent = getContainer();
+            String folderName = form.getName();
+
+            StringBuilder sb = new StringBuilder();
+            if (!Container.isLegalName(folderName, parent.isRoot(), sb))
+                throw new ApiUsageException(sb.toString());
+
+            if (getContainer().hasChild(folderName))
+                throw new ApiUsageException("Folder \"" + folderName + "\" already exists in the parent");
+
+            // Create the folder and give it a specific folder type
+            Container c = ContainerManager.createContainer(parent, folderName, form.getTitle(), form.getDescription(), NormalContainerType.NAME, getUser());
+            // This clears out the default active modules set by createContainer(). My FolderType specifies the active modules that I want.
+            // Or, if you prefer, you could put the modules you want in Set.of().
+            c.setActiveModules(Set.of());
+            c.setFolderType(FolderTypeManager.get().getFolderType("Mobile App Study"), getUser());
+
+            // An example of setting a module property -- in this case, to an invalid value
+            Module module = ModuleLoader.getInstance().getModule(MobileAppStudyModule.NAME);
+            Map<String, ModuleProperty> props = module.getModuleProperties();
+            ModuleProperty mp = props.get(MobileAppStudyModule.METADATA_SERVICE_BASE_URL);
+            mp.saveValue(getUser(), getContainer(), "This is a test");
+
+            return success();
+        }
+    }
+
+    public static class CreateFolderForm
+    {
+        private String _name;
+        private String _title;
+        private String _description;
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        @SuppressWarnings("unused")
+        public void setName(String name)
+        {
+            _name = name;
+        }
+
+        public String getTitle()
+        {
+            return _title;
+        }
+
+        @SuppressWarnings("unused")
+        public void setTitle(String title)
+        {
+            _title = title;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+
+        @SuppressWarnings("unused")
+        public void setDescription(String description)
+        {
+            _description = description;
         }
     }
 }

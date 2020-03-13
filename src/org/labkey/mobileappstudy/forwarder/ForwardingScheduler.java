@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.labkey.api.collections.ConcurrentHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.util.DateUtil;
 import org.labkey.mobileappstudy.MobileAppStudyManager;
 import org.quartz.DailyTimeIntervalScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -76,11 +77,11 @@ public class ForwardingScheduler
         try
         {
             StdSchedulerFactory.getDefaultScheduler().scheduleJob(job, trigger);
-            logger.info(String.format("SurveyResponseForwarder scheduled to run every %1$S minutes. Next runtime %2$s", getIntervalMinutes(), trigger.getNextFireTime()));
+            logger.info(String.format("SurveyResponseForwarder scheduled to run every %1$S minutes. Next runtime %2$s", getIntervalMinutes(), DateUtil.formatDateTimeISO8601(trigger.getNextFireTime())));
         }
         catch (SchedulerException e)
         {
-            logger.error("Failed to schedule SurveryResponseForwarder.", e);
+            logger.error("Failed to schedule SurveyResponseForwarder.", e);
         }
     }
 
@@ -89,11 +90,11 @@ public class ForwardingScheduler
         try
         {
             StdSchedulerFactory.getDefaultScheduler().unscheduleJob(triggerKey);
-            logger.info(String.format("SurveyResponseForwarder has been unscheduled."));
+            logger.info("SurveyResponseForwarder has been unscheduled.");
         }
         catch (SchedulerException e)
         {
-            logger.error("Failed to unschedule SurveryResponseForwarder.", e);
+            logger.error("Failed to unschedule SurveyResponseForwarder.", e);
         }
     }
 
