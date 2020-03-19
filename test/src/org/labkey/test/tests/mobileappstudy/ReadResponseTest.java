@@ -20,15 +20,12 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.GuestCredentialsProvider;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.Locator;
-import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
@@ -43,7 +40,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -158,7 +154,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         ListHelper.ListColumn doubleTypeColumn = new ListHelper.ListColumn("doubleField", "doubleField", ListHelper.ListColumnType.Decimal, "");
         ListHelper.ListColumn dateTimeTypeColumn = new ListHelper.ListColumn("dateTimeField", "dateTimeField", ListHelper.ListColumnType.DateAndTime, "");
         ListHelper.ListColumn flagTypeColumn = new ListHelper.ListColumn("flagField", "flagField", ListHelper.ListColumnType.Flag, "");
-        ListHelper.ListColumn userColumn = new ListHelper.ListColumn("user", "user", ListHelper.ListColumnType.Integer, "", new ListHelper.LookupInfo(getProjectName(), "core", "Users").setTableType(FieldDefinition.ColumnType.LookupToInteger));
+        ListHelper.ListColumn userColumn = new ListHelper.ListColumn("user", "user", ListHelper.ListColumnType.Integer, "", new ListHelper.LookupInfo(getProjectName(), "core", "Users").setTableType(FieldDefinition.ColumnType.Integer));
 
         _listHelper.createList(getProjectName(), LIST_DIFF_DATATYPES, ListHelper.ListColumnType.AutoInteger, "Key", participantIdColumn, stringTypeColumn, multiLineTypeColumn, booleanTypeColumn, integerTypeColumn, doubleTypeColumn, dateTimeTypeColumn, flagTypeColumn, userColumn);
         clickAndWait(Locator.linkWithText(LIST_DIFF_DATATYPES));
