@@ -197,7 +197,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     protected CommandResponse assignToken(Connection connection, @LoggedParam String token, @LoggedParam String projectName, @LoggedParam String studyName) throws IOException, CommandException
     {
         Command command = new PostCommand("mobileappstudy", "enroll");
-        HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token));
+        HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token, "allowDataSharing", "true"));
         command.setParameters(params);
         log("Assigning token: " + token);
         return command.execute(connection, projectName);

@@ -170,13 +170,13 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
     @Test
     public void testAllowDataSharingValidation()
     {
-        // test the validation of the "allowDataSharing" parameter at enrollment time
+        // test validation of the "allowDataSharing" parameter at enrollment time
         TokenListPage tokenListPage = TokenListPage.beginAt(this, CLIENT_1_TOKEN_STUDY);
         String token1 = tokenListPage.getToken(1);
         String token2 = tokenListPage.getToken(2);
         String token3 = tokenListPage.getToken(3);
 
-        // test null, blank, and invalid values - should all fail
+        // test null, blank, and invalid values - all should fail
         EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token1, null, this::log);
         testRequired(enrollCmd, null);
         testRequired(enrollCmd, "");
@@ -201,7 +201,7 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         testInvalid(enrollCmd, "Wombat");
         testInvalid(enrollCmd, "Mazipan");
 
-        // test the three valid values - should all succeed
+        // test the three valid values - all should succeed
         enrollCmd.setAllowDataSharing("true");
         enrollCmd.execute(200);
         assertTrue("Enrollment with token '" + token1 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
