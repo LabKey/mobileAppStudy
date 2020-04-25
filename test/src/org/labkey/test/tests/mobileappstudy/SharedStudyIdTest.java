@@ -117,7 +117,7 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         assertEquals("Study name not saved for second project", SHORT_NAME.toUpperCase(), setupPage.getStudySetupWebPart().getShortName());
 
         log("Testing enrollment, which should fail without any tokens.");
-        EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", SHORT_NAME, null, this::log);
+        EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", SHORT_NAME, null, "NA", this::log);
         enrollCmd.execute(400);
         assertFalse("Enrollment should fail when two projects share a study id but have no enrollment tokens", enrollCmd.getSuccess());
     }
@@ -150,23 +150,20 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         TokenListPage tokenListPage = TokenListPage.beginAt(this, CLIENT_1_TOKEN_STUDY);
         String token = tokenListPage.getToken(0);
 
-        EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token, this::log);
+        EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token, "true", this::log);
         enrollCmd.execute(200);
         assertTrue("Enrollment with token '" + token + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
         EnrollmentTokenValidationCommand validateCmd = new EnrollmentTokenValidationCommand("home", STUDY_ID, token, this::log);
         validateCmd.execute(400);
         assertFalse("Enrollment token validation for " + CLIENT_1_TOKEN_STUDY + " with token '" + token + "' should fail after enrollment succeeds", validateCmd.getSuccess());
 
-
         tokenListPage = TokenListPage.beginAt(this, CLIENT_2_TOKEN_STUDY);
         token = tokenListPage.getToken(0);
-        enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token, this::log);
+        enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token, "false", this::log);
         enrollCmd.execute(200);
         assertTrue("Enrollment with token '" + token + "' for  " + CLIENT_2_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
         validateCmd = new EnrollmentTokenValidationCommand("home", STUDY_ID, token, this::log);
         validateCmd.execute(400);
         assertFalse("Enrollment token validation for " + CLIENT_2_TOKEN_STUDY + " with token '" + token + "' should fail after enrollment succeeds", validateCmd.getSuccess());
-
     }
-
 }
