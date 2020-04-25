@@ -180,7 +180,7 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token1, null, this::log);
         testRequired(enrollCmd, null);
         testRequired(enrollCmd, "");
-        testRequired(enrollCmd, "  ");
+        testRequired(enrollCmd, "%20%20%20");
         testInvalid(enrollCmd, "na");
         testInvalid(enrollCmd, "n/a");
         testInvalid(enrollCmd, "N/A");
