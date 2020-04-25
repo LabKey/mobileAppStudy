@@ -36,7 +36,7 @@ public class EnrollParticipantCommand extends MobileAppCommand
     private String _studyName;
     private String _appToken;
     private String _projectName;
-    private final String _allowDataSharing;
+    private String _allowDataSharing;
 
     public String getProjectName()
     {
@@ -78,6 +78,11 @@ public class EnrollParticipantCommand extends MobileAppCommand
     public String getAllowDataSharing()
     {
         return _allowDataSharing;
+    }
+
+    public void setAllowDataSharing(String allowDataSharing)
+    {
+        _allowDataSharing = allowDataSharing;
     }
 
     @Override

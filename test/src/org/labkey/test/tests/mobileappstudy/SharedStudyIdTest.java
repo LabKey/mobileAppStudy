@@ -166,4 +166,69 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         validateCmd.execute(400);
         assertFalse("Enrollment token validation for " + CLIENT_2_TOKEN_STUDY + " with token '" + token + "' should fail after enrollment succeeds", validateCmd.getSuccess());
     }
+
+    @Test
+    public void testAllowDataSharingValidation()
+    {
+        // test the validation of the "allowDataSharing" parameter at enrollment time
+        TokenListPage tokenListPage = TokenListPage.beginAt(this, CLIENT_1_TOKEN_STUDY);
+        String token1 = tokenListPage.getToken(1);
+        String token2 = tokenListPage.getToken(2);
+        String token3 = tokenListPage.getToken(3);
+
+        // test null, blank, and invalid values - should all fail
+        EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, token1, null, this::log);
+        testRequired(enrollCmd, null);
+        testRequired(enrollCmd, "");
+        testRequired(enrollCmd, "  ");
+        testInvalid(enrollCmd, "na");
+        testInvalid(enrollCmd, "n/a");
+        testInvalid(enrollCmd, "N/A");
+        testInvalid(enrollCmd, "TRUE");
+        testInvalid(enrollCmd, "True");
+        testInvalid(enrollCmd, "T");
+        testInvalid(enrollCmd, "t");
+        testInvalid(enrollCmd, "yes");
+        testInvalid(enrollCmd, "YES");
+        testInvalid(enrollCmd, "1");
+        testInvalid(enrollCmd, "FALSE");
+        testInvalid(enrollCmd, "False");
+        testInvalid(enrollCmd, "F");
+        testInvalid(enrollCmd, "f");
+        testInvalid(enrollCmd, "no");
+        testInvalid(enrollCmd, "NO");
+        testInvalid(enrollCmd, "0");
+        testInvalid(enrollCmd, "Wombat");
+        testInvalid(enrollCmd, "Mazipan");
+
+        // test the three valid values - should all succeed
+        enrollCmd.setAllowDataSharing("true");
+        enrollCmd.execute(200);
+        assertTrue("Enrollment with token '" + token1 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
+        enrollCmd.setBatchToken(token2);
+        enrollCmd.setAllowDataSharing("false");
+        enrollCmd.execute(200);
+        assertTrue("Enrollment with token '" + token2 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
+        enrollCmd.setBatchToken(token3);
+        enrollCmd.setAllowDataSharing("NA");
+        enrollCmd.execute(200);
+        assertTrue("Enrollment with token '" + token3 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
+    }
+
+    private void testRequired(EnrollParticipantCommand enrollCmd, String allowDataSharing)
+    {
+        test(enrollCmd, allowDataSharing, "allowDataSharing is required");
+    }
+
+    private void testInvalid(EnrollParticipantCommand enrollCmd, String allowDataSharing)
+    {
+        test(enrollCmd, allowDataSharing, "Invalid allowDataSharing value: '" + allowDataSharing + "'");
+    }
+
+    private void test(EnrollParticipantCommand enrollCmd, String allowDataSharing, String expectedMessage)
+    {
+        enrollCmd.setAllowDataSharing(allowDataSharing);
+        enrollCmd.execute(400);
+        assertEquals(expectedMessage, enrollCmd.getExceptionMessage());
+    }
 }
