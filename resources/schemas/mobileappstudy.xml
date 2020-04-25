@@ -59,6 +59,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="Participant" tableDbType="TABLE">
+        <ns:titleColumn>RowId</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="RowId" >
                 <ns:columnTitle>Participant Id</ns:columnTitle>
@@ -78,6 +79,7 @@
                     <ns:fkColumnName>rowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="AllowDataSharing"/>
             <ns:column columnName="Created"/>
             <ns:column columnName="Container"/>
         </ns:columns>

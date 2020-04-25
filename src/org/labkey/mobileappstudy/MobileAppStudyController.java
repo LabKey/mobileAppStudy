@@ -363,14 +363,34 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
+    // These are the only valid values. Can't use an enum for this... true and false are keywords
+    private static final Set<String> ALLOW_SHARING_VALUES = Set.of("true", "false", "NA");
+
     @RequiresNoPermission
     @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the enrollment token). Plus, mobile app has no ability to provide CSRF token.
     public class EnrollAction extends BaseEnrollmentAction
     {
         @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            super.validateForm(form, errors);
+
+            String allowDataSharing = form.getAllowDataSharing();
+
+            if (StringUtils.isBlank(allowDataSharing))
+            {
+                errors.reject(ERROR_REQUIRED, "allowDataSharing is required");
+            }
+            else if (!ALLOW_SHARING_VALUES.contains(allowDataSharing))
+            {
+                errors.rejectValue("allowDataSharing", ERROR_MSG, "Invalid allowDataSharing value: '" + form.getAllowDataSharing() + "'");
+            }
+        }
+
+        @Override
         public Object execute(EnrollmentForm enrollmentForm, BindException errors)
         {
-            Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken());
+            Participant participant = MobileAppStudyManager.get().enrollParticipant(enrollmentForm.getShortName(), enrollmentForm.getToken(), enrollmentForm.getAllowDataSharing());
             return success(PageFlowUtil.map("appToken", participant.getAppToken()));
         }
     }
@@ -635,6 +655,7 @@ public class MobileAppStudyController extends SpringActionController
     {
         private String _token;
         private String _shortName;
+        private String _allowDataSharing;
 
         public String getToken()
         {
@@ -668,6 +689,16 @@ public class MobileAppStudyController extends SpringActionController
         public @NotNull Collection<ParticipantProperty> getParticipantProperties(User user, Container container) throws InvalidKeyException
         {
             return MobileAppStudyManager.get().getParticipantProperties(container, user, getToken(), getShortName(), true);
+        }
+
+        public String getAllowDataSharing()
+        {
+            return _allowDataSharing;
+        }
+
+        public void setAllowDataSharing(String allowDataSharing)
+        {
+            _allowDataSharing = allowDataSharing;
         }
     }
 
