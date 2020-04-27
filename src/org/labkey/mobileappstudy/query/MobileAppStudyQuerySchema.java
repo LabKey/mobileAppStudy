@@ -119,6 +119,16 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
             return new ParticipantTable(this, getDbSchema().getTable(PARTICIPANT_TABLE), cf);
         }
         else
-            return super.createTable(name, cf);
+        {
+            TableInfo ti = super.createTable(name, cf);
+
+            if (ti instanceof SimpleTable)
+            {
+                //noinspection unchecked
+                ((SimpleTable<MobileAppStudyQuerySchema>) ti).setReadOnly(true);
+            }
+
+            return ti;
+        }
     }
 }

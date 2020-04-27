@@ -223,14 +223,13 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         enrollCmd.execute(200);
         assertTrue("Enrollment with token '" + token + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
 
-        log("AppToken: " + enrollCmd.getAppToken());
-
         Connection cn = WebTestHelper.getRemoteApiConnection();
         SelectRowsCommand cmd = new SelectRowsCommand("mobileappstudy", "Participant");
-        cmd.setColumns(List.of("allowDataSharing"));
+        cmd.setColumns(List.of("AllowDataSharing", "Token"));
         cmd.addFilter("AppToken", enrollCmd.getAppToken(), Filter.Operator.EQUAL);
         SelectRowsResponse resp = cmd.execute(cn, CLIENT_1_TOKEN_STUDY);
 
+        // TODO: Ensure that AllowDataSharing and Token values show up in the Participant table
         log(resp.getRows().toString());
     }
 
