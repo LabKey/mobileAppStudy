@@ -15,6 +15,7 @@
  */
 package org.labkey.mobileappstudy.query;
 
+import com.google.common.collect.Sets;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -32,10 +33,13 @@ import org.labkey.mobileappstudy.data.Participant;
 import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 
+import java.util.Set;
+
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE;
-import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_PROPERTIES_TYPE_TABLE;
+import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_PROPERTY_TYPE_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_STATUS_TABLE;
+import static org.labkey.mobileappstudy.MobileAppStudySchema.PARTICIPANT_TABLE;
 import static org.labkey.mobileappstudy.MobileAppStudySchema.RESPONSE_STATUS_TABLE;
 
 public class MobileAppStudyQuerySchema extends SimpleUserSchema
@@ -60,6 +64,14 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
         });
     }
 
+    private static final Set<String> enumTables = Set.of(RESPONSE_STATUS_TABLE, PARTICIPANT_STATUS_TABLE, PARTICIPANT_PROPERTY_TYPE_TABLE);
+
+    @Override
+    public Set<String> getVisibleTableNames()
+    {
+        return Sets.union(super.getVisibleTableNames(), enumTables);
+    }
+
     @Nullable
     @Override
     public TableInfo createTable(String name, ContainerFilter cf)
@@ -72,7 +84,7 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
         {
             return new EnrollmentTokenTable(this, cf);
         }
-        else if(RESPONSE_STATUS_TABLE.equalsIgnoreCase(name))
+        else if (RESPONSE_STATUS_TABLE.equalsIgnoreCase(name))
         {
             return new EnumTableInfo<>(
                 SurveyResponse.ResponseStatus.class,
@@ -85,22 +97,26 @@ public class MobileAppStudyQuerySchema extends SimpleUserSchema
         else if (PARTICIPANT_STATUS_TABLE.equalsIgnoreCase(name))
         {
             return new EnumTableInfo<>(
-                    Participant.ParticipantStatus.class,
-                    this,
-                    Participant.ParticipantStatus::getPkId,
-                    true,
-                    "Possible states a Participant might be in"
+                Participant.ParticipantStatus.class,
+                this,
+                Participant.ParticipantStatus::getPkId,
+                true,
+                "Possible states a Participant might be in"
             );
         }
-        else if (PARTICIPANT_PROPERTIES_TYPE_TABLE.equalsIgnoreCase(name))
+        else if (PARTICIPANT_PROPERTY_TYPE_TABLE.equalsIgnoreCase(name))
         {
             return new EnumTableInfo<>(
-                    ParticipantProperty.ParticipantPropertyType.class,
-                    this,
-                    ParticipantProperty.ParticipantPropertyType::getId,
-                    true,
-                    "Possible states a Participant might be in"
+                ParticipantProperty.ParticipantPropertyType.class,
+                this,
+                ParticipantProperty.ParticipantPropertyType::getId,
+                true,
+                "Possible Participant Property types"
             );
+        }
+        else if (PARTICIPANT_TABLE.equalsIgnoreCase(name))
+        {
+            return new ParticipantTable(this, getDbSchema().getTable(PARTICIPANT_TABLE), cf);
         }
         else
             return super.createTable(name, cf);
