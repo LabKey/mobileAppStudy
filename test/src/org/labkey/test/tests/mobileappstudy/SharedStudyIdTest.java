@@ -18,12 +18,21 @@ package org.labkey.test.tests.mobileappstudy;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.query.Filter;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
+import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
+
+import java.io.IOException;
+import java.util.List;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -168,7 +177,7 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
     }
 
     @Test
-    public void testAllowDataSharingValidation()
+    public void testAllowDataSharingValidation() throws IOException, CommandException
     {
         // test validation of the "allowDataSharing" parameter at enrollment time
         TokenListPage tokenListPage = TokenListPage.beginAt(this, CLIENT_1_TOKEN_STUDY);
@@ -202,17 +211,27 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         testInvalid(enrollCmd, "Mazipan");
 
         // test the three valid values - all should succeed
-        enrollCmd.setAllowDataSharing("true");
+        testValid(enrollCmd, token1, "true");
+        testValid(enrollCmd, token2, "false");
+        testValid(enrollCmd, token3, "NA");
+    }
+
+    private void testValid(EnrollParticipantCommand enrollCmd, String token, String allowDataSharing) throws IOException, CommandException
+    {
+        enrollCmd.setBatchToken(token);
+        enrollCmd.setAllowDataSharing(allowDataSharing);
         enrollCmd.execute(200);
-        assertTrue("Enrollment with token '" + token1 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
-        enrollCmd.setBatchToken(token2);
-        enrollCmd.setAllowDataSharing("false");
-        enrollCmd.execute(200);
-        assertTrue("Enrollment with token '" + token2 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
-        enrollCmd.setBatchToken(token3);
-        enrollCmd.setAllowDataSharing("NA");
-        enrollCmd.execute(200);
-        assertTrue("Enrollment with token '" + token3 + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
+        assertTrue("Enrollment with token '" + token + "' for " + CLIENT_1_TOKEN_STUDY + " failed when it shouldn't have", enrollCmd.getSuccess());
+
+        log("AppToken: " + enrollCmd.getAppToken());
+
+        Connection cn = WebTestHelper.getRemoteApiConnection();
+        SelectRowsCommand cmd = new SelectRowsCommand("mobilestudyapp", "Participant");
+        cmd.setColumns(List.of("allowDataSharing"));
+        cmd.addFilter("AppToken", enrollCmd.getAppToken(), Filter.Operator.EQUAL);
+        SelectRowsResponse resp = cmd.execute(cn, CLIENT_1_TOKEN_STUDY);
+
+        log(resp.getRows().toString());
     }
 
     private void testRequired(EnrollParticipantCommand enrollCmd, String allowDataSharing)
