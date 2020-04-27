@@ -226,7 +226,7 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         log("AppToken: " + enrollCmd.getAppToken());
 
         Connection cn = WebTestHelper.getRemoteApiConnection();
-        SelectRowsCommand cmd = new SelectRowsCommand("mobilestudyapp", "Participant");
+        SelectRowsCommand cmd = new SelectRowsCommand("mobileappstudy", "Participant");
         cmd.setColumns(List.of("allowDataSharing"));
         cmd.addFilter("AppToken", enrollCmd.getAppToken(), Filter.Operator.EQUAL);
         SelectRowsResponse resp = cmd.execute(cn, CLIENT_1_TOKEN_STUDY);
