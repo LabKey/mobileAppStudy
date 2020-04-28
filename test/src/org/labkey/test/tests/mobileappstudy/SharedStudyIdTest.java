@@ -33,6 +33,7 @@ import org.labkey.test.pages.mobileappstudy.TokenListPage;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -177,9 +178,9 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
     }
 
     @Test
+    // test validation of the "allowDataSharing" parameter at enrollment time
     public void testAllowDataSharingValidation() throws IOException, CommandException
     {
-        // test validation of the "allowDataSharing" parameter at enrollment time
         TokenListPage tokenListPage = TokenListPage.beginAt(this, CLIENT_1_TOKEN_STUDY);
         String token1 = tokenListPage.getToken(1);
         String token2 = tokenListPage.getToken(2);
@@ -229,8 +230,10 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         cmd.addFilter("AppToken", enrollCmd.getAppToken(), Filter.Operator.EQUAL);
         SelectRowsResponse resp = cmd.execute(cn, CLIENT_1_TOKEN_STUDY);
 
-        // TODO: Ensure that AllowDataSharing and Token values show up in the Participant table
-        log(resp.getRows().toString());
+        // Ensure that expected AllowDataSharing and Token values show up in the Participant table
+        Map<String, Object> map = resp.getRows().get(0);
+        assertEquals(allowDataSharing, map.get("AllowDataSharing"));
+        assertEquals(token, map.get("Token"));
     }
 
     private void testRequired(EnrollParticipantCommand enrollCmd, String allowDataSharing)
