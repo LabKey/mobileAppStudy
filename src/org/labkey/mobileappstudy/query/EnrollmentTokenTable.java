@@ -16,9 +16,9 @@
 package org.labkey.mobileappstudy.query;
 
 import org.labkey.api.data.BaseColumnInfo;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataColumn;
+import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.SimpleUserSchema;
@@ -33,8 +33,18 @@ import java.util.Collections;
 /**
  * Created by susanh on 10/11/16.
  */
+
 class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQuerySchema>
 {
+    static final DisplayColumnFactory TOKEN_DISPLAY_COLUMN_FACTORY = colInfo -> new DataColumn(colInfo)
+    {
+        @Override
+        public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+        {
+            out.write("<span style='font-family: monospace'>" + getFormattedValue(ctx) + "</span>");
+        }
+    };
+
     EnrollmentTokenTable(MobileAppStudyQuerySchema schema, ContainerFilter cf)
     {
         super(schema, schema.getDbSchema().getTable(MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE), cf);
@@ -53,18 +63,7 @@ class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQu
         getMutableColumn("Token").setURL(null);
 
         BaseColumnInfo tokenColumn = getMutableColumn("Token");
-        tokenColumn.setDisplayColumnFactory(colInfo -> new DataColumn(colInfo)
-        {
-            @Override
-            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
-            {
-                if (null != getValue(ctx))
-                {
-                    out.write("<span style='font-family: monospace'>" + getValue(ctx) + "</span>");
-                }
-
-            }
-        });
+        tokenColumn.setDisplayColumnFactory(TOKEN_DISPLAY_COLUMN_FACTORY);
 
         getMutableColumn("ParticipantId").setURL(null);
     }

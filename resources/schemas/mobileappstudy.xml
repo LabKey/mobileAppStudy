@@ -59,6 +59,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="Participant" tableDbType="TABLE">
+        <ns:titleColumn>RowId</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="RowId" >
                 <ns:columnTitle>Participant Id</ns:columnTitle>
@@ -78,6 +79,7 @@
                     <ns:fkColumnName>rowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="AllowDataSharing"/>
             <ns:column columnName="Created"/>
             <ns:column columnName="Container"/>
         </ns:columns>
@@ -155,7 +157,13 @@
             <ns:column columnName="RowId"/>
             <ns:column columnName="ListId"/>
             <ns:column columnName="PropertyURI"/>
-            <ns:column columnName="PropertyType"/>
+            <ns:column columnName="PropertyType">
+                <ns:fk>
+                    <ns:fkDbSchema>mobileappstudy</ns:fkDbSchema>
+                    <ns:fkTable>ParticipantPropertyType</ns:fkTable>
+                    <ns:fkColumnName>rowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="Created"/>
             <ns:column columnName="Modified"/>
             <ns:column columnName="Container"/>

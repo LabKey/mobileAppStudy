@@ -227,9 +227,10 @@ public class MobileAppStudyManager
      * enrollment tokens table to link the token to the participant.
      * @param shortName identifier for the study
      * @param tokenValue the token string being used for enrollment
+     * @param allowDataSharing data-sharing permission ("true", "false", or "NA")
      * @return an object representing the participant that was created
      */
-    public Participant enrollParticipant(@NotNull String shortName, @Nullable String tokenValue)
+    public Participant enrollParticipant(@NotNull String shortName, @Nullable String tokenValue, @NotNull String allowDataSharing)
     {
         DbScope scope = MobileAppStudySchema.getInstance().getSchema().getScope();
 
@@ -242,7 +243,7 @@ public class MobileAppStudyManager
             if (tokenValue != null)
             {
                 Optional<MobileAppStudy> studyOpt = studies.stream().filter(s -> getEnrollmentToken(s.getContainer(), tokenValue) != null).findFirst();
-                if (!studyOpt.isPresent())
+                if (studyOpt.isEmpty())
                     throw new RuntimeValidationException("Invalid token '" + tokenValue + "' for study id '" + shortName + "'. Participant cannot be enrolled.");
                 else
                     study = studyOpt.get();
@@ -257,6 +258,7 @@ public class MobileAppStudyManager
             participant.setAppToken(GUID.makeHash());
             participant.setContainer(study.getContainer());
             participant.setStatus(ParticipantStatus.Enrolled);
+            participant.setAllowDataSharing(allowDataSharing);
             participant = Table.insert(null, schema.getTableInfoParticipant(), participant);
             if (tokenValue != null)
             {

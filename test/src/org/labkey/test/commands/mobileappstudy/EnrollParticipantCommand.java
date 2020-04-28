@@ -36,6 +36,7 @@ public class EnrollParticipantCommand extends MobileAppCommand
     private String _studyName;
     private String _appToken;
     private String _projectName;
+    private String _allowDataSharing;
 
     public String getProjectName()
     {
@@ -46,11 +47,12 @@ public class EnrollParticipantCommand extends MobileAppCommand
         _projectName = projectName;
     }
 
-    public EnrollParticipantCommand(String project, String studyName, String batchToken, Consumer<String> logger)
+    public EnrollParticipantCommand(String project, String studyName, String batchToken, String allowDataSharing, Consumer<String> logger)
     {
         _studyName = studyName;
         _batchToken = batchToken;
         _projectName = project;
+        _allowDataSharing = allowDataSharing;
 
         setLogger(logger);
     }
@@ -73,6 +75,16 @@ public class EnrollParticipantCommand extends MobileAppCommand
         _batchToken = batchToken;
     }
 
+    public String getAllowDataSharing()
+    {
+        return _allowDataSharing;
+    }
+
+    public void setAllowDataSharing(String allowDataSharing)
+    {
+        _allowDataSharing = allowDataSharing;
+    }
+
     @Override
     public HttpResponse execute(int expectedStatusCode)
     {
@@ -87,6 +99,7 @@ public class EnrollParticipantCommand extends MobileAppCommand
         params.put("studyId", getStudyName());
         if (StringUtils.isNotBlank(getBatchToken()))
             params.put("token", getBatchToken());
+        params.put("allowDataSharing", getAllowDataSharing());
         return WebTestHelper.buildURL(CONTROLLER_NAME, getProjectName(), ACTION_NAME, params);
     }
 

@@ -52,6 +52,7 @@ public class Participant
     private Container _container;
     private Date _created;
     private ParticipantStatus _status;
+    private String _allowDataSharing;
 
     public String getAppToken()
     {
@@ -107,8 +108,19 @@ public class Participant
     {
         return _status;
     }
+
     public void setStatus(ParticipantStatus status)
     {
         _status = status;
+    }
+
+    public String getAllowDataSharing()
+    {
+        return _allowDataSharing;
+    }
+
+    public void setAllowDataSharing(String allowDataSharing)
+    {
+        _allowDataSharing = allowDataSharing;
     }
 }
