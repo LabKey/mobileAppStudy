@@ -15,8 +15,6 @@
  */
 package org.labkey.mobileappstudy.query;
 
-import org.labkey.api.data.BaseColumnInfo;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
@@ -42,7 +40,7 @@ class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQu
         // wrap all the existing columns
         wrapAllColumns();
 
-        BaseColumnInfo idColumn = getMutableColumn("BatchId");
+        var idColumn = getMutableColumn("BatchId");
 
         ActionURL base = new ActionURL(MobileAppStudyController.TokenBatchAction.class, getContainer());
         DetailsURL detailsURL = new DetailsURL(base, Collections.singletonMap("query.RowId~eq", "batchId"));
@@ -52,7 +50,7 @@ class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQu
         // don't link out to the schema browser details (where the data can be edited).
         getMutableColumn("Token").setURL(null);
 
-        BaseColumnInfo tokenColumn = getMutableColumn("Token");
+        var tokenColumn = getMutableColumn("Token");
         tokenColumn.setDisplayColumnFactory(colInfo -> new DataColumn(colInfo)
         {
             @Override

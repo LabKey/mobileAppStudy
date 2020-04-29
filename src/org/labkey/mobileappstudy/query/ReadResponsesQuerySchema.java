@@ -18,11 +18,11 @@ package org.labkey.mobileappstudy.query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.Sets;
-import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ForeignKey;
+import org.labkey.api.data.MutableColumnInfo;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -144,9 +144,9 @@ public class ReadResponsesQuerySchema extends UserSchema
         private static final Set<String> NAUGHTY_COLUMNS = Sets.newCaseInsensitiveHashSet("CreatedBy", "ModifiedBy", "Container");
 
         @Override
-        public BaseColumnInfo addWrapColumn(ColumnInfo column)
+        public MutableColumnInfo addWrapColumn(ColumnInfo column)
         {
-            BaseColumnInfo wrapped = super.addWrapColumn(column);
+            var wrapped = super.addWrapColumn(column);
 
             // Nuke standard columns that have foreign keys to other schemas... otherwise, selectRows and executeSql would blow up when these columns are selected
             if (NAUGHTY_COLUMNS.contains(wrapped.getColumnName()))
