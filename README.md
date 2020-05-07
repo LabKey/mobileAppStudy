@@ -16,21 +16,21 @@ This module must be deployed within the LabKey Server platform (version 19.2.x).
 1. In your settings.gradle file, find the commented out line with this text:
 
     ```
-    //include ":server:optionalModules:workflow"
+    //include ":server:modules:workflow"
     ```
 
 1. Underneath this line, add these two lines:
 
    ```
-   include ":server:optionalModules:mobileAppStudy"
-   include ":server:optionalModules:mobileAppStudy:distributions:fda"
+   include ":server:modules:mobileAppStudy"
+   include ":server:modules:mobileAppStudy:distributions:fda"
    ```
 
 1. On the command line (again, in the root of your working copy), run one of these commands (use the first command on Linux/OSX and the second on Windows):
 
     ```
-    ./gradlew :server:optionalModules:mobileAppStudy:distributions:fda:dist
-    gradlew :server:optionalModules:mobileAppStudy:distributions:fda:dist
+    ./gradlew :server:modules:mobileAppStudy:distributions:fda:dist
+    gradlew :server:modules:mobileAppStudy:distributions:fda:dist
     ```
 
 1. Look in the directory "dist/mobileAppStudy" for a file whose name ends with "mobileAppStudy-bin.tar.gz". Install this distribution using the [Install LabKey Manually](https://www.labkey.org/Documentation/wiki-page.view?name=manualInstall) instructions.
