@@ -109,6 +109,7 @@ public abstract class MobileAppCommand
 
     protected HttpResponse execute(HttpUriRequest request, int expectedStatusCode)
     {
+        setExceptionMessage(null); // Clear out previous exception message, in case we're reusing this Command
         HttpResponse response = null;
         log("Submitting request using url: " + request.getURI());
 

@@ -34,7 +34,7 @@ public class MobileAppStudySchema
     public static final String RESPONSE_METADATA_TABLE = "ResponseMetadata";
     public static final String RESPONSE_STATUS_TABLE = "ResponseStatus";
     public static final String PARTICIPANT_PROPERTY_METADATA_TABLE = "ParticipantPropertyMetadata";
-    public static final String PARTICIPANT_PROPERTIES_TYPE_TABLE = "ParticipantPropertiesType";
+    public static final String PARTICIPANT_PROPERTY_TYPE_TABLE = "ParticipantPropertyType";
 
     public static MobileAppStudySchema getInstance()
     {

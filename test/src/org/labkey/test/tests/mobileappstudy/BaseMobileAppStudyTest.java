@@ -101,7 +101,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     String getNewAppToken(String project, String studyShortName, String batchToken)
     {
         log("Requesting app token for project [" + project +"] and study [" + studyShortName + "]");
-        EnrollParticipantCommand cmd = new EnrollParticipantCommand(project, studyShortName, batchToken, this::log);
+        EnrollParticipantCommand cmd = new EnrollParticipantCommand(project, studyShortName, batchToken, "true", this::log);
 
         cmd.execute(200);
         String appToken = cmd.getAppToken();
@@ -197,7 +197,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
     protected CommandResponse assignToken(Connection connection, @LoggedParam String token, @LoggedParam String projectName, @LoggedParam String studyName) throws IOException, CommandException
     {
         Command command = new PostCommand("mobileappstudy", "enroll");
-        HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token));
+        HashMap<String, Object> params = new HashMap<>(Maps.of("shortName", studyName, "token", token, "allowDataSharing", "true"));
         command.setParameters(params);
         log("Assigning token: " + token);
         return command.execute(connection, projectName);

@@ -18,7 +18,6 @@ package org.labkey.test.tests.mobileappstudy;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.SubmitResponseCommand;
 import org.labkey.test.pages.list.BeginPage;
@@ -532,10 +531,10 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
         cmd.execute(200);
         waitForResults(baseTableData, baseTableName);
 
-        // Verify no other block parses and gets expected responses and columns
+        // Verify "no other" block parses and gets expected responses and columns
         List<Map<String, Object>> afterTable = getTableData(noOtherOptionTableName);
-        assertEquals("Unexpected number of rows in  for no `other` option.", 2, afterTable.size());
-        assertEquals("Unexpected number of columns for no `other` option.", 16, afterTable.get(0).keySet().size());
+        assertEquals("Unexpected number of rows in for no `other` option.", 2, afterTable.size());
+        assertEquals("Unexpected number of columns for no `other` option.", 15, afterTable.get(0).keySet().size());
 
         // Verify other block parses and gets expected responses and columns
         afterTable = getTableData(optionRequiredTableName);
