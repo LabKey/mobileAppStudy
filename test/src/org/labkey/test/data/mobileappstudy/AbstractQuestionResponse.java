@@ -134,7 +134,9 @@ public abstract class AbstractQuestionResponse implements QuestionResult
         _omitType = omitType;
     }
 
+    @Override
     public abstract String getJsonString();
+    @Override
     public abstract Object getResult();
     public void setOmitResult(boolean flag)
     {

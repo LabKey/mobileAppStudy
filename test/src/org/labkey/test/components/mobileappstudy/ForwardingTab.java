@@ -32,6 +32,7 @@ public class ForwardingTab extends LabKeyPage<ForwardingTab.ElementCache> implem
         return new ForwardingTab(driver);
     }
 
+    @Override
     protected ElementCache newElementCache()
     {
         return new ElementCache();

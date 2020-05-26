@@ -391,6 +391,7 @@ public class SurveyStep implements IDynamicListField
         return SurveyStepType.getStepType(type);
     }
 
+    @Override
     public String getKey()
     {
         return key;
@@ -446,6 +447,7 @@ public class SurveyStep implements IDynamicListField
         return null;
     }
 
+    @Override
     @JsonIgnore
     @Nullable
     public Integer getMaxLength()
@@ -481,6 +483,7 @@ public class SurveyStep implements IDynamicListField
         return Style.getStyle(val);
     }
 
+    @Override
     @JsonIgnore
     public JdbcType getPropertyStorageType()
     {
