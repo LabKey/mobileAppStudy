@@ -52,6 +52,7 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
         return schema.getSettings(viewContext, "enrollmentTokenBatches", MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE);
     }
 
+    @Override
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);

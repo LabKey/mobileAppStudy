@@ -64,6 +64,7 @@ public class TokenBatchesWebPart extends BodyWebPart<TokenBatchesWebPart.Element
         return elementCache().tokenBatchDataRegion.getRowDataAsMap("RowId", batchId);
     }
 
+    @Override
     protected void waitForReady()
     {
         elementCache().tokenBatchDataRegion.getComponentElement().isDisplayed();

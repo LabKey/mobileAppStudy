@@ -35,6 +35,7 @@ public class FormQuestionResponse extends Form implements QuestionResult
         );
     }
 
+    @Override
     public Object getResult()
     {
         return responses;

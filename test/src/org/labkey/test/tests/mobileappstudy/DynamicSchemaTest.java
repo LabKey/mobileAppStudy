@@ -50,6 +50,7 @@ public class DynamicSchemaTest extends BaseMobileAppStudyTest
     private static List<Map<String,Object>> newSurveyGroupedTextChoiceField;
     private static List<Map<String,Object>> newSurveyTextChoiceField;
 
+    @Override
     protected
     @Nullable String getProjectName()
     {

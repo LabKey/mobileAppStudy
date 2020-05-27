@@ -26,6 +26,7 @@ public class QuestionResponse extends AbstractQuestionResponse
 {
     private Object _result;
 
+    @Override
     public Object getResult()
     {
         return _result;
@@ -50,6 +51,7 @@ public class QuestionResponse extends AbstractQuestionResponse
         setResult(result);
     }
 
+    @Override
     public String getJsonString()
     {
         return String.format(getQuestionResponseJsonFormat(), getType().getDisplayText(), getQuestionId(), DATE_FORMAT.format(getStart()),

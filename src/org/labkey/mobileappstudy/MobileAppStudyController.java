@@ -143,9 +143,8 @@ public class MobileAppStudyController extends SpringActionController
     public class TokenBatchAction extends SimpleViewAction
     {
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
 
         @Override
@@ -160,11 +159,10 @@ public class MobileAppStudyController extends SpringActionController
     public class TokenListAction extends SimpleViewAction
     {
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             root.addChild("Token Batches", getEnrollmentTokenBatchURL());
             root.addChild("Enrollment Tokens");
-            return root;
         }
 
         @Override

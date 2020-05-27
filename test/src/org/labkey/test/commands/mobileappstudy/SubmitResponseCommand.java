@@ -130,6 +130,7 @@ public class SubmitResponseCommand extends MobileAppCommand
         this.body = body;
     }
 
+    @Override
     public String getBody()
     {
         return this.body;
