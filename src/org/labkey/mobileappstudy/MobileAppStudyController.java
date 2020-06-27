@@ -395,6 +395,42 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
+    /**
+     * Look up and return the studyId associated with the passed in enrollment token to support token search, #40743
+     */
+    @RequiresNoPermission
+    @CSRF(CSRF.Method.NONE) // No need for CSRF token; request includes a secret (the enrollment token). Plus, mobile app has no ability to provide CSRF token.
+    public class ResolveEnrollmentTokenAction extends MutatingApiAction<EnrollmentForm>
+    {
+        @Override
+        public void validateForm(EnrollmentForm form, Errors errors)
+        {
+            if (form == null)
+                errors.reject(ERROR_MSG, "Invalid input format.");
+            else if (StringUtils.isEmpty(form.getToken()))
+                errors.reject(ERROR_REQUIRED, "Token is required");
+            else if (!MobileAppStudyManager.get().isChecksumValid(form.getToken()))
+                errors.rejectValue("token", ERROR_MSG, "Invalid token: '" + form.getToken() + "'");
+        }
+
+        @Override
+        public Object execute(EnrollmentForm enrollmentForm, BindException errors)
+        {
+            String studyId = MobileAppStudyManager.get().findStudyShortName(enrollmentForm.getToken());
+            boolean success = null != studyId;
+
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("success", success);
+
+            if (success)
+                response.put("studyId", studyId);
+            else
+                response.put("message", "Token is not associated with a study ID");
+
+            return response;
+        }
+    }
+
     @RequiresPermission(AdminPermission.class)
     public class ReprocessResponseAction extends MutatingApiAction<ReprocessResponseForm>
     {

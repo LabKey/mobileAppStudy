@@ -30,6 +30,7 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
@@ -161,8 +162,8 @@ public class MobileAppStudyManager
     }
 
     /**
-     * Determines if the token provided is one that is associated with the study short name
-     * by the short name.  This does not check the validity of the token itself.
+     * Determines if the token provided is one that is associated with the study short name. This does not check the
+     * validity of the token itself.
      * @param token the token string
      * @param shortName unique identifier for the study
      * @return true or false to indicate if the given string is associated with the study.
@@ -178,6 +179,29 @@ public class MobileAppStudyManager
         filter.addCondition(FieldKey.fromString("Token"), token.toUpperCase());
         TableSelector selector = new TableSelector(schema.getTableInfoEnrollmentToken(), filter, null);
         return selector.exists();
+    }
+
+    /**
+     * Returns the shortName of the study associated with the specified enrollment token.
+     * @param token the token string
+     * @return If enrollment token is found, the shortName of the study associated with the token. Otherwise null.
+     */
+    public @Nullable String findStudyShortName(@NotNull String token)
+    {
+        MobileAppStudySchema schema = MobileAppStudySchema.getInstance();
+        SQLFragment sql = new SQLFragment("SELECT ShortName FROM ")
+            .append(schema.getTableInfoEnrollmentToken(), "et")
+            .append("\n INNER JOIN ")
+            .append(schema.getTableInfoEnrollmentTokenBatch(), "etb")
+            .append(" ON etb.RowId = et.BatchId\n")
+            .append(" INNER JOIN ")
+            .append(schema.getTableInfoStudy(), "s")
+            .append(" ON etb.Container = s.Container\n")
+            .append(" WHERE Token = ?");
+        sql.add(token.toUpperCase());
+
+        Selector selector = new SqlSelector(schema.getSchema(), sql);
+        return selector.getObject(String.class);
     }
 
     /**
