@@ -95,7 +95,7 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
         EnrollmentTokenValidationCommand cmd = new EnrollmentTokenValidationCommand(PROJECT_NAME01, STUDY_NAME01 + "_INVALIDSTUDYNAME", token, this::log);
         cmd.execute(400);
         assertFalse("Enrollment token validation succeeded with an invalid studyId", cmd.getSuccess());
-        assertEquals("Unexpected error message", String.format(EnrollmentTokenValidationCommand.INVLAID_STUDYID_FORMAT, STUDY_NAME01 + "_INVALIDSTUDYNAME"), cmd.getExceptionMessage());
+        assertEquals("Unexpected error message", String.format(EnrollmentTokenValidationCommand.INVALID_STUDYID_FORMAT, STUDY_NAME01 + "_INVALIDSTUDYNAME"), cmd.getExceptionMessage());
     }
 
     @Test

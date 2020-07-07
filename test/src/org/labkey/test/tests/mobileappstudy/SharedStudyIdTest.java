@@ -27,6 +27,7 @@ import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.Git;
 import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
+import org.labkey.test.commands.mobileappstudy.ResolveEnrollmentTokenCommand;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
@@ -251,5 +252,50 @@ public class SharedStudyIdTest extends BaseMobileAppStudyTest
         enrollCmd.setAllowDataSharing(allowDataSharing);
         enrollCmd.execute(400);
         assertEquals(expectedMessage, enrollCmd.getExceptionMessage());
+    }
+
+    @Test
+    // test the ability to resolve enrollment tokens
+    public void testResolveEnrollmentToken() throws IOException, CommandException
+    {
+        // test null, blank, invalid, and non-existent token - all should fail
+        ResolveEnrollmentTokenCommand resolveCmd = new ResolveEnrollmentTokenCommand("home", null, this::log);
+        testInvalid(resolveCmd, null, EnrollmentTokenValidationCommand.TOKEN_REQUIRED);
+        testInvalid(resolveCmd, "   ", EnrollmentTokenValidationCommand.TOKEN_REQUIRED);
+        String badToken = "ABCDEFGH"; // Wrong format - too short
+        testInvalid(resolveCmd, badToken, String.format(EnrollmentTokenValidationCommand.INVALID_TOKEN_FORMAT, badToken));
+        badToken = "ABCDEFGHI"; // Wrong format - bad checksum
+        testInvalid(resolveCmd, badToken, String.format(EnrollmentTokenValidationCommand.INVALID_TOKEN_FORMAT, badToken));
+        badToken = "RMNBREQMJ"; // Valid token, but doesn't exist
+        testInvalid(resolveCmd, badToken, String.format(EnrollmentTokenValidationCommand.INVALID_TOKEN_FORMAT, badToken));
+
+        TokenListPage tokenListPage = TokenListPage.beginAt(this, CLIENT_1_TOKEN_STUDY);
+        String goodToken1 = tokenListPage.getToken(4);
+
+        // Resolve multiple times
+        resolveCmd.setBatchToken(goodToken1);
+        resolveCmd.execute(200);
+        assertEquals(STUDY_ID, resolveCmd.getStudyId());
+        resolveCmd.execute(200);
+        assertEquals(STUDY_ID, resolveCmd.getStudyId());
+
+        // Resolve after enrollment
+        EnrollParticipantCommand enrollCmd = new EnrollParticipantCommand("home", STUDY_ID, goodToken1, null, this::log);
+        enrollCmd.execute(200);
+        resolveCmd.execute(200);
+        assertEquals(STUDY_ID, resolveCmd.getStudyId());
+
+// TODO: Test a different study
+//        tokenListPage = TokenListPage.beginAt(this, CLIENT_2_TOKEN_STUDY);
+//        String goodToken2 = tokenListPage.getToken(1);
+//        resolveCmd = new ResolveEnrollmentTokenCommand("home", null, this::log);
+
+    }
+
+    private void testInvalid(ResolveEnrollmentTokenCommand resolveCmd, String token, String expectedErrorMessage)
+    {
+        resolveCmd.setBatchToken(token);
+        resolveCmd.execute(400);
+        assertEquals(expectedErrorMessage, resolveCmd.getExceptionMessage());
     }
 }
