@@ -423,9 +423,14 @@ public class MobileAppStudyController extends SpringActionController
             response.put("success", success);
 
             if (success)
+            {
                 response.put("studyId", studyId);
+            }
             else
+            {
                 response.put("message", "Token is not associated with a study ID");
+                getViewContext().getResponse().setStatus(404);
+            }
 
             return response;
         }

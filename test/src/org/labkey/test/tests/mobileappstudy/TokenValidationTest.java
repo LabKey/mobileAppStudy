@@ -182,7 +182,7 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
         log("Attempt resolving a non-existent token");
         badToken = "ABCDEFGHI"; // Valid token, but doesn't exist
         resolveCmd.setBatchToken(badToken);
-        resolveCmd.execute(200);
+        resolveCmd.execute(404);
         assertFalse(resolveCmd.getSuccess());
         assertNull(resolveCmd.getStudyId());
         assertEquals("Token is not associated with a study ID", resolveCmd.getMessage());
