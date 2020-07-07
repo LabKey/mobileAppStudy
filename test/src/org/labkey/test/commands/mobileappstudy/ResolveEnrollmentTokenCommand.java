@@ -117,7 +117,7 @@ public class ResolveEnrollmentTokenCommand extends MobileAppCommand
         }
         catch (IOException e)
         {
-            //TODO: do something here...
+            throw new RuntimeException(e);
         }
     }
 }
