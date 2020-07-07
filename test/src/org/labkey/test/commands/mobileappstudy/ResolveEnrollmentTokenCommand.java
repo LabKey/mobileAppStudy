@@ -36,7 +36,9 @@ public class ResolveEnrollmentTokenCommand extends MobileAppCommand
 
     private String _batchToken;
     private String _projectName;
+
     private String _studyId;
+    private String _message;
 
     public String getProjectName()
     {
@@ -69,6 +71,11 @@ public class ResolveEnrollmentTokenCommand extends MobileAppCommand
         return _studyId;
     }
 
+    public String getMessage()
+    {
+        return _message;
+    }
+
     @Override
     public HttpResponse execute(int expectedStatusCode)
     {
@@ -89,6 +96,13 @@ public class ResolveEnrollmentTokenCommand extends MobileAppCommand
     public String getBody()
     {
         return "";
+    }
+
+    @Override
+    protected void parseErrorResponse(JSONObject response)
+    {
+        super.parseErrorResponse(response);
+        _message = (String)response.get("message");
     }
 
     @Override
