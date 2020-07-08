@@ -21,40 +21,24 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.json.simple.JSONObject;
 import org.labkey.test.WebTestHelper;
-import org.labkey.test.data.mobileappstudy.ParticipantPropertiesResponse;
-import org.labkey.test.data.mobileappstudy.ParticipantProperty;
+import org.labkey.test.data.mobileappstudy.ResolveEnrollmentTokenResponse;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 
-public class EnrollmentTokenValidationCommand extends MobileAppCommand
+public class ResolveEnrollmentTokenCommand extends MobileAppCommand
 {
     protected static final String CONTROLLER_NAME = "mobileappstudy";
-    protected static final String ACTION_NAME = "validateenrollmenttoken";
-    public static final String INVALID_STUDYID_FORMAT = "Study with StudyId '%1$s' does not exist";
-    public static final String INVALID_TOKEN_FORMAT = "Invalid token: '%1$s'";
-    public static final String BLANK_STUDYID = "StudyId is required";
-    public static final String TOKEN_REQUIRED = "Token is required";
+    protected static final String ACTION_NAME = "resolveenrollmenttoken";
 
     private String _batchToken;
-    private String _studyName;
     private String _projectName;
 
-    private Collection<ParticipantProperty> _preEnrollmentParticipantProperties;
-
-    public void setPreEnrollmentParticipantProperties(Collection<ParticipantProperty> preEnrollmentParticipantProperties)
-    {
-        _preEnrollmentParticipantProperties = preEnrollmentParticipantProperties;
-    }
-
-    public Collection<ParticipantProperty> getPreEnrollmentParticipantProperties()
-    {
-        return _preEnrollmentParticipantProperties;
-    }
+    private String _studyId;
+    private String _message;
 
     public String getProjectName()
     {
@@ -65,22 +49,12 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
         _projectName = projectName;
     }
 
-    public EnrollmentTokenValidationCommand(String project, String studyName, String batchToken, Consumer<String> logger)
+    public ResolveEnrollmentTokenCommand(String project, String batchToken, Consumer<String> logger)
     {
-        _studyName = studyName;
         _batchToken = batchToken;
         _projectName = project;
 
         setLogger(logger);
-    }
-
-    public String getStudyName()
-    {
-        return _studyName;
-    }
-    public void setStudyName(String studyName)
-    {
-        _studyName = studyName;
     }
 
     public String getBatchToken()
@@ -90,6 +64,16 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
     public void setBatchToken(String batchToken)
     {
         _batchToken = batchToken;
+    }
+
+    public String getStudyId()
+    {
+        return _studyId;
+    }
+
+    public String getMessage()
+    {
+        return _message;
     }
 
     @Override
@@ -103,7 +87,6 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
     public String getTargetURL()
     {
         Map<String, String> params = new HashMap<>();
-        params.put("studyId", getStudyName());
         if (StringUtils.isNotBlank(getBatchToken()))
             params.put("token", getBatchToken());
         return WebTestHelper.buildURL(CONTROLLER_NAME, getProjectName(), ACTION_NAME, params);
@@ -116,14 +99,21 @@ public class EnrollmentTokenValidationCommand extends MobileAppCommand
     }
 
     @Override
+    protected void parseErrorResponse(JSONObject response)
+    {
+        super.parseErrorResponse(response);
+        _message = (String)response.get("message");
+    }
+
+    @Override
     protected void parseSuccessfulResponse(JSONObject response)
     {
         ObjectMapper mapper = new ObjectMapper();
         try
         {
-            ParticipantPropertiesResponse ppResponse = mapper.readValue(response.toJSONString(), ParticipantPropertiesResponse.class);
-            if (ppResponse != null)
-                _preEnrollmentParticipantProperties = ppResponse.getPreEnrollmentParticipantProperties();
+            ResolveEnrollmentTokenResponse enrollmentTokenResponse = mapper.readValue(response.toJSONString(), ResolveEnrollmentTokenResponse.class);
+            if (null != enrollmentTokenResponse)
+                _studyId = enrollmentTokenResponse.getStudyId();
         }
         catch (IOException e)
         {
