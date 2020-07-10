@@ -18,7 +18,8 @@ package org.labkey.mobileappstudy;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.ArrayListMap;
@@ -104,7 +105,7 @@ public class MobileAppStudyManager
 
     private static final int THREAD_COUNT = 10;
     private static JobRunner _shredder;
-    private static final Logger logger = Logger.getLogger(MobileAppStudy.class);
+    private static final Logger logger = LogManager.getLogger(MobileAppStudy.class);
 
     public static final String OTHER_OPTION_TITLE = "_Other_Text";
 

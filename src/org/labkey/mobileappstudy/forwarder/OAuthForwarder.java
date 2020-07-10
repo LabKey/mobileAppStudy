@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.auth.AuthenticationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.Cache;
@@ -28,7 +29,7 @@ public class OAuthForwarder extends Forwarder
     private static final int MAX_RETRIES = 1;
     private static final Cache<Container, String> authTokenCache =
             CacheManager.getBlockingCache(100, TimeUnit.HOURS.toMillis(1), "Mobile app forwarding tokens",
-                    (key, args) -> requestNewAuthToken(key, Logger.getLogger(OAuthForwarder.class)));
+                    (key, args) -> requestNewAuthToken(key, LogManager.getLogger(OAuthForwarder.class)));
 
     public OAuthForwarder(Container container, Logger logger)
     {

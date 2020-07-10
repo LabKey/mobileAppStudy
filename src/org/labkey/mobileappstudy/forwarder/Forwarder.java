@@ -1,6 +1,7 @@
 package org.labkey.mobileappstudy.forwarder;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.security.User;
@@ -21,7 +22,7 @@ public abstract class Forwarder
 
     public Forwarder(Container container, Logger logger)
     {
-        this.logger = logger != null ? logger : Logger.getLogger(Forwarder.class.getName());
+        this.logger = logger != null ? logger : LogManager.getLogger(Forwarder.class.getName());
         this.container = container;
         this.properties = Collections.unmodifiableMap(new ForwarderProperties().getForwarderConnection(container));
     }

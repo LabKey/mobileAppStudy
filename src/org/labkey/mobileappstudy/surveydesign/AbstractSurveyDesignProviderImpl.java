@@ -17,7 +17,8 @@ package org.labkey.mobileappstudy.surveydesign;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.mobileappstudy.data.ActivityMetadataResponse;
 import org.labkey.mobileappstudy.participantproperties.ParticipantPropertiesDesign;
