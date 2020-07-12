@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.mobileappstudy;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -885,7 +886,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
     @Test
     public void validateExecuteSqlErrorConditions() throws IOException
     {
-        String sql = "select * from TestListDiffDataTypes";
         final String ERROR_NO_PARTICIPANTID = "ParticipantId not included in request";
         final String ERROR_TABLE_NOT_FOUND = "Query or table not found: core.Users";
         final String ERROR_BAD_SQL = "Syntax error near 'never'";
@@ -895,81 +895,50 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         long participantId = ReadResponseTest.participantWithMultipleRow.getId();
         String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
 
-        String task = "Call executeSql without a participantId.";
-        log(task);
-        Map<String, Object> params = new HashMap<>();
-        params.put("sql", sql);
-        log("Call the executeSql action with sql: '" + sql + "' and no participant parameter.");
-
-        try
-        {
-            callExecuteSql(params);
-            fail("Should not have succeeded: " + task);
-        }
-        catch(CommandException ce)
-        {
-            assertEquals("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage(), ERROR_NO_PARTICIPANTID);
-        }
-
-        task = "Call executeSql looking only at an 'external' table.";
-        log(task);
-        sql = "select * from core.Users";
-        params = new HashMap<>();
-        params.put("sql", sql);
-        params.put("participantId", participantAppToken);
-
-        log("Call executeSql action with sql: '" + sql + "' and participant " + participantId + " (" + participantAppToken + ").");
-
-        try
-        {
-            callExecuteSql(params);
-            fail("Should not have succeeded: " + task);
-        }
-        catch(CommandException ce)
-        {
-            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
-        }
-
-        task = "Call executeSql while joining to an 'external' table.";
-        log(task);
-        sql = "select TestListDiffDataTypes.participantId, TestListDiffDataTypes.user, core.Users.email from TestListDiffDataTypes inner join core.Users on TestListDiffDataTypes.user = core.Users.DisplayName";
-        params = new HashMap<>();
-        params.put("sql", sql);
-        params.put("participantId", participantAppToken);
-
-        log("Call executeSql action with sql: '" + sql + "' and participant " + participantId + " (" + participantAppToken + ").");
-
-        try
-        {
-            callExecuteSql(params);
-            fail("Should not have succeeded: " + task);
-        }
-        catch(CommandException ce)
-        {
-            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_TABLE_NOT_FOUND));
-        }
-
-        task = "Call executeSql with garbage as the sql.";
-        log(task);
-        sql = "select this should never ever ever work!";
-        params = new HashMap<>();
-        params.put("sql", sql);
-        params.put("participantId", participantAppToken);
-
-        log("Call executeSql action with sql: '" + sql + "' and participant " + participantId + " (" + participantAppToken + ").");
-
-        try
-        {
-            callExecuteSql(params);
-            fail("Should not have succeeded: " + task);
-        }
-        catch(CommandException ce)
-        {
-            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_BAD_SQL));
-        }
+        testExecuteSql("without a participantId.",
+            "select * from TestListDiffDataTypes",
+            0, null,
+            ERROR_NO_PARTICIPANTID);
+        testExecuteSql("looking only at an 'external' table.",
+            "select * from core.Users",
+            participantId, participantAppToken,
+            ERROR_TABLE_NOT_FOUND);
+        testExecuteSql("while joining to an 'external' table.",
+            "select TestListDiffDataTypes.participantId, TestListDiffDataTypes.user, core.Users.email from TestListDiffDataTypes inner join core.Users on TestListDiffDataTypes.user = core.Users.DisplayName",
+            participantId, participantAppToken,
+            ERROR_TABLE_NOT_FOUND);
+        testExecuteSql("with garbage sql.",
+            "select this should never ever ever work!",
+            participantId, participantAppToken,
+            ERROR_BAD_SQL);
 
         log("Looks good. Go home.");
         goToHome();
+    }
+
+    private void testExecuteSql(String task, String sql, long participantId, @Nullable String participantAppToken, String expectedErrorMessage)
+    {
+        String details = "Call executeSql with sql: '" + sql + "' and ";
+        if (null == participantAppToken)
+            testExecuteSql(task, Map.of("sql", sql), details + "no participant parameter.", expectedErrorMessage);
+        else
+            testExecuteSql(task, Map.of("sql", sql, "participantId", participantAppToken), details + "participant " + participantId + " (" + participantAppToken + ").", expectedErrorMessage);
+    }
+
+    private void testExecuteSql(String task, Map<String, Object> params, String detailsToLog, String expectedErrorMessage)
+    {
+        log("Call executeSql " + task);
+        log(detailsToLog);
+
+        try
+        {
+            callExecuteSql(params);
+            fail("Should not have succeeded: " + task);
+        }
+        catch(CommandException | IOException ce)
+        {
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(expectedErrorMessage));
+        }
     }
 
     private void confirmBatchInfoCreated(SetupPage setupPage, String batchId, String expectedTokenCount, String expectedUsedCount)
