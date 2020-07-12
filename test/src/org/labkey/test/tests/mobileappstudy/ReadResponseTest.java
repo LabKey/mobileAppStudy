@@ -888,9 +888,12 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         String sql = "select * from TestListDiffDataTypes";
         final String ERROR_NO_PARTICIPANTID = "ParticipantId not included in request";
         final String ERROR_TABLE_NOT_FOUND = "Query or table not found: core.Users";
-        final String ERROR_INVALID_TOKEN = "Unexpected token:";
+        final String ERROR_BAD_SQL = "Syntax error near 'never'";
 
         goToProjectHome();
+
+        long participantId = ReadResponseTest.participantWithMultipleRow.getId();
+        String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
 
         String task = "Call executeSql without a participantId.";
         log(task);
@@ -910,8 +913,6 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         task = "Call executeSql looking only at an 'external' table.";
         log(task);
-        long participantId = ReadResponseTest.participantWithMultipleRow.getId();
-        String participantAppToken = ReadResponseTest.participantWithMultipleRow.getAppToken();
         sql = "select * from core.Users";
         params = new HashMap<>();
         params.put("sql", sql);
@@ -964,7 +965,7 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
         }
         catch(CommandException ce)
         {
-            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_INVALID_TOKEN));
+            Assert.assertTrue("Command exception did not include expected message. Exception was: " + ce.getMessage(), ce.getMessage().contains(ERROR_BAD_SQL));
         }
 
         log("Looks good. Go home.");
