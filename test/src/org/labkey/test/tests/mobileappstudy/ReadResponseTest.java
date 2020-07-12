@@ -932,7 +932,8 @@ public class ReadResponseTest extends BaseMobileAppStudyTest
 
         try
         {
-            callExecuteSql(params);
+            // Command requires a mutable map :(
+            callExecuteSql(new HashMap<>(params));
             fail("Should not have succeeded: " + task);
         }
         catch(CommandException | IOException ce)
