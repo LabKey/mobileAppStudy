@@ -11,7 +11,6 @@
 <%@ page import="java.util.Map" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-
 <%!
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
@@ -63,15 +62,15 @@
 
     <div style="padding: 10px;" >
         <div id="basicAuthPanel" class=" form-group">
-            <labkey:input type="text" className=" form-control lk-forwarder-input" label="User" name="username" value="<%=h(basicAuthUser)%>" />
-            <labkey:input type="password" className=" form-control lk-forwarder-input" label="Password" name="password" value="<%=h(basicAuthPassword)%>"/>
-            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="basicURL" value="<%=h(basicAuthURL)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input" label="User" name="username" value="<%=basicAuthUser%>" />
+            <labkey:input type="password" className=" form-control lk-forwarder-input" label="Password" name="password" value="<%=basicAuthPassword%>"/>
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="basicURL" value="<%=basicAuthURL%>" />
         </div>
         <div id="oauthPanel" class=" form-group">
-            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Token Request URL" name="tokenRequestURL" value="<%=h(oauthRequestURL)%>" />
-            <labkey:input type="text" className=" form-control lk-forwarder-input" label="Token Field" name="tokenField" value="<%=h(oauthTokenFieldPath)%>"/>
-            <labkey:input type="text" className=" form-control lk-forwarder-input" label="Header Name" name="header" value="<%=h(oauthTokenHeader)%>" />
-            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="oauthURL" value="<%=h(oauthURL)%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Token Request URL" name="tokenRequestURL" value="<%=oauthRequestURL%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input" label="Token Field" name="tokenField" value="<%=oauthTokenFieldPath%>"/>
+            <labkey:input type="text" className=" form-control lk-forwarder-input" label="Header Name" name="header" value="<%=oauthTokenHeader%>" />
+            <labkey:input type="text" className=" form-control lk-forwarder-input lk-forwarder-url" label="Endpoint URL" name="oauthURL" value="<%=oauthURL%>" />
         </div>
     </div>
     <div id="buttonBar">
