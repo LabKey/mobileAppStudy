@@ -9,14 +9,14 @@ public class ParticipantPropertiesResponse
 {
     private Collection<ParticipantProperty> _preEnrollmentParticipantProperties;
 
-
-    public void setPreEnrollmentParticipantProperties(Collection<ParticipantProperty> _participantProperties)
+    @SuppressWarnings("unused")
+    public void setPreEnrollmentParticipantProperties(Collection<ParticipantProperty> participantProperties)
     {
-        this._preEnrollmentParticipantProperties = _participantProperties;
+        _preEnrollmentParticipantProperties = participantProperties;
     }
 
     public Collection<ParticipantProperty> getPreEnrollmentParticipantProperties()
     {
-        return this._preEnrollmentParticipantProperties;
+        return _preEnrollmentParticipantProperties;
     }
 }
