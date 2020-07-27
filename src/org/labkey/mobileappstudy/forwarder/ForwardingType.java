@@ -3,7 +3,7 @@ package org.labkey.mobileappstudy.forwarder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
-import org.labkey.api.util.EnumHasHtmlString;
+import org.labkey.api.util.SimpleHasHtmlString;
 import org.labkey.mobileappstudy.MobileAppStudyController;
 import org.springframework.validation.Errors;
 
@@ -23,7 +23,7 @@ import static org.labkey.mobileappstudy.forwarder.ForwarderProperties.TOKEN_REQU
 import static org.labkey.mobileappstudy.forwarder.ForwarderProperties.URL_PROPERTY_NAME;
 import static org.labkey.mobileappstudy.forwarder.ForwarderProperties.USER_PROPERTY_NAME;
 
-public enum ForwardingType implements EnumHasHtmlString<ForwardingType>
+public enum ForwardingType implements SimpleHasHtmlString
 {
     Disabled
             {
