@@ -1,7 +1,8 @@
 package org.labkey.mobileappstudy.forwarder;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.util.SimpleHasHtmlString;
 import org.labkey.mobileappstudy.MobileAppStudyController;

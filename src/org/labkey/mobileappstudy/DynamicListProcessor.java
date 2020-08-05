@@ -1,6 +1,7 @@
 package org.labkey.mobileappstudy;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.PropertyStorageSpec;
@@ -19,12 +20,12 @@ public abstract class DynamicListProcessor
 
     public DynamicListProcessor()
     {
-        this(Logger.getLogger(MobileAppStudy.class));
+        this(LogManager.getLogger(MobileAppStudy.class));
     }
 
     public DynamicListProcessor(Logger logger)
     {
-        this.logger = logger != null ? logger : Logger.getLogger(MobileAppStudy.class);
+        this.logger = logger != null ? logger : LogManager.getLogger(MobileAppStudy.class);
     }
 
     /**

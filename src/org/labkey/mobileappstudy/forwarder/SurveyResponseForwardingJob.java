@@ -16,7 +16,8 @@
 package org.labkey.mobileappstudy.forwarder;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.pipeline.PipeRoot;
@@ -41,7 +42,7 @@ import java.util.concurrent.Callable;
 
 public class SurveyResponseForwardingJob implements org.quartz.Job, Callable<String>
 {
-    private static final Logger logger = Logger.getLogger(SurveyResponseForwardingJob.class);
+    private static final Logger logger = LogManager.getLogger(SurveyResponseForwardingJob.class);
     private static volatile Set<String> unsuccessful = new HashSet<>();
 
     // Private service user

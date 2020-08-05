@@ -15,7 +15,8 @@
  */
 package org.labkey.mobileappstudy.forwarder;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.collections.ConcurrentHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -39,7 +40,7 @@ import java.util.Set;
 public class ForwardingScheduler
 {
     private static JobDetail job = null;
-    private static final Logger logger = Logger.getLogger(ForwardingScheduler.class);
+    private static final Logger logger = LogManager.getLogger(ForwardingScheduler.class);
     private static final int INTERVAL_MINUTES = 5;
     private static final ForwardingScheduler instance = new ForwardingScheduler();
     private static  Set<String> enabledContainers = new ConcurrentHashSet<>();

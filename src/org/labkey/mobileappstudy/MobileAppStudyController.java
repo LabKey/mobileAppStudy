@@ -19,7 +19,8 @@ package org.labkey.mobileappstudy;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.Action;
@@ -90,7 +91,7 @@ import static org.labkey.api.util.Result.failure;
 @Marshal(Marshaller.Jackson)
 public class MobileAppStudyController extends SpringActionController
 {
-    private static final Logger LOG = Logger.getLogger(MobileAppStudyController.class);
+    private static final Logger LOG = LogManager.getLogger(MobileAppStudyController.class);
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(MobileAppStudyController.class);
 
     public static final String NAME = "mobileappstudy";
