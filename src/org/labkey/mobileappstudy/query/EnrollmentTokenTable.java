@@ -40,7 +40,9 @@ class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQu
         @Override
         public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
         {
-            out.write("<span style='font-family: monospace'>" + getFormattedValue(ctx) + "</span>");
+            out.write("<span style='font-family: monospace'>");
+            getFormattedHtml(ctx).appendTo(out);
+            out.write("</span>");
         }
     };
 
