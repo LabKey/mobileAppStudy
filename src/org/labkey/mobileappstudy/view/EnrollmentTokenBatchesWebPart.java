@@ -21,6 +21,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -56,8 +57,13 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);
-        ActionButton generateBtn = new ActionButton("New Batch");
-        generateBtn.setScript("Ext4.create('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
-        bar.add(generateBtn);
+
+        // Enable the "New Batch" button only for administrators, #41565
+        if (getContainer().hasPermission(getUser(), AdminPermission.class))
+        {
+            ActionButton generateBtn = new ActionButton("New Batch");
+            generateBtn.setScript("Ext4.create('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
+            bar.add(generateBtn);
+        }
     }
 }

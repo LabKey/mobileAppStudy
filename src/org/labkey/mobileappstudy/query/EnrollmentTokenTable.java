@@ -47,6 +47,7 @@ class EnrollmentTokenTable extends SimpleUserSchema.SimpleTable<MobileAppStudyQu
     EnrollmentTokenTable(MobileAppStudyQuerySchema schema, ContainerFilter cf)
     {
         super(schema, schema.getDbSchema().getTable(MobileAppStudySchema.ENROLLMENT_TOKEN_TABLE), cf);
+        setReadOnly(true);
 
         // wrap all the existing columns
         wrapAllColumns();

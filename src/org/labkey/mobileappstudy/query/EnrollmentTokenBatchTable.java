@@ -35,6 +35,7 @@ class EnrollmentTokenBatchTable extends SimpleUserSchema.SimpleTable<MobileAppSt
     EnrollmentTokenBatchTable(MobileAppStudyQuerySchema schema, ContainerFilter cf)
     {
         super(schema, schema.getDbSchema().getTable(MobileAppStudySchema.ENROLLMENT_TOKEN_BATCH_TABLE), cf);
+        setReadOnly(true);
 
         // wrap all the existing columns
         wrapAllColumns();
