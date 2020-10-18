@@ -53,12 +53,15 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     {
         super.populateButtonBar(view, bar);
 
+        ActionButton generateBtn = new ActionButton("New Batch");
+        generateBtn.setTooltip("Create a batch of enrollment tokens");
+
         // Enable the "New Batch" button only for administrators, #41565
         if (getContainer().hasPermission(getUser(), AdminPermission.class))
-        {
-            ActionButton generateBtn = new ActionButton("New Batch");
             generateBtn.setScript("Ext4.create('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
-            bar.add(generateBtn);
-        }
+        else
+            generateBtn.setEnabled(false);
+
+        bar.add(generateBtn);
     }
 }
