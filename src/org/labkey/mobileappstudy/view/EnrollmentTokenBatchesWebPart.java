@@ -40,11 +40,6 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
         setSettings(createQuerySettings(viewContext));
         addClientDependency(ClientDependency.fromPath("Ext4"));
         addClientDependency(ClientDependency.fromPath("mobileAppStudy/panel/enrollmentTokenBatchFormPanel.js"));
-        setShowInsertNewButton(false);
-        setShowImportDataButton(false);
-        setShowDeleteButton(false);
-        setShowReports(false);
-        setShowUpdateColumn(false);
     }
 
     private QuerySettings createQuerySettings(ViewContext viewContext)

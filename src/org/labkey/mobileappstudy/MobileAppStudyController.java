@@ -55,6 +55,7 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.FolderManagement.FolderManagementViewPostAction;
@@ -139,7 +140,7 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class TokenBatchAction extends SimpleViewAction
     {
         @Override
@@ -155,7 +156,7 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class TokenListAction extends SimpleViewAction
     {
         @Override
