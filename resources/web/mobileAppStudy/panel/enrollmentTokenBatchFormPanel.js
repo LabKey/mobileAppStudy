@@ -58,17 +58,15 @@ Ext4.define('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {
 
         this.add(this.createForm());
         this.on (
-                {
-                    afterRender: function () {
-                        this.getSubmitButton().setDisabled(true);
-                    },
-                    close : function() {
-                        this.toggleGridButton();
-                    }
+            {
+                afterRender: function () {
+                    this.getSubmitButton().setDisabled(true);
+                },
+                close : function() {
+                    this.toggleGridButton();
                 }
+            }
         )
-
-
     },
 
     toggleGridButton: function() {
@@ -178,7 +176,6 @@ Ext4.define('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {
         btn.up('window').getCancelButton().setDisabled(true);
         btn.up('window').getEl().mask("Generating tokens ...");
 
-
         function onSuccess(response, options){
             btn.up('window').close();
             var batchId = JSON.parse(response.responseText).data.batchId;
@@ -189,12 +186,12 @@ Ext4.define('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {
         }
 
         function onError(response, options){
-            btn.setDisabled(false);
+            btn.up('window').close();
 
             var obj = Ext4.decode(response.responseText);
-            if (obj.errors && obj.errors[0].field == "form")
+            if (obj.exception)
             {
-                Ext4.Msg.alert("Error", "There were problems generating the tokens. " + obj.errors[0].message);
+                Ext4.Msg.alert("Error", "There were problems generating the tokens. " + obj.exception);
             }
         }
 
@@ -206,7 +203,6 @@ Ext4.define('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {
             failure: onError,
             scope: this
         });
-
     },
 
     getFieldValues: function()

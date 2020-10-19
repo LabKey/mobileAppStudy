@@ -21,6 +21,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -39,11 +40,6 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
         setSettings(createQuerySettings(viewContext));
         addClientDependency(ClientDependency.fromPath("Ext4"));
         addClientDependency(ClientDependency.fromPath("mobileAppStudy/panel/enrollmentTokenBatchFormPanel.js"));
-        setShowInsertNewButton(false);
-        setShowImportDataButton(false);
-        setShowDeleteButton(false);
-        setShowReports(false);
-        setShowUpdateColumn(false);
     }
 
     private QuerySettings createQuerySettings(ViewContext viewContext)
@@ -56,8 +52,16 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);
+
         ActionButton generateBtn = new ActionButton("New Batch");
-        generateBtn.setScript("Ext4.create('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
+        generateBtn.setTooltip("Create a batch of enrollment tokens");
+
+        // Enable the "New Batch" button only for administrators, #41565
+        if (getContainer().hasPermission(getUser(), AdminPermission.class))
+            generateBtn.setScript("Ext4.create('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
+        else
+            generateBtn.setEnabled(false);
+
         bar.add(generateBtn);
     }
 }

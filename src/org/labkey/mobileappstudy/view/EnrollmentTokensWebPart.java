@@ -31,12 +31,6 @@ public class EnrollmentTokensWebPart extends QueryView
     {
         super(QueryService.get().getUserSchema(viewContext.getUser(), viewContext.getContainer(), MobileAppStudySchema.NAME));
         setSettings(createQuerySettings(viewContext));
-        setShowInsertNewButton(false);
-        setShowImportDataButton(false);
-        setShowDeleteButton(false);
-        setShowReports(false);
-        setShowUpdateColumn(false);
-        setShowDetailsColumn(false);
     }
 
     private QuerySettings createQuerySettings(ViewContext viewContext)
