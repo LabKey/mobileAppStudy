@@ -71,7 +71,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
             "decimalPreEnroll", "datePreEnroll", "timePreEnroll", "booleanPreEnroll");
     private final static List<String> STANDARD_FIELD_NAMES = Arrays.asList("Modified", "lastIndexed",
             "ModifiedBy", "Created", "CreatedBy", "container", "EntityId");
-    private final static List<String> ALL_FIELDS = Stream.of(PREENROLLMENT_FIELD_NAMES, POSTENROLLMENT_FIELD_NAMES, STANDARD_FIELD_NAMES).flatMap(x->x.stream()).collect(Collectors.toList());
+    private final static List<String> ALL_FIELDS = Stream.of(PREENROLLMENT_FIELD_NAMES, POSTENROLLMENT_FIELD_NAMES, STANDARD_FIELD_NAMES).flatMap(Collection::stream).collect(Collectors.toList());
     private final static String TOKEN_BATCH_SIZE = "10";
 
     private final static int EXECUTE_SQL_INDEX = 0;
@@ -369,7 +369,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         String changeUrl = String.join("/", BASE_URL, study);
         String token = setupProjectWithParticipantProperties(study, project);
 
-        verifyBaseParicipantPropertiesSetup(project, study, token);
+        verifyBaseParticipantPropertiesSetup(project, study, token);
 
         // Easiest way to change response body of mockserver call is to adjust the path,
         // so update the url used to request participant properties metadata
@@ -388,7 +388,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         String changeUrl = String.join("/", BASE_URL, study);
         String token = setupProjectWithParticipantProperties(study, project);
 
-        verifyBaseParicipantPropertiesSetup(project, study, token);
+        verifyBaseParticipantPropertiesSetup(project, study, token);
 
         // Easiest way to change response body of mockserver call is to adjust the path,
         // so update the url used to request participant properties metadata
@@ -413,7 +413,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         String changeUrl = String.join("/", BASE_URL, study);
         String token = setupProjectWithParticipantProperties(study, project);
 
-        verifyBaseParicipantPropertiesSetup(project, study, token);
+        verifyBaseParticipantPropertiesSetup(project, study, token);
 
         // Easiest way to change response body of mockserver call is to adjust the path,
         // so update the url used to request participant properties metadata
@@ -452,7 +452,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         String changeUrl = String.join("/", BASE_URL, study);
         String token = setupProjectWithParticipantProperties(study, project);
 
-        verifyBaseParicipantPropertiesSetup(project, study, token);
+        verifyBaseParticipantPropertiesSetup(project, study, token);
 
         // Easiest way to change response body of mockserver call is to adjust the path,
         // so update the url used to request participant properties metadata
@@ -505,7 +505,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         return tokenListPage.getToken(0);
     }
 
-    private void verifyBaseParicipantPropertiesSetup(String project, String study, String enrollmentToken)
+    private void verifyBaseParticipantPropertiesSetup(String project, String study, String enrollmentToken)
     {
         //Verify base setup
         log("Token validation action: successful token request");
