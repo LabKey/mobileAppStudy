@@ -376,6 +376,7 @@ public class MobileAppStudyManager
             ContainerUtil.purgeTable(schema.getTableInfoEnrollmentTokenBatch(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoStudy(), c, null);
             ContainerUtil.purgeTable(schema.getTableInfoResponseMetadata(), c, null);
+            ContainerUtil.purgeTable(schema.getTableInfoParticipantPropertyMetadata(), c, null);
 
             transaction.commit();
         }
