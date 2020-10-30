@@ -91,4 +91,4 @@ dependencies {
     // include core API
     implementation "org.labkey.api:core:${labkeyVersion}"
 
-}            
+}
