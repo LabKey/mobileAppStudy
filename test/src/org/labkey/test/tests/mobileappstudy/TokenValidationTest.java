@@ -237,7 +237,7 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
         stopImpersonating(false);
 
         // Test for MyStudies Coordinator
-        impersonateRoles("Reader","MyStudies Coordinator");
+        impersonateRoles("Reader", "MyStudies Coordinator");
         assertTrue(batchesWebPart.isNewBatchPresent());
         assertTrue(batchesWebPart.isNewBatchEnabled());  // Should be able to create a new batch
         assertFalse(setupPage.isSubmitButtonVisible());  // Submit button should NOT be present

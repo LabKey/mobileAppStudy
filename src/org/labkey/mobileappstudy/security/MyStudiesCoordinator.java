@@ -7,7 +7,7 @@ public class MyStudiesCoordinator extends AbstractModuleScopedRole
 {
     public MyStudiesCoordinator()
     {
-        super("MyStudies Coordinator", "MyStudies Coordinators may generate enrollment tokens.", MobileAppStudyModule.class, GenerateEnrollmentTokensPermission.class);
+        super("MyStudies Coordinator", "May generate batches of enrollment tokens.", MobileAppStudyModule.class, GenerateEnrollmentTokensPermission.class);
         excludeGuests();
     }
 }
