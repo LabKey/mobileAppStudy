@@ -44,6 +44,11 @@ public class SetupPage extends LabKeyPage<SetupPage.ElementCache> implements Web
         clearCache();
     }
 
+    public boolean isSubmitButtonVisible()
+    {
+        return elementCache().studySetupWebPart.isSubmitVisible();
+    }
+
     public void validateSubmitButtonDisabled()
     {
         log("Validate that the submit button is disabled.");

@@ -227,22 +227,22 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
         // Test for Administrator
         assertTrue(batchesWebPart.isNewBatchPresent());
         assertTrue(batchesWebPart.isNewBatchEnabled());
-        setupPage.validateSubmitButtonEnabled();
+        setupPage.validateSubmitButtonDisabled();  // Submit button should be present
 
         // Test for Reader
         impersonateRole("Reader");
         assertTrue(batchesWebPart.isNewBatchPresent());
         assertFalse(batchesWebPart.isNewBatchEnabled());
-        setupPage.validateSubmitButtonDisabled();
-        stopImpersonating();
+        assertFalse(setupPage.isSubmitButtonVisible());  // Submit button should NOT be present
+        stopImpersonating(false);
 
         // Test for MyStudies Coordinator
         impersonateRoles("Reader","MyStudies Coordinator");
         assertTrue(batchesWebPart.isNewBatchPresent());
-        assertTrue(batchesWebPart.isNewBatchEnabled());   // Should be able to create a new batch
+        assertTrue(batchesWebPart.isNewBatchEnabled());  // Should be able to create a new batch
+        assertFalse(setupPage.isSubmitButtonVisible());  // Submit button should NOT be present
         TokenBatchPopup tokenBatchPopup = batchesWebPart.openNewBatchPopup();
         tokenBatchPopup.createNewBatch("100");
-        setupPage.validateSubmitButtonDisabled();  // Shouldn't have admin capabilities like changing study setup
         stopImpersonating();
     }
 

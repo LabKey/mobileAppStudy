@@ -90,6 +90,11 @@ public class StudySetupWebPart extends BodyWebPart<StudySetupWebPart.ElementCach
         return !classValue.toLowerCase().contains("x4-btn-disabled");
     }
 
+    public boolean isSubmitVisible()
+    {
+        return elementCache().submitButton.isDisplayed();
+    }
+
     public void clickSubmit()
     {
         submit();
