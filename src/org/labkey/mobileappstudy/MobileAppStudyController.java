@@ -72,6 +72,7 @@ import org.labkey.mobileappstudy.data.SurveyResponse;
 import org.labkey.mobileappstudy.forwarder.ForwardingType;
 import org.labkey.mobileappstudy.participantproperties.ParticipantProperty;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
+import org.labkey.mobileappstudy.security.GenerateEnrollmentTokensPermission;
 import org.labkey.mobileappstudy.surveydesign.FileSurveyDesignProvider;
 import org.labkey.mobileappstudy.surveydesign.InvalidDesignException;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
@@ -175,7 +176,7 @@ public class MobileAppStudyController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
+    @RequiresPermission(GenerateEnrollmentTokensPermission.class)
     public class GenerateTokensAction extends MutatingApiAction<GenerateTokensForm>
     {
         @Override

@@ -23,11 +23,13 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleProperty;
+import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.view.FolderManagement;
 import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.mobileappstudy.query.MobileAppStudyQuerySchema;
 import org.labkey.mobileappstudy.query.ReadResponsesQuerySchema;
+import org.labkey.mobileappstudy.security.MyStudiesCoordinator;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.StudyConfigWebPart;
 
@@ -113,6 +115,8 @@ public class MobileAppStudyModule extends DefaultModule
 
         //Startup shredding and forwarder jobs
         MobileAppStudyManager.get().doStartup();
+
+        RoleManager.registerRole(new MyStudiesCoordinator());
     }
 
     @Override
