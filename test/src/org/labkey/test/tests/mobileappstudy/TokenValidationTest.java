@@ -23,6 +23,7 @@ import org.labkey.test.commands.mobileappstudy.EnrollParticipantCommand;
 import org.labkey.test.commands.mobileappstudy.EnrollmentTokenValidationCommand;
 import org.labkey.test.commands.mobileappstudy.ResolveEnrollmentTokenCommand;
 import org.labkey.test.components.mobileappstudy.TokenBatchPopup;
+import org.labkey.test.components.mobileappstudy.TokenBatchesWebPart;
 import org.labkey.test.pages.mobileappstudy.SetupPage;
 import org.labkey.test.pages.mobileappstudy.TokenListPage;
 
@@ -214,6 +215,36 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
         resolveCmd.execute(200);
         assertTrue(resolveCmd.getSuccess());
         assertEquals(STUDY_NAME03, resolveCmd.getStudyId());
+    }
+
+    @Test
+    public void testMyStudiesCoordinatorRole()
+    {
+        goToProjectHome(PROJECT_NAME01);
+        SetupPage setupPage = new SetupPage(this);
+        TokenBatchesWebPart batchesWebPart = setupPage.getTokenBatchesWebPart();
+
+        // Test for Administrator
+        assertTrue(batchesWebPart.isNewBatchPresent());
+        assertTrue(batchesWebPart.isNewBatchEnabled());
+        setupPage.validateSubmitButtonDisabled();  // Submit button should be present
+
+        // Test for Reader
+        impersonateRole("Reader");
+        assertTrue(batchesWebPart.isNewBatchPresent());
+        assertFalse(batchesWebPart.isNewBatchEnabled());
+        assertFalse(setupPage.isSubmitButtonVisible());  // Submit button should NOT be present
+        stopImpersonating(false);
+
+        // Test for MyStudies Coordinator
+        impersonateRoles("Reader", "MyStudies Coordinator");
+        assertTrue(batchesWebPart.isNewBatchPresent());
+        assertTrue(batchesWebPart.isNewBatchEnabled());  // Should be able to create a new batch
+        assertFalse(setupPage.isSubmitButtonVisible());  // Submit button should NOT be present
+        TokenBatchPopup tokenBatchPopup = batchesWebPart.openNewBatchPopup();
+        TokenListPage tokenListPage = tokenBatchPopup.createNewBatch("100");
+        assertEquals("Wrong number of tokens generated for MyStudies Coordinator", 100, tokenListPage.getNumTokens());
+        stopImpersonating();
     }
 
     private void testInvalid(ResolveEnrollmentTokenCommand resolveCmd, String token, String expectedErrorMessage)
