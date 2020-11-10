@@ -242,7 +242,8 @@ public class TokenValidationTest extends BaseMobileAppStudyTest
         assertTrue(batchesWebPart.isNewBatchEnabled());  // Should be able to create a new batch
         assertFalse(setupPage.isSubmitButtonVisible());  // Submit button should NOT be present
         TokenBatchPopup tokenBatchPopup = batchesWebPart.openNewBatchPopup();
-        tokenBatchPopup.createNewBatch("100");
+        TokenListPage tokenListPage = tokenBatchPopup.createNewBatch("100");
+        assertEquals("Wrong number of tokens generated for MyStudies Coordinator", 100, tokenListPage.getNumTokens());
         stopImpersonating();
     }
 
