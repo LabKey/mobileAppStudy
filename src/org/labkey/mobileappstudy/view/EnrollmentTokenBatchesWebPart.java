@@ -21,11 +21,11 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
-import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.mobileappstudy.MobileAppStudySchema;
+import org.labkey.mobileappstudy.security.GenerateEnrollmentTokensPermission;
 
 /**
  * Web part for displaying current enrollment token batches and allowing
@@ -56,8 +56,8 @@ public class EnrollmentTokenBatchesWebPart extends QueryView
         ActionButton generateBtn = new ActionButton("New Batch");
         generateBtn.setTooltip("Create a batch of enrollment tokens");
 
-        // Enable the "New Batch" button only for administrators, #41565
-        if (getContainer().hasPermission(getUser(), AdminPermission.class))
+        // Enable the "New Batch" button for Administrators and MyStudies Coordinators, Issue 41770
+        if (getContainer().hasPermission(getUser(), GenerateEnrollmentTokensPermission.class))
             generateBtn.setScript("Ext4.create('LABKEY.MobileAppStudy.EnrollmentTokenBatchFormPanel', {gridButton: this}).show();");
         else
             generateBtn.setEnabled(false);

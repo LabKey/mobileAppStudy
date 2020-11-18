@@ -49,7 +49,7 @@ public class TokenBatchesWebPart extends BodyWebPart<TokenBatchesWebPart.Element
 
     public boolean isNewBatchEnabled()
     {
-        return elementCache().newBatchButton.isEnabled();
+        return !elementCache().newBatchButton.getAttribute("class").contains("labkey-disabled-button");
     }
 
     public TokenBatchPopup openNewBatchPopup()
