@@ -33,9 +33,9 @@ import org.labkey.mobileappstudy.security.MyStudiesCoordinator;
 import org.labkey.mobileappstudy.view.EnrollmentTokenBatchesWebPart;
 import org.labkey.mobileappstudy.view.StudyConfigWebPart;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -60,7 +60,7 @@ public class MobileAppStudyModule extends DefaultModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 20.001;
+        return 21.000;
     }
 
     @Override
@@ -73,10 +73,10 @@ public class MobileAppStudyModule extends DefaultModule
     @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
-        ArrayList<WebPartFactory> list = new ArrayList<>();
-        list.add(new SimpleWebPartFactory("Enrollment Token Batches", WebPartFactory.LOCATION_BODY, EnrollmentTokenBatchesWebPart.class, null));
-        list.add(new SimpleWebPartFactory("Mobile App Study Setup", WebPartFactory.LOCATION_BODY, StudyConfigWebPart.class, null));
-        return list;
+        return List.of(
+            new SimpleWebPartFactory("Enrollment Token Batches", WebPartFactory.LOCATION_BODY, EnrollmentTokenBatchesWebPart.class, null),
+            new SimpleWebPartFactory("Mobile App Study Setup", WebPartFactory.LOCATION_BODY, StudyConfigWebPart.class, null)
+        );
     }
 
     @Override
