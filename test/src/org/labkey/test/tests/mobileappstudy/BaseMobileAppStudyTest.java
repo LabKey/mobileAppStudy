@@ -373,6 +373,7 @@ public abstract class BaseMobileAppStudyTest extends BaseWebDriverTest implement
                             !column.equals("Created") &&
                             !column.equals("Modified") &&
                             !column.equals("lastIndexed") &&
+                            !column.equals("diImportHash") &&
                             !column.equals("EntityId")))
             {
                 unexpectedJsonColumn.append("Found unexpected column '").append(column).append("' in jsonObject.\r\n");

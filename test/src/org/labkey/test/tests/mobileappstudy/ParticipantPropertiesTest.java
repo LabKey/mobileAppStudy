@@ -70,7 +70,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
     private final static List<String> PREENROLLMENT_FIELD_NAMES = Arrays.asList("stringPreEnroll", "integerPreEnroll",
             "decimalPreEnroll", "datePreEnroll", "timePreEnroll", "booleanPreEnroll");
     private final static List<String> STANDARD_FIELD_NAMES = Arrays.asList("Modified", "lastIndexed",
-            "ModifiedBy", "Created", "CreatedBy", "container", "EntityId");
+            "ModifiedBy", "Created", "CreatedBy", "container", "EntityId", "diImportHash");
     private final static List<String> ALL_FIELDS = Stream.of(PREENROLLMENT_FIELD_NAMES, POSTENROLLMENT_FIELD_NAMES, STANDARD_FIELD_NAMES).flatMap(Collection::stream).collect(Collectors.toList());
     private final static String TOKEN_BATCH_SIZE = "10";
 
@@ -295,7 +295,7 @@ public class ParticipantPropertiesTest extends BaseMobileAppStudyTest
         assertNotNull("No ParticipantProperties row data returned by execute sql", rowData);
         for (String propertyId : (Set<String>)rowData.keySet())
         {
-            assertTrue(String.format("Expected column not found: " + propertyId), POSTENROLLMENT_FIELD_NAMES.contains(propertyId)
+            assertTrue(String.format("Unexpected column found: " + propertyId), POSTENROLLMENT_FIELD_NAMES.contains(propertyId)
                     || PREENROLLMENT_FIELD_NAMES.contains(propertyId) || STANDARD_FIELD_NAMES.contains(propertyId));
         }
     }
