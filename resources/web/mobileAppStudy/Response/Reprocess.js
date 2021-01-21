@@ -22,15 +22,17 @@ LABKEY.MobileAppStudy.reprocess = function(dataRegion) {
                         (response.data.notReprocessed.length == 1 ? ' ] was' : ' ] were') + ' not reprocessed, as ' +
                         (response.data.notReprocessed.length == 1 ? 'it was' : 'they were') + ' successfully processed previously.';
 
-                Ext4.Msg.show({
-                    title: "Reprocess Successful",
-                    msg: message,
-                    buttons: Ext4.MessageBox.OK,
-                    icon: Ext4.MessageBox.INFO,
-                    fn: function (button) {
-                        if (button == 'ok')
-                            window.location.reload();
-                    }
+                LABKEY.requiresExt4Sandbox(function() {
+                    Ext4.Msg.show({
+                        title: "Reprocess Successful",
+                        msg: message,
+                        buttons: Ext4.MessageBox.OK,
+                        icon: Ext4.MessageBox.INFO,
+                        fn: function (button) {
+                            if (button == 'ok')
+                                window.location.reload();
+                        }
+                    });
                 });
             } else
                LABKEY.Utils.displayAjaxErrorResponse(response);
